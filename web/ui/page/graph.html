@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<h1>日志检索引擎</h1>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/graph.css">
+    <script type="text/javascript">
+        function search() {
+            var text = document.getElementById('text-expr').value;
+            //console.log(text);
+            xmlHttp = new XMLHttpRequest();
+            var host = window.location.protocol + "//" + window.location.host;
+            xmlHttp.open("post", host + "/search");
+            xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xmlHttp.send(text);
+
+            xmlHttp.onload = function () {
+                if (this.status == 200) {
+                    //  var data = this.responseText;
+                    var str = "";
+                    var resBody = document.getElementById("tbody-result")
+                    console.log("this.responseText", this.responseText)
+                    var dataJson = JSON.parse(this.responseText);
+                    resBody.innerHTML = "";
+                    // var str = "";
+                    // var obj = JSON.parse(this.responseText);
+                    for (i in dataJson) {
+                        var logStr = ""
+                        for (j in dataJson[i]["logs"]) {
+                            logStr += "<tr>" +
+                                "<td>" + dataJson[i]["logs"][j]["log"] + "</td >" +
+                                "</tr>";;
+                        }
+                        str += "<tr>" +
+                            "<td>" + JSON.stringify(dataJson[i]["metric"]) + "</td>" +
+                            "<td >" + "<table cellpadding=5px>" + logStr + "</table>" + "</td >" +
+                            "</tr>";;
+                    }
+                    resBody.innerHTML = str;
+                }
+            };
+
+        }
+    </script>
+</head>
+<div id="form-div">
+
+    <div class="row">
+        <div class="col-lg-10"></div>
+        <textarea id="text-expr" placeholder="输入表达式" name="expr" class="form-control"></textarea>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-10">
+            <input class="btn" type="button" color="white" value="搜索" name="submit" onclick="search()" />
+        </div>
+    </div>
+
+</div>
+
+<div>
+    <table border="2" bordercolor="#a0c6e5" style="border-collapse:collapse;">
+        <thead>  
+             <tr>  
+                <th>时间序列</th>  
+                <th>日志</th>  
+            </tr>  
+        </thead> 
+        <tbody id="tbody-result">
+        </tbody>
+    </table>
+</div>
+
+</html>
