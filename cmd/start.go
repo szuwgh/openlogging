@@ -5,8 +5,8 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/sophon-lab/temsearch/core/tokenizer"
-	_ "github.com/sophon-lab/temsearch/core/tokenizer/buildinit"
+	"github.com/sophon-lab/temsearch/pkg/tokenizer"
+	_ "github.com/sophon-lab/temsearch/pkg/tokenizer/buildinit"
 	"github.com/sophon-lab/temsearch/web"
 	"github.com/spf13/cobra"
 )

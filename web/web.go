@@ -11,12 +11,12 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/sophon-lab/temsearch/core/engine/tem/byteutil"
+	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 
-	"github.com/sophon-lab/temsearch/core/analysis"
-	"github.com/sophon-lab/temsearch/core/engine/tem"
-	"github.com/sophon-lab/temsearch/core/engine/tem/labels"
-	"github.com/sophon-lab/temsearch/core/engine/tem/search"
+	"github.com/sophon-lab/temsearch/pkg/analysis"
+	"github.com/sophon-lab/temsearch/pkg/engine/tem"
+	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
+	"github.com/sophon-lab/temsearch/pkg/engine/tem/search"
 )
 
 var ok = []byte("ok")
