@@ -11,24 +11,24 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/sophon-lab/temsearch/core/indexer/lsm/byteutil"
+	"github.com/sophon-lab/temsearch/core/engine/tem/byteutil"
 
 	"github.com/sophon-lab/temsearch/core/analysis"
-	"github.com/sophon-lab/temsearch/core/indexer/lsm"
-	"github.com/sophon-lab/temsearch/core/indexer/lsm/labels"
-	"github.com/sophon-lab/temsearch/core/indexer/lsm/search"
+	"github.com/sophon-lab/temsearch/core/engine/tem"
+	"github.com/sophon-lab/temsearch/core/engine/tem/labels"
+	"github.com/sophon-lab/temsearch/core/engine/tem/search"
 )
 
 var ok = []byte("ok")
 
 type Handler struct {
-	eg *lsm.Engine
+	eg *tem.Engine
 }
 
 func New() *Handler {
 	var err error
 	h := &Handler{}
-	h.eg, err = lsm.NewEngine(analysis.NewAnalyzer("gojieba"))
+	h.eg, err = tem.NewEngine(analysis.NewAnalyzer("gojieba"))
 	if err != nil {
 		return nil
 	}
