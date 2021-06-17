@@ -66,7 +66,7 @@ func NewTableOps() *TableOps {
 	return t
 }
 
-//const dataDir = "E:\\goproject\\temsearch2\\src\\data"
+//const dataDir = "E:\\goproject\\temsearch\\src\\data"
 
 // func CreateIndexFrom(dir string) (*IndexW, error) {
 // 	if err := os.MkdirAll(dir, 0777); err != nil {

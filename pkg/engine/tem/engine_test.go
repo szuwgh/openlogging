@@ -32,7 +32,7 @@ func Test_TermLog(t *testing.T) {
 }
 
 func Test_blockDirs(t *testing.T) {
-	dirs, _ := blockDirs("E:\\goproject\\temsearch2\\src\\data")
+	dirs, _ := blockDirs("E:\\goproject\\temsearch\\src\\data")
 	for _, dir := range dirs {
 		meta, err := readMetaFile(dir)
 		if err != nil {

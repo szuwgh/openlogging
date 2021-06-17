@@ -31,7 +31,7 @@ const (
 
 	metaFilename = "meta.json"
 
-	maxBlockDuration = 60 //1 * 60 * 60 //1 * 60 * 60 //2h
+	maxBlockDuration = 30 //1 * 60 * 60 //1 * 60 * 60 //2h
 
 	flushWritecoldDuration = 60
 )
@@ -81,7 +81,7 @@ func NewEngine(a *analysis.Analyzer) (*Engine, error) {
 	e.a = a
 	e.alloc = byteutil.NewByteBlockAllocator()
 	e.tOps = disk.NewTableOps()
-	e.dataDir = "E:\\goproject\\temsearch2\\src\\data"
+	e.dataDir = "E:\\goproject\\temsearch\\src\\data"
 	e.opts = &Options{RetentionDuration: 12 * 60 * 60, BlockRanges: exponentialBlockRanges(maxBlockDuration, 10, 3)} //15d
 	e.walDir = filepath.Join(e.dataDir, "wal")
 	e.headPool = make(chan *Head, 1)
@@ -108,6 +108,7 @@ func NewEngine(a *analysis.Analyzer) (*Engine, error) {
 	if err != nil {
 		return nil, err
 	}
+	e.walFile = append(e.walFile, lastWal)
 	go e.compact()
 	return e, nil
 }
@@ -447,9 +448,13 @@ func (e *Engine) shouldCompact() error {
 			e.memMu.Unlock()
 			return err
 		}
+		e.frozeWalFiles = append(e.frozeWalFiles, e.walFile...)
+		e.walFile = e.walFile[:0]
+		e.walFile = append(e.walFile, nextFile)
+	} else {
+		e.frozeWalFiles = append(e.frozeWalFiles, e.walFile...)
+		e.walFile = e.walFile[:0]
 	}
-	e.frozeWalFiles = e.walFile //append(e.frozeWalFiles, e.walFile)
-	e.walFile = e.walFile[:0]
 	e.frozeHead = e.head
 	e.head = e.allocHead() //NewHead(e.alloc)
 	e.head.lastSegNum = e.frozeHead.lastSegNum + e.frozeHead.LogNum()
@@ -472,6 +477,7 @@ func (e *Engine) deleteFrozeWal() {
 	for _, f := range e.frozeWalFiles {
 		os.RemoveAll(f)
 	}
+	e.frozeWalFiles = e.frozeWalFiles[:0]
 }
 
 func (e *Engine) tcompact() error {

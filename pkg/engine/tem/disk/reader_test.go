@@ -8,7 +8,7 @@ import (
 )
 
 func Test_DiskTableReader(t *testing.T) {
-	dir := "E:\\goproject\\temsearch2\\src\\data\\01F6MF5X9DPCMVWAN8FMVZ7NVD"
+	dir := "E:\\goproject\\temsearch\\src\\data\\01F6MF5X9DPCMVWAN8FMVZ7NVD"
 	tOps := NewTableOps()
 	ulid, _ := ulid.Parse(filepath.Base(dir))
 	reader := tOps.CreateIndexReader(dir, ulid, 1622037072)
@@ -19,5 +19,5 @@ func Test_DiskTableReader(t *testing.T) {
 
 func Test_DiskLogReader(t *testing.T) {
 
-	//NewLogReader("E:\\goproject\\temsearch2\\src\\data\\my")
+	//NewLogReader("E:\\goproject\\temsearch\\src\\data\\my")
 }

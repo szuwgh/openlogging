@@ -51,7 +51,7 @@ func Test_Wal(t *testing.T) {
 }
 
 func Test_WalReader(t *testing.T) {
-	fname := "E:\\goproject\\temsearch2\\src\\data\\wal\\000001"
+	fname := "E:\\goproject\\temsearch\\src\\data\\wal\\000001"
 	//fname := "./wal.log"
 	f, err := os.OpenFile(fname, os.O_RDONLY, 0644)
 	if err != nil {

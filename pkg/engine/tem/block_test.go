@@ -3,7 +3,7 @@ package tem
 import "testing"
 
 func Test_Block(t *testing.T) {
-	// block, err := openBlock("E:\\goproject\\temsearch2\\src\\data\\01EXP0PSBNP118V1J51C2YCC7H")
+	// block, err := openBlock("E:\\goproject\\temsearch\\src\\data\\01EXP0PSBNP118V1J51C2YCC7H")
 	// if err != nil {
 	// 	t.Fatal(err)
 	// }

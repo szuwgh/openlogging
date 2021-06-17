@@ -12,7 +12,7 @@ import (
 )
 
 func Test_IterWalk(t *testing.T) {
-	// reader := NewIndexReader("E:\\goproject\\temsearch2\\src\\data\\01EWCS1EKD0E9GRET66QCPVD7Z")
+	// reader := NewIndexReader("E:\\goproject\\temsearch\\src\\data\\01EWCS1EKD0E9GRET66QCPVD7Z")
 	// iter := reader.Iterator()
 	// if iter.First() {
 	// 	fmt.Println("first", string(iter.Key()), iter.Value())
@@ -28,9 +28,9 @@ func Test_IterWalk(t *testing.T) {
 }
 
 func Test_IterMerge(t *testing.T) {
-	// reader1 := NewIndexReader("E:\\goproject\\temsearch2\\src\\data\\01F0B3H7419TB6CEZ6TY8E2N5P", 1614909121)
+	// reader1 := NewIndexReader("E:\\goproject\\temsearch\\src\\data\\01F0B3H7419TB6CEZ6TY8E2N5P", 1614909121)
 	// iter1 := reader1.Iterator()
-	// reader2 := NewIndexReader("E:\\goproject\\temsearch2\\src\\data\\01F0B3HPBD77RPCVAEJSMCM01J", 1614909121) //src\data\01EXGBNN7ZRE8904TWP351ZWSR
+	// reader2 := NewIndexReader("E:\\goproject\\temsearch\\src\\data\\01F0B3HPBD77RPCVAEJSMCM01J", 1614909121) //src\data\01EXGBNN7ZRE8904TWP351ZWSR
 	// iter2 := reader2.Iterator()
 
 	// mergeIter := NewMergeLabelIterator(iter1, iter2)
@@ -65,7 +65,7 @@ type BlockMeta struct {
 }
 
 func Test_LogIter(t *testing.T) {
-	dir := "E:\\goproject\\temsearch2\\src\\data\\01EXNYVY84KSFR6BMNP9CN44TZ"
+	dir := "E:\\goproject\\temsearch\\src\\data\\01EXNYVY84KSFR6BMNP9CN44TZ"
 	b, err := ioutil.ReadFile(filepath.Join(dir, "meta.json"))
 	if err != nil {
 		t.Fatal(err)
