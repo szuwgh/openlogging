@@ -608,7 +608,7 @@ func (r *IndexReader) Search(lset labels.Labels, terms []string) (posting.Postin
 	for _, v := range lset {
 		value := r.find(v.Name, byteutil.Str2bytes(v.Value))
 		if value == nil {
-			return nil, nil
+			return posting.EmptyPostings, nil
 		}
 		ref, _ := binary.Uvarint(value)
 		list, _ := r.postingr.readPosting(ref)

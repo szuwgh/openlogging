@@ -116,8 +116,6 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var series []Series
-	//sql.MinTime = now - 1000000
-	//sql.MaxTime = now
 	seriesSet := searcher.Search(sql)
 	for seriesSet.Next() {
 		s := seriesSet.At()

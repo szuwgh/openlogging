@@ -8,7 +8,7 @@ import (
 
 func Test_Compact(t *testing.T) {
 
-	// dataDir := "E:\\goproject\\temsearch2\\src\\data"
+	// dataDir := "E:\\goproject\\temsearch\\src\\data"
 	// blocks, err := blockDirs(dataDir)
 	// if err != nil {
 	// 	t.Fatal(err)
@@ -34,7 +34,7 @@ func Test_Compact(t *testing.T) {
 func Test_CompactPlan(t *testing.T) {
 	compactor := newLeveledCompactor(exponentialBlockRanges(maxBlockDuration, 10, 3))
 
-	plan, err := compactor.Plan("E:\\goproject\\temsearch2\\src\\data")
+	plan, err := compactor.Plan("E:\\goproject\\temsearch\\src\\data")
 	if err != nil {
 		log.Println(err)
 		//break
