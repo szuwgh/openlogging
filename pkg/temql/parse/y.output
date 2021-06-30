@@ -1,0 +1,167 @@
+
+state 0
+	$accept: .start $end 
+
+	METRIC_IDENTIFIER  shift 5
+	.  error
+
+	metric_identifier  goto 4
+	expr  goto 2
+	vector_selector  goto 3
+	start  goto 1
+
+state 1
+	$accept:  start.$end 
+
+	$end  accept
+	.  error
+
+
+state 2
+	start:  expr.    (1)
+
+	.  reduce 1 (src line 41)
+
+
+state 3
+	expr:  vector_selector.    (2)
+
+	.  reduce 2 (src line 46)
+
+
+state 4
+	vector_selector:  metric_identifier.label_matchers 
+
+	LEFT_BRACE  shift 7
+	.  error
+
+	label_matchers  goto 6
+
+state 5
+	metric_identifier:  METRIC_IDENTIFIER.    (4)
+
+	.  reduce 4 (src line 53)
+
+
+state 6
+	vector_selector:  metric_identifier label_matchers.    (13)
+
+	.  reduce 13 (src line 87)
+
+
+state 7
+	label_matchers:  LEFT_BRACE.label_match_list RIGHT_BRACE 
+
+	error  shift 11
+	IDENTIFIER  shift 10
+	.  error
+
+	label_match_list  goto 8
+	label_matcher  goto 9
+
+state 8
+	label_matchers:  LEFT_BRACE label_match_list.RIGHT_BRACE 
+	label_match_list:  label_match_list.COMMA label_matcher 
+	label_match_list:  label_match_list.error 
+
+	error  shift 14
+	RIGHT_BRACE  shift 12
+	COMMA  shift 13
+	.  error
+
+
+state 9
+	label_match_list:  label_matcher.    (7)
+
+	.  reduce 7 (src line 71)
+
+
+state 10
+	label_matcher:  IDENTIFIER.match_op STRING 
+	label_matcher:  IDENTIFIER.match_op error 
+	label_matcher:  IDENTIFIER.error 
+
+	error  shift 16
+	EQL  shift 17
+	.  error
+
+	match_op  goto 15
+
+state 11
+	label_matcher:  error.    (12)
+
+	.  reduce 12 (src line 83)
+
+
+state 12
+	label_matchers:  LEFT_BRACE label_match_list RIGHT_BRACE.    (5)
+
+	.  reduce 5 (src line 55)
+
+
+state 13
+	label_match_list:  label_match_list COMMA.label_matcher 
+
+	error  shift 11
+	IDENTIFIER  shift 10
+	.  error
+
+	label_matcher  goto 18
+
+state 14
+	label_match_list:  label_match_list error.    (8)
+
+	.  reduce 8 (src line 73)
+
+
+state 15
+	label_matcher:  IDENTIFIER match_op.STRING 
+	label_matcher:  IDENTIFIER match_op.error 
+
+	error  shift 20
+	STRING  shift 19
+	.  error
+
+
+state 16
+	label_matcher:  IDENTIFIER error.    (11)
+
+	.  reduce 11 (src line 81)
+
+
+state 17
+	match_op:  EQL.    (3)
+
+	.  reduce 3 (src line 51)
+
+
+state 18
+	label_match_list:  label_match_list COMMA label_matcher.    (6)
+
+	.  reduce 6 (src line 63)
+
+
+state 19
+	label_matcher:  IDENTIFIER match_op STRING.    (9)
+
+	.  reduce 9 (src line 77)
+
+
+state 20
+	label_matcher:  IDENTIFIER match_op error.    (10)
+
+	.  reduce 10 (src line 79)
+
+
+15 terminals, 9 nonterminals
+14 grammar rules, 21/16000 states
+0 shift/reduce, 0 reduce/reduce conflicts reported
+58 working sets used
+memory: parser 8/240000
+0 extra closures
+13 shift entries, 1 exceptions
+9 goto entries
+0 entries saved by goto default
+Optimizer space used: output 20/240000
+20 table entries, 0 zero
+maximum spread: 15, maximum offset: 14
