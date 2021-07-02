@@ -89,7 +89,6 @@ vector_selector: metric_identifier label_matchers
                         {
                         vs := $2.(*VectorSelector)
                         vs.Name = $1.Val
-                        yylex.(*parser).assembleVectorSelector(vs)
                         $$ = vs
                         }
                     ;

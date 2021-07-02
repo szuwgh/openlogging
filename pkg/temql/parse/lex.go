@@ -1,4 +1,4 @@
-package temql
+package parse
 
 import "unicode/utf8"
 

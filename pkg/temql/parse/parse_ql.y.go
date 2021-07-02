@@ -11,6 +11,7 @@ import __yyfmt__ "fmt"
 type yySymType struct {
 	yys  int
 	item Item
+	node Node
 }
 
 const LEFT_PAREN = 57346
@@ -50,7 +51,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parse_ql.y:96
+//line parse_ql.y:97
 
 //line yacctab:1
 var yyExca = [...]int{
@@ -452,13 +453,13 @@ yydefault:
 
 	case 1:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:43
+//line parse_ql.y:44
 		{
 			yylex.(*parser).generatedParserResult = yyDollar[1].node
 		}
 	case 5:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:56
+//line parse_ql.y:57
 		{
 			yyVAL.node = &VectorSelector{
 				LabelMatchers: yyDollar[2].matchers,
@@ -466,7 +467,7 @@ yydefault:
 		}
 	case 6:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:64
+//line parse_ql.y:65
 		{
 			if yyDollar[1].matchers != nil {
 				yyVAL.matchers = append(yyDollar[1].matchers, yyDollar[3].matcher)
@@ -476,47 +477,47 @@ yydefault:
 		}
 	case 7:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:72
+//line parse_ql.y:73
 		{
 			yyVAL.matchers = []*labels.Matcher{yyDollar[1].matcher}
 		}
 	case 8:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parse_ql.y:74
+//line parse_ql.y:75
 		{
 			yylex.(*parser).unexpected("label matching", "\",\" or \"}\"")
 			yyVAL.matchers = yyDollar[1].matchers
 		}
 	case 9:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:78
+//line parse_ql.y:79
 		{
 			yyVAL.matcher = yylex.(*parser).newLabelMatcher(yyDollar[1].item, yyDollar[2].item, yyDollar[3].item)
 		}
 	case 10:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:80
+//line parse_ql.y:81
 		{
 			yylex.(*parser).unexpected("label matching", "string")
 			yyVAL.matcher = nil
 		}
 	case 11:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parse_ql.y:82
+//line parse_ql.y:83
 		{
 			yylex.(*parser).unexpected("label matching", "label matching operator")
 			yyVAL.matcher = nil
 		}
 	case 12:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:84
+//line parse_ql.y:85
 		{
 			yylex.(*parser).unexpected("label matching", "identifier or \"}\"")
 			yyVAL.matcher = nil
 		}
 	case 13:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parse_ql.y:88
+//line parse_ql.y:89
 		{
 			vs := yyDollar[2].node.(*VectorSelector)
 			vs.Name = yyDollar[1].item.Val
