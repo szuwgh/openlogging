@@ -1,12 +1,14 @@
 %{
 package parse
-
+import "github.com/sophon-lab/temsearch/pkg/temql/labels"
 %}
 
 
 %union {
     item Item
     node Node
+    matchers  []*labels.Matcher
+    matcher   *labels.Matcher
 }
 
 %token <item>
@@ -23,7 +25,6 @@ STRING
 METRIC_IDENTIFIER
 COMMA
 
-
 %type <item> match_op metric_identifier 
 
 %type <node>  expr label_matchers vector_selector
@@ -34,10 +35,7 @@ COMMA
 
 %start start
 
-
 %%
-
-
 
 start           :
                 expr

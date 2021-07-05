@@ -16,7 +16,6 @@ type Matcher struct {
 	Value string
 }
 
-
 // NewMatcher returns a matcher object.
 func NewMatcher(t MatchType, n, v string) (*Matcher, error) {
 	m := &Matcher{
