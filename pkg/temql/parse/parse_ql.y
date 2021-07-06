@@ -56,17 +56,29 @@ term_op : LAND | LOR;
 metric_identifier : METRIC_IDENTIFIER   ;
 
 
-term_identifier :  LEFT_PAREN term_list RIGHT_PAREN
+term_identifier :  LEFT_PAREN term_expr RIGHT_PAREN
+                        {
+
+                        }
+                   | metric_identifier
                         {
 
                         }
                         ;
 
-term_list: term_list term_op term_pair
+term_expr : term_list 
+            | term_pair 
+           ;
+
+term_list: term_expr term_op term_expr
+                {
+                        $$ = yylex.(*parser).newLabelMatcher($1, $2, $3);  
+                }
+          ;
 
 term_pair : IDENTIFIER term_op IDENTIFIER 
                 {
-                 $$ = yylex.(*parser).newLabelMatcher($1, $2, $3); 
+                 $$ = yylex.(*parser).newTermExpr($1, $2, $3); 
                 }
                 ;
 

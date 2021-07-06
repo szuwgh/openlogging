@@ -35,7 +35,7 @@ func (p *parser) newLabelMatcher(label Item, operator Item, value Item) *labels.
 	return labels.NewMatcher(matchType, label.Val, value.Val)
 }
 
-func (p *parser) newTermMatcher(label Item, operator Item, value Item) *labels.Matcher {
+func (p *parser) newTermExpr(label Item, operator Item, value Item) *labels.Matcher {
 	op := operator.Typ
 
 	// Map the Item to the respective match type.
