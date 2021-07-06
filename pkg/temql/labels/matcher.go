@@ -17,11 +17,11 @@ type Matcher struct {
 }
 
 // NewMatcher returns a matcher object.
-func NewMatcher(t MatchType, n, v string) (*Matcher, error) {
+func NewMatcher(t MatchType, n, v string) *Matcher {
 	m := &Matcher{
 		Type:  t,
 		Name:  n,
 		Value: v,
 	}
-	return m, nil
+	return m
 }

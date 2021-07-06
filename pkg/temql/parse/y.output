@@ -2,11 +2,13 @@
 state 0
 	$accept: .start $end 
 
-	METRIC_IDENTIFIER  shift 5
+	LEFT_BRACE  shift 7
+	METRIC_IDENTIFIER  shift 6
 	.  error
 
 	metric_identifier  goto 4
 	expr  goto 2
+	label_matchers  goto 5
 	vector_selector  goto 3
 	start  goto 1
 
@@ -20,13 +22,13 @@ state 1
 state 2
 	start:  expr.    (1)
 
-	.  reduce 1 (src line 40)
+	.  reduce 1 (src line 42)
 
 
 state 3
 	expr:  vector_selector.    (2)
 
-	.  reduce 2 (src line 45)
+	.  reduce 2 (src line 47)
 
 
 state 4
@@ -35,133 +37,139 @@ state 4
 	LEFT_BRACE  shift 7
 	.  error
 
-	label_matchers  goto 6
+	label_matchers  goto 8
 
 state 5
-	metric_identifier:  METRIC_IDENTIFIER.    (4)
+	vector_selector:  label_matchers.    (14)
 
-	.  reduce 4 (src line 52)
+	.  reduce 14 (src line 94)
 
 
 state 6
-	vector_selector:  metric_identifier label_matchers.    (13)
+	metric_identifier:  METRIC_IDENTIFIER.    (4)
 
-	.  reduce 13 (src line 86)
+	.  reduce 4 (src line 54)
 
 
 state 7
 	label_matchers:  LEFT_BRACE.label_match_list RIGHT_BRACE 
 
-	error  shift 11
-	IDENTIFIER  shift 10
+	error  shift 12
+	IDENTIFIER  shift 11
 	.  error
 
-	label_match_list  goto 8
-	label_matcher  goto 9
+	label_match_list  goto 9
+	label_matcher  goto 10
 
 state 8
+	vector_selector:  metric_identifier label_matchers.    (13)
+
+	.  reduce 13 (src line 88)
+
+
+state 9
 	label_matchers:  LEFT_BRACE label_match_list.RIGHT_BRACE 
 	label_match_list:  label_match_list.COMMA label_matcher 
 	label_match_list:  label_match_list.error 
 
-	error  shift 14
-	RIGHT_BRACE  shift 12
-	COMMA  shift 13
+	error  shift 15
+	RIGHT_BRACE  shift 13
+	COMMA  shift 14
 	.  error
 
 
-state 9
+state 10
 	label_match_list:  label_matcher.    (7)
 
-	.  reduce 7 (src line 70)
+	.  reduce 7 (src line 72)
 
 
-state 10
+state 11
 	label_matcher:  IDENTIFIER.match_op STRING 
 	label_matcher:  IDENTIFIER.match_op error 
 	label_matcher:  IDENTIFIER.error 
 
-	error  shift 16
-	EQL  shift 17
+	error  shift 17
+	EQL  shift 18
 	.  error
 
-	match_op  goto 15
-
-state 11
-	label_matcher:  error.    (12)
-
-	.  reduce 12 (src line 82)
-
+	match_op  goto 16
 
 state 12
-	label_matchers:  LEFT_BRACE label_match_list RIGHT_BRACE.    (5)
+	label_matcher:  error.    (12)
 
-	.  reduce 5 (src line 54)
+	.  reduce 12 (src line 84)
 
 
 state 13
-	label_match_list:  label_match_list COMMA.label_matcher 
+	label_matchers:  LEFT_BRACE label_match_list RIGHT_BRACE.    (5)
 
-	error  shift 11
-	IDENTIFIER  shift 10
-	.  error
+	.  reduce 5 (src line 56)
 
-	label_matcher  goto 18
 
 state 14
-	label_match_list:  label_match_list error.    (8)
+	label_match_list:  label_match_list COMMA.label_matcher 
 
-	.  reduce 8 (src line 72)
+	error  shift 12
+	IDENTIFIER  shift 11
+	.  error
 
+	label_matcher  goto 19
 
 state 15
-	label_matcher:  IDENTIFIER match_op.STRING 
-	label_matcher:  IDENTIFIER match_op.error 
+	label_match_list:  label_match_list error.    (8)
 
-	error  shift 20
-	STRING  shift 19
-	.  error
+	.  reduce 8 (src line 74)
 
 
 state 16
-	label_matcher:  IDENTIFIER error.    (11)
+	label_matcher:  IDENTIFIER match_op.STRING 
+	label_matcher:  IDENTIFIER match_op.error 
 
-	.  reduce 11 (src line 80)
+	error  shift 21
+	STRING  shift 20
+	.  error
 
 
 state 17
-	match_op:  EQL.    (3)
+	label_matcher:  IDENTIFIER error.    (11)
 
-	.  reduce 3 (src line 50)
+	.  reduce 11 (src line 82)
 
 
 state 18
-	label_match_list:  label_match_list COMMA label_matcher.    (6)
+	match_op:  EQL.    (3)
 
-	.  reduce 6 (src line 62)
+	.  reduce 3 (src line 52)
 
 
 state 19
-	label_matcher:  IDENTIFIER match_op STRING.    (9)
+	label_match_list:  label_match_list COMMA label_matcher.    (6)
 
-	.  reduce 9 (src line 76)
+	.  reduce 6 (src line 64)
 
 
 state 20
+	label_matcher:  IDENTIFIER match_op STRING.    (9)
+
+	.  reduce 9 (src line 78)
+
+
+state 21
 	label_matcher:  IDENTIFIER match_op error.    (10)
 
-	.  reduce 10 (src line 78)
+	.  reduce 10 (src line 80)
 
 
-15 terminals, 9 nonterminals
-14 grammar rules, 21/16000 states
+17 terminals, 9 nonterminals
+15 grammar rules, 22/16000 states
 0 shift/reduce, 0 reduce/reduce conflicts reported
 58 working sets used
-memory: parser 8/240000
+memory: parser 9/240000
 0 extra closures
-13 shift entries, 1 exceptions
-9 goto entries
+14 shift entries, 1 exceptions
+10 goto entries
 0 entries saved by goto default
-Optimizer space used: output 20/240000
-20 table entries, 0 zero
+Optimizer space used: output 22/240000
+22 table entries, 0 zero
 maximum spread: 15, maximum offset: 14

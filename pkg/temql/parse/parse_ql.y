@@ -24,8 +24,10 @@ IDENTIFIER
 STRING
 METRIC_IDENTIFIER
 COMMA
+ERROR
+EOF
 
-%type <item> match_op metric_identifier 
+%type <item> match_op metric_identifier term_identifier
 
 %type <node>  expr label_matchers vector_selector
 
@@ -49,7 +51,24 @@ expr            :
 
 match_op        : EQL  ;
 
+term_op : LAND | LOR;
+
 metric_identifier : METRIC_IDENTIFIER   ;
+
+
+term_identifier :  LEFT_PAREN term_list RIGHT_PAREN
+                        {
+
+                        }
+                        ;
+
+term_list: term_list term_op term_pair
+
+term_pair : IDENTIFIER term_op IDENTIFIER 
+                {
+                 $$ = yylex.(*parser).newLabelMatcher($1, $2, $3); 
+                }
+                ;
 
 label_matchers  : LEFT_BRACE label_match_list RIGHT_BRACE
                         {
@@ -83,12 +102,16 @@ label_matcher   : IDENTIFIER match_op STRING
                         { yylex.(*parser).unexpected("label matching", "identifier or \"}\""); $$ = nil}
                 ;
 
-vector_selector: metric_identifier label_matchers
+vector_selector: term_identifier label_matchers
                         {
                         vs := $2.(*VectorSelector)
                         vs.Name = $1.Val
                         $$ = vs
                         }
-                    ;
+                | label_matchers
+                {
+                        $$ = $1.(*VectorSelector)
+                }
+                ;
 
 %%

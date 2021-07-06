@@ -39,17 +39,22 @@ var ItemTypeStr = map[ItemType]string{
 }
 
 type lexer struct {
-	input string
-	pos   int
-	len   int
-	width int
-	start int // Start position of this Item.
-	itemp *Item
+	input       string
+	state       stateFn // The next lexing function to enter.
+	pos         int
+	len         int
+	width       int
+	start       int // Start position of this Item.
+	itemp       *Item
+	braceOpen   bool // Whether a { is opened.
+	stringOpen  rune // Quote rune of the string currently being read.
+	scannedItem bool // Set to true every time an item is scanned.
 }
 
 func newLex(input string) *lexer {
 	return &lexer{
 		input: input,
+		state: lexStatements,
 	}
 }
 
@@ -67,7 +72,24 @@ func (l *lexer) next() rune {
 //获取下一个item
 func (l *lexer) nextItem(itemp *Item) {
 	l.itemp = itemp
-	//l.lexStatements()
+	l.scannedItem = false
+	if l.state != nil {
+		for !l.scannedItem {
+			l.state = l.state(l)
+		}
+	} else {
+		l.eject(EOF)
+	}
+}
+
+func (l *lexer) peek() rune {
+	r := l.next()
+	l.backup()
+	return r
+}
+
+func (l *lexer) ignore() {
+	l.start = l.pos
 }
 
 func (l *lexer) backup() {
@@ -78,6 +100,7 @@ func (l *lexer) backup() {
 func (l *lexer) eject(t ItemType) {
 	*l.itemp = Item{t, l.start, l.input[l.start:l.pos]}
 	l.start = l.pos
+	l.scannedItem = true
 }
 
 func lexSpace(l *lexer) stateFn {
@@ -88,16 +111,54 @@ func lexSpace(l *lexer) stateFn {
 	return lexStatements
 }
 
+func lexIdentifier(l *lexer) stateFn {
+	for isAlphaNumeric(l.next()) {
+		// absorb
+	}
+	l.backup()
+	l.eject(IDENTIFIER)
+	return lexStatements
+}
+
+func lexString(l *lexer) stateFn {
+Loop:
+	for {
+		switch l.next() {
+		case utf8.RuneError:
+			return lexString
+		case l.stringOpen:
+			break Loop
+		}
+	}
+	l.eject(STRING)
+	return lexStatements
+}
+
 func lexInsideBraces(l *lexer) stateFn {
 	switch r := l.next(); {
 	case isSpace(r):
-		skipSpaces(l)
+		return lexSpace(l)
 	case isAlpha(r):
+		return lexIdentifier
+	case r == '=':
+		l.eject(EQL)
+	case r == '"' || r == '\'':
+		l.stringOpen = r
+		return lexString
+	case r == ',':
+		l.eject(COMMA)
+	case r == '}':
+		l.eject(RIGHT_BRACE)
+		l.braceOpen = false
+		return lexStatements
+	default:
+		return nil
 	}
-
+	return lexInsideBraces
 }
 
 func lexKeywordOrIdentifier(l *lexer) stateFn {
+Loop:
 	for {
 		switch r := l.next(); {
 		case isAlphaNumeric(r):
@@ -109,16 +170,25 @@ func lexKeywordOrIdentifier(l *lexer) stateFn {
 			} else {
 				l.eject(METRIC_IDENTIFIER)
 			}
+			break Loop
 		}
 	}
+	return lexStatements
 }
 
 //lex
 func lexStatements(l *lexer) stateFn {
+	if l.braceOpen {
+		return lexInsideBraces
+	}
 	switch r := l.next(); {
 	case r == eof:
+		l.eject(EOF)
+		return nil
 	case r == ',':
 	case r == '{':
+		l.eject(LEFT_BRACE)
+		l.braceOpen = true
 		return lexInsideBraces(l)
 	case r == '}':
 	case r == '=':
