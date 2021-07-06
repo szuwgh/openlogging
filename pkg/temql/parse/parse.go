@@ -35,7 +35,11 @@ func (p *parser) newLabelMatcher(label Item, operator Item, value Item) *labels.
 	return labels.NewMatcher(matchType, label.Val, value.Val)
 }
 
-func (p *parser) newTermExpr(label Item, operator Item, value Item) *labels.Matcher {
+func (p *parser) newBinaryExpr() *termBinaryExpr {
+
+}
+
+func (p *parser) newTermExpr(name1 Item, operator Item, name2 Item) *termExpr {
 	op := operator.Typ
 
 	// Map the Item to the respective match type.
@@ -50,7 +54,7 @@ func (p *parser) newTermExpr(label Item, operator Item, value Item) *labels.Matc
 		// by the generated parser.
 		panic("invalid operator")
 	}
-	return term.NewMatcher(matchType, label.Val, value.Val)
+	return &termExpr{name1.Val, name2.Val, matchType}
 }
 
 func (p *parser) parseGenerated() interface{} {

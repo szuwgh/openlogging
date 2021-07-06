@@ -27,7 +27,15 @@ type termBinaryExpr struct {
 	LHS, RHS Expr     // The operands on the respective sides of the operator.
 }
 
+func (t *termBinaryExpr) String() string {
+	return "termBinaryExpr"
+}
+
 type termExpr struct {
 	name1, name2 string
 	Op           ItemType // The operation of the expression.
+}
+
+func (t *termExpr) String() string {
+	return "termExpr"
 }

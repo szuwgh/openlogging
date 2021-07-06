@@ -66,21 +66,16 @@ term_identifier :  LEFT_PAREN term_expr RIGHT_PAREN
                         }
                         ;
 
-term_expr : term_list 
-            | term_pair 
-           ;
-
-term_list: term_expr term_op term_expr
+term_expr: term_expr term_op IDENTIFIER
                 {
                         $$ = yylex.(*parser).newLabelMatcher($1, $2, $3);  
                 }
+            | IDENTIFIER term_op IDENTIFIER
+                {
+                       $$ =  yylex.(*parser).newTermExpr($1, $2, $3)
+                }
           ;
 
-term_pair : IDENTIFIER term_op IDENTIFIER 
-                {
-                 $$ = yylex.(*parser).newTermExpr($1, $2, $3); 
-                }
-                ;
 
 label_matchers  : LEFT_BRACE label_match_list RIGHT_BRACE
                         {
