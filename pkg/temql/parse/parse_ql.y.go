@@ -8,8 +8,9 @@ import __yyfmt__ "fmt"
 
 //line parse_ql.y:3
 import "github.com/sophon-lab/temsearch/pkg/temql/labels"
+import "fmt"
 
-//line parse_ql.y:7
+//line parse_ql.y:8
 type yySymType struct {
 	yys      int
 	item     Item
@@ -22,16 +23,15 @@ const LEFT_PAREN = 57346
 const RIGHT_PAREN = 57347
 const LEFT_BRACE = 57348
 const RIGHT_BRACE = 57349
-const ASSIGN = 57350
-const LAND = 57351
-const LOR = 57352
-const EQL = 57353
-const IDENTIFIER = 57354
-const STRING = 57355
-const METRIC_IDENTIFIER = 57356
-const COMMA = 57357
-const ERROR = 57358
-const EOF = 57359
+const LAND = 57350
+const LOR = 57351
+const EQL = 57352
+const IDENTIFIER = 57353
+const STRING = 57354
+const METRIC_IDENTIFIER = 57355
+const COMMA = 57356
+const ERROR = 57357
+const EOF = 57358
 
 var yyToknames = [...]string{
 	"$end",
@@ -41,7 +41,6 @@ var yyToknames = [...]string{
 	"RIGHT_PAREN",
 	"LEFT_BRACE",
 	"RIGHT_BRACE",
-	"ASSIGN",
 	"LAND",
 	"LOR",
 	"EQL",
@@ -59,7 +58,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parse_ql.y:100
+//line parse_ql.y:145
 
 //line yacctab:1
 var yyExca = [...]int{
@@ -70,44 +69,50 @@ var yyExca = [...]int{
 
 const yyPrivate = 57344
 
-const yyLast = 22
+const yyLast = 39
 
 var yyAct = [...]int{
-	15, 7, 10, 21, 1, 13, 12, 5, 7, 6,
-	17, 9, 8, 14, 20, 3, 11, 19, 2, 18,
-	4, 16,
+	9, 13, 22, 32, 28, 29, 17, 20, 11, 24,
+	35, 15, 19, 31, 21, 10, 7, 25, 26, 27,
+	14, 16, 5, 30, 17, 18, 1, 8, 36, 33,
+	34, 17, 6, 12, 7, 3, 4, 2, 23,
 }
 
 var yyPact = [...]int{
-	-5, -1000, -1000, -1000, 2, -1000, -1000, 4, -1000, -2,
-	-1000, 8, -1000, -1000, 4, -1000, 1, -1000, -1000, -1000,
-	-1000, -1000,
+	28, -1000, -1000, -1000, 10, -1000, 4, 9, -1000, 16,
+	-1000, 4, 0, -1000, 7, -1000, -1000, 4, 4, -4,
+	-1000, 9, -1000, 1, -1000, -1000, -1000, -2, 4, 4,
+	-1000, -1000, -1000, 5, 23, -1000, -1000,
 }
 
 var yyPgo = [...]int{
-	0, 21, 20, 18, 7, 15, 11, 2, 4,
+	0, 38, 37, 0, 36, 22, 35, 33, 1, 26,
 }
 
 var yyR1 = [...]int{
-	0, 8, 3, 1, 2, 4, 6, 6, 6, 7,
-	7, 7, 7, 5, 5,
+	0, 9, 2, 1, 4, 3, 3, 3, 3, 3,
+	5, 7, 7, 7, 8, 8, 8, 8, 6, 6,
+	6, 6,
 }
 
 var yyR2 = [...]int{
-	0, 1, 1, 1, 1, 3, 3, 1, 2, 3,
-	3, 2, 1, 2, 1,
+	0, 1, 1, 1, 3, 1, 5, 5, 3, 3,
+	3, 3, 1, 2, 3, 3, 2, 1, 2, 1,
+	1, 0,
 }
 
 var yyChk = [...]int{
-	-1000, -8, -3, -5, -2, -4, 14, 6, -4, -6,
-	-7, 12, 2, 7, 15, 2, -1, 2, 11, -7,
-	13, 2,
+	-1000, -9, -2, -6, -4, -5, 4, 6, -5, -3,
+	11, 4, -7, -8, 11, 2, 5, 8, 9, -3,
+	7, 14, 2, -1, 2, 10, -3, -3, 8, 9,
+	-8, 12, 2, -3, -3, 5, 5,
 }
 
 var yyDef = [...]int{
-	0, -2, 1, 2, 0, 14, 4, 0, 13, 0,
-	7, 0, 12, 5, 0, 8, 0, 11, 3, 6,
-	9, 10,
+	21, -2, 1, 2, 19, 20, 0, 0, 18, 0,
+	5, 0, 0, 12, 0, 17, 4, 0, 0, 0,
+	10, 0, 13, 0, 16, 3, 8, 9, 0, 0,
+	11, 14, 15, 8, 9, 6, 7,
 }
 
 var yyTok1 = [...]int{
@@ -116,7 +121,7 @@ var yyTok1 = [...]int{
 
 var yyTok2 = [...]int{
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-	12, 13, 14, 15, 16, 17,
+	12, 13, 14, 15, 16,
 }
 
 var yyTok3 = [...]int{
@@ -462,21 +467,57 @@ yydefault:
 
 	case 1:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:44
+//line parse_ql.y:48
 		{
 			yylex.(*parser).generatedParserResult = yyDollar[1].node
 		}
-	case 5:
+	case 4:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:57
+//line parse_ql.y:60
+		{
+			yyVAL.node = yyDollar[2].node
+		}
+	case 5:
+		yyDollar = yyS[yypt-1 : yypt+1]
+//line parse_ql.y:66
+		{
+			yyVAL.node = yylex.(*parser).newTermExpr(yyDollar[1].item)
+		}
+	case 6:
+		yyDollar = yyS[yypt-5 : yypt+1]
+//line parse_ql.y:70
+		{
+			yyVAL.node = yylex.(*parser).newBinaryExpr(yyDollar[2].node, yyDollar[3].item, yyDollar[4].node)
+		}
+	case 7:
+		yyDollar = yyS[yypt-5 : yypt+1]
+//line parse_ql.y:74
+		{
+			yyVAL.node = yylex.(*parser).newBinaryExpr(yyDollar[2].node, yyDollar[3].item, yyDollar[4].node)
+		}
+	case 8:
+		yyDollar = yyS[yypt-3 : yypt+1]
+//line parse_ql.y:78
+		{
+			yyVAL.node = yylex.(*parser).newBinaryExpr(yyDollar[1].node, yyDollar[2].item, yyDollar[3].node)
+		}
+	case 9:
+		yyDollar = yyS[yypt-3 : yypt+1]
+//line parse_ql.y:82
+		{
+			yyVAL.node = yylex.(*parser).newBinaryExpr(yyDollar[1].node, yyDollar[2].item, yyDollar[3].node)
+		}
+	case 10:
+		yyDollar = yyS[yypt-3 : yypt+1]
+//line parse_ql.y:89
 		{
 			yyVAL.node = &VectorSelector{
 				LabelMatchers: yyDollar[2].matchers,
 			}
 		}
-	case 6:
+	case 11:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:65
+//line parse_ql.y:97
 		{
 			if yyDollar[1].matchers != nil {
 				yyVAL.matchers = append(yyDollar[1].matchers, yyDollar[3].matcher)
@@ -484,59 +525,76 @@ yydefault:
 				yyVAL.matchers = yyDollar[1].matchers
 			}
 		}
-	case 7:
+	case 12:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:73
+//line parse_ql.y:105
 		{
 			yyVAL.matchers = []*labels.Matcher{yyDollar[1].matcher}
 		}
-	case 8:
+	case 13:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parse_ql.y:75
+//line parse_ql.y:107
 		{
 			yylex.(*parser).unexpected("label matching", "\",\" or \"}\"")
 			yyVAL.matchers = yyDollar[1].matchers
 		}
-	case 9:
+	case 14:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:79
+//line parse_ql.y:111
 		{
 			yyVAL.matcher = yylex.(*parser).newLabelMatcher(yyDollar[1].item, yyDollar[2].item, yyDollar[3].item)
 		}
-	case 10:
+	case 15:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:81
+//line parse_ql.y:113
 		{
 			yylex.(*parser).unexpected("label matching", "string")
 			yyVAL.matcher = nil
 		}
-	case 11:
+	case 16:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parse_ql.y:83
+//line parse_ql.y:115
 		{
 			yylex.(*parser).unexpected("label matching", "label matching operator")
 			yyVAL.matcher = nil
 		}
-	case 12:
+	case 17:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:85
+//line parse_ql.y:117
 		{
 			yylex.(*parser).unexpected("label matching", "identifier or \"}\"")
 			yyVAL.matcher = nil
 		}
-	case 13:
+	case 18:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parse_ql.y:89
+//line parse_ql.y:121
 		{
 			vs := yyDollar[2].node.(*VectorSelector)
-			vs.Name = yyDollar[1].item.Val
+			vs.Expr = yyDollar[1].node
 			yyVAL.node = vs
 		}
-	case 14:
+	case 19:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:95
+//line parse_ql.y:127
+		{
+			fmt.Println("parse term_identifier")
+			vs := &VectorSelector{
+				Expr:          yyDollar[1].node,
+				LabelMatchers: []*labels.Matcher{},
+			}
+			yyVAL.node = vs
+		}
+	case 20:
+		yyDollar = yyS[yypt-1 : yypt+1]
+//line parse_ql.y:136
 		{
 			yyVAL.node = yyDollar[1].node.(*VectorSelector)
+		}
+	case 21:
+		yyDollar = yyS[yypt-0 : yypt+1]
+//line parse_ql.y:140
+		{
+			fmt.Println("parse nil")
 		}
 	}
 	goto yystack /* stack new state and value */

@@ -1,6 +1,7 @@
 %{
 package parse
 import "github.com/sophon-lab/temsearch/pkg/temql/labels"
+import "fmt"
 %}
 
 
@@ -16,7 +17,6 @@ LEFT_PAREN
 RIGHT_PAREN
 LEFT_BRACE
 RIGHT_BRACE    
-ASSIGN
 LAND
 LOR
 EQL
@@ -27,15 +27,19 @@ COMMA
 ERROR
 EOF
 
-%type <item> match_op metric_identifier term_identifier
+%type <item> match_op
 
-%type <node>  expr label_matchers vector_selector
+%type <node>  expr term_expr term_identifier label_matchers vector_selector
 
 %type <matchers> label_match_list
 
 %type <matcher> label_matcher
 
 %start start
+
+%left LOR
+
+%left LAND
 
 %%
 
@@ -51,37 +55,41 @@ expr            :
 
 match_op        : EQL  ;
 
-term_op : LAND | LOR;
-
-metric_identifier : METRIC_IDENTIFIER   ;
-
 
 term_identifier :  LEFT_PAREN term_expr RIGHT_PAREN
                         {
-
-                        }
-                   | metric_identifier
-                        {
-
+                           $$ = $2
                         }
                         ;
 
-term_expr: term_expr term_op IDENTIFIER
-                {
-                        $$ = yylex.(*parser).newLabelMatcher($1, $2, $3);  
-                }
-            | IDENTIFIER term_op IDENTIFIER
-                {
-                       $$ =  yylex.(*parser).newTermExpr($1, $2, $3)
-                }
-          ;
+term_expr: IDENTIFIER
+        {
+           $$ = yylex.(*parser).newTermExpr($1);   
+        }
+        | LEFT_PAREN term_expr LAND term_expr RIGHT_PAREN
+        {
+           $$ = yylex.(*parser).newBinaryExpr($2, $3, $4)
+        }
+        | LEFT_PAREN term_expr LOR term_expr RIGHT_PAREN
+        {
+           $$ = yylex.(*parser).newBinaryExpr($2, $3, $4)
+        }
+        | term_expr LAND term_expr
+        {
+           $$ = yylex.(*parser).newBinaryExpr($1, $2, $3)
+        }
+        | term_expr LOR term_expr
+        {
+           $$ = yylex.(*parser).newBinaryExpr($1, $2, $3)
+        }
+        ;
 
 
 label_matchers  : LEFT_BRACE label_match_list RIGHT_BRACE
                         {
-                        $$ = &VectorSelector{
-                                LabelMatchers: $2,
-                        }
+                                $$ = &VectorSelector{
+                                        LabelMatchers: $2,
+                                }
                         }
                     ;
 
@@ -110,14 +118,27 @@ label_matcher   : IDENTIFIER match_op STRING
                 ;
 
 vector_selector: term_identifier label_matchers
-                        {
+                {
                         vs := $2.(*VectorSelector)
-                        vs.Name = $1.Val
+                        vs.Expr = $1
                         $$ = vs
+                }
+                | term_identifier
+                {
+                     fmt.Println("parse term_identifier")
+                     vs := &VectorSelector{
+                                Expr: $1,
+                                LabelMatchers: []*labels.Matcher{},
                         }
+                     $$ = vs  
+                }
                 | label_matchers
                 {
                         $$ = $1.(*VectorSelector)
+                }
+                |
+                {
+                         fmt.Println("parse nil")
                 }
                 ;
 

@@ -28,13 +28,19 @@ var key = map[string]ItemType{
 	"or":  LOR,
 }
 
+var keyType = map[ItemType]string{
+	// Operators.
+	LAND: "and",
+	LOR:  "or",
+}
+
 // 符号定义
 var ItemTypeStr = map[ItemType]string{
 	LEFT_PAREN:  "(",
 	RIGHT_PAREN: ")",
 	LEFT_BRACE:  "{",
 	RIGHT_BRACE: "}",
-	ASSIGN:      "=",
+	EQL:         "=",
 	COMMA:       ",",
 }
 
@@ -47,6 +53,7 @@ type lexer struct {
 	start       int // Start position of this Item.
 	itemp       *Item
 	braceOpen   bool // Whether a { is opened.
+	parenDepth  int  // Whether a ( is opened.
 	stringOpen  rune // Quote rune of the string currently being read.
 	scannedItem bool // Set to true every time an item is scanned.
 }
@@ -168,7 +175,7 @@ Loop:
 			if kw, ok := key[strings.ToLower(word)]; ok {
 				l.eject(kw)
 			} else {
-				l.eject(METRIC_IDENTIFIER)
+				l.eject(IDENTIFIER)
 			}
 			break Loop
 		}
@@ -176,24 +183,57 @@ Loop:
 	return lexStatements
 }
 
+func lexInsideParen(l *lexer) stateFn {
+	switch r := l.next(); {
+	case isSpace(r):
+		return lexSpace(l)
+	case r == '(':
+		l.eject(LEFT_PAREN)
+		l.parenDepth++
+		return lexInsideParen
+	case isAlpha(r):
+		return lexKeywordOrIdentifier
+	case r == ')':
+		l.eject(RIGHT_PAREN)
+		l.parenDepth--
+		//l.parenOpen = false
+		return lexStatements
+	default:
+		return nil
+	}
+}
+
 //lex
 func lexStatements(l *lexer) stateFn {
 	if l.braceOpen {
 		return lexInsideBraces
 	}
+	if l.parenDepth > 0 {
+		return lexInsideParen
+	}
 	switch r := l.next(); {
 	case r == eof:
 		l.eject(EOF)
 		return nil
+	case r == '(':
+		l.eject(LEFT_PAREN)
+		l.parenDepth++
+		return lexInsideParen
+	case r == ')':
+		l.eject(RIGHT_PAREN)
+		l.parenDepth--
+		//l.parenOpen = false
 	case r == ',':
 	case r == '{':
 		l.eject(LEFT_BRACE)
 		l.braceOpen = true
-		return lexInsideBraces(l)
+		return lexInsideBraces
 	case r == '}':
+		l.eject(RIGHT_BRACE)
+		l.braceOpen = false
 	case r == '=':
 	case isAlpha(r):
-		return lexKeywordOrIdentifier(l)
+		return lexKeywordOrIdentifier
 	}
 	return nil
 }

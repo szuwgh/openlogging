@@ -15,6 +15,8 @@ type Node interface {
 type VectorSelector struct {
 	Name string
 
+	Expr Node
+
 	LabelMatchers []*labels.Matcher
 }
 
@@ -32,10 +34,18 @@ func (t *termBinaryExpr) String() string {
 }
 
 type termExpr struct {
-	name1, name2 string
-	Op           ItemType // The operation of the expression.
+	name string
 }
 
 func (t *termExpr) String() string {
-	return "termExpr"
+	return "term"
 }
+
+// type termExpr struct {
+// 	name1, name2 string
+// 	Op           ItemType // The operation of the expression.
+// }
+
+// func (t *termExpr) String() string {
+// 	return "termExpr"
+// }

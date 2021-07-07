@@ -2,7 +2,6 @@ package parse
 
 import (
 	"github.com/sophon-lab/temsearch/pkg/temql/labels"
-	"github.com/sophon-lab/temsearch/pkg/temql/term"
 )
 
 type parser struct {
@@ -35,26 +34,31 @@ func (p *parser) newLabelMatcher(label Item, operator Item, value Item) *labels.
 	return labels.NewMatcher(matchType, label.Val, value.Val)
 }
 
-func (p *parser) newBinaryExpr() *termBinaryExpr {
-
+func (p *parser) newBinaryExpr(lhs Node, op Item, rhs Node) Node {
+	ret := &termBinaryExpr{}
+	ret.LHS = lhs.(Expr)
+	ret.RHS = rhs.(Expr)
+	ret.Op = op.Typ
+	return ret
 }
 
-func (p *parser) newTermExpr(name1 Item, operator Item, name2 Item) *termExpr {
-	op := operator.Typ
+// func (p *parser) newTermExpr(name1 Item, operator Item, name2 Item) *termExpr {
+// 	op := operator.Typ
 
-	// Map the Item to the respective match type.
-	var matchType term.MatchType
-	switch op {
-	case LAND:
-		matchType = term.MatchAnd
-	case LOR:
-		matchType = term.MatchOr
-	default:
-		// This should never happen, since the error should have been caught
-		// by the generated parser.
-		panic("invalid operator")
-	}
-	return &termExpr{name1.Val, name2.Val, matchType}
+// 	var matchType term.MatchType
+// 	switch op {
+// 	case LAND:
+// 		matchType = term.MatchAnd
+// 	case LOR:
+// 		matchType = term.MatchOr
+// 	default:
+// 		panic("invalid operator")
+// 	}
+// 	return &termExpr{name1.Val, name2.Val, matchType}
+// }
+
+func (p *parser) newTermExpr(name Item) Node {
+	return &termExpr{name.Val}
 }
 
 func (p *parser) parseGenerated() interface{} {
@@ -63,6 +67,7 @@ func (p *parser) parseGenerated() interface{} {
 }
 
 func (p *parser) Lex(lval *yySymType) int {
+
 	p.lexer.nextItem(&lval.item)
 	typ := lval.item.Typ
 	switch typ {
@@ -78,5 +83,5 @@ func (p *parser) Error(s string) {
 }
 
 func (p *parser) unexpected(context string, expected string) {
-	//fmt.Println(context, expected)
+
 }
