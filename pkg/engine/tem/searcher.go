@@ -6,6 +6,7 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/series"
+	"github.com/sophon-lab/temsearch/pkg/temql"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/search"
@@ -515,7 +516,11 @@ type bloctemsearcher struct {
 	lastSegNum    uint64
 }
 
-func (s *bloctemsearcher) Search(sql *search.QueryESL) SeriesSet {
+func (s *bloctemsearcher) Search(expr temql.Expr) SeriesSet {
+	e, ok := expr.(*temql.VectorSelector)
+	if !ok {
+		return nil
+	}
 	posting, series := s.indexr.Search(labels.FromMap(sql.Tags), sql.Term)
 	isTerm := len(sql.Term) > 0
 	return &blockSeriesSet{

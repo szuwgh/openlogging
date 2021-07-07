@@ -1,4 +1,4 @@
-package parse
+package temql
 
 import (
 	"fmt"
@@ -11,10 +11,10 @@ func Test_Parse(t *testing.T) {
 	v := expr.(*VectorSelector)
 	fmt.Println(v.Name)
 	switch v.Expr.(type) {
-	case *termBinaryExpr:
+	case *TermBinaryExpr:
 		//fmt.Println("termBinaryExpr")
 		printExpr(v.Expr)
-	case *termExpr:
+	case *TermExpr:
 		fmt.Println("termExpr")
 	}
 	for _, vv := range v.LabelMatchers {
@@ -24,14 +24,14 @@ func Test_Parse(t *testing.T) {
 
 func printExpr(e Expr) {
 	switch e.(type) {
-	case *termBinaryExpr:
+	case *TermBinaryExpr:
 		//fmt.Println("termBinaryExpr")
-		e := e.(*termBinaryExpr)
+		e := e.(*TermBinaryExpr)
 		printExpr(e.LHS)
 		fmt.Print(keyType[e.Op], " ")
 		printExpr(e.RHS)
-	case *termExpr:
-		e := e.(*termExpr)
+	case *TermExpr:
+		e := e.(*TermExpr)
 		fmt.Print(e.name, " ")
 	}
 }

@@ -1,4 +1,4 @@
-package parse
+package temql
 
 import "github.com/sophon-lab/temsearch/pkg/temql/labels"
 
@@ -24,20 +24,20 @@ func (*VectorSelector) String() string {
 	return "VectorSelector"
 }
 
-type termBinaryExpr struct {
+type TermBinaryExpr struct {
 	Op       ItemType // The operation of the expression.
 	LHS, RHS Expr     // The operands on the respective sides of the operator.
 }
 
-func (t *termBinaryExpr) String() string {
+func (t *TermBinaryExpr) String() string {
 	return "termBinaryExpr"
 }
 
-type termExpr struct {
+type TermExpr struct {
 	name string
 }
 
-func (t *termExpr) String() string {
+func (t *TermExpr) String() string {
 	return "term"
 }
 

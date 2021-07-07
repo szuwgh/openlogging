@@ -1,5 +1,5 @@
 %{
-package parse
+package temql
 import "github.com/sophon-lab/temsearch/pkg/temql/labels"
 import "fmt"
 %}

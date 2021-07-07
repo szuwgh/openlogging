@@ -2,7 +2,7 @@
 
 //line parse_ql.y:1
 
-package parse
+package temql
 
 import __yyfmt__ "fmt"
 

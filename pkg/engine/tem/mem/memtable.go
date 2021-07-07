@@ -8,6 +8,7 @@ import (
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/index"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/index/skiplist"
+	"github.com/sophon-lab/temsearch/pkg/temql"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/disk"
@@ -277,7 +278,7 @@ func (mt *MemTable) Iterator() disk.IteratorLabel {
 	return mt.indexs.Iterator(mt.bytePoolReader, mt.series)
 }
 
-func (mt *MemTable) Search(lset labels.Labels, terms []string) (posting.Postings, []series.Series) { // ([]*search.SeriesSnapShot, []*search.SnapShot) {
+func (mt *MemTable) Search(lset labels.Labels, expr *temql.TermBinaryExpr) (posting.Postings, []series.Series) { // ([]*search.SeriesSnapShot, []*search.SnapShot) {
 	var its []posting.Postings
 	for _, v := range lset {
 		postingList, ok := mt.indexs.Get(v.Name)
@@ -308,6 +309,30 @@ func (mt *MemTable) Search(lset labels.Labels, terms []string) (posting.Postings
 	}
 	p := posting.Intersect(its...)
 	return p, series
+}
+
+func queryTerm(e temql.Expr) posting.Postings {
+	switch e.(type) {
+	case *temql.TermBinaryExpr:
+		expr := e.(*temql.TermBinaryExpr)
+		p1 := queryTerm(expr.LHS)
+		p1 := queryTerm(expr.RHS)
+		switch expr.Op {
+		case temql.LAND:
+			return posting.Intersect(p1, p2)
+		case temql.LOR:
+			return posting.Merge(p1, p2)
+		}
+	case *temql.TermExpr:
+		e := e.(*temql.TermExpr)
+		pointer, _ := postingList.Find(byteutil.Str2bytes(term))
+		if pointer == nil {
+			return posting.EmptyPostings
+		}
+		termList := pointer.(*TermPosting)
+		return posting.NewListPostings(termList.seriesID())
+	}
+	return nil
 }
 
 func selectSingle(p index.Index, b []byte) posting.Postings {
