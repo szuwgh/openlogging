@@ -288,35 +288,35 @@ func (mt *MemTable) Search(lset labels.Labels, expr *temql.TermBinaryExpr) (post
 		its = append(its, selectSingle(postingList, byteutil.Str2bytes(v.Value)))
 	}
 
-	if len(terms) == 0 {
+	if expr == nil {
 		p := posting.Intersect(its...)
 		return p, []series.Series{mt.series}
 	}
-	postingList, ok := mt.indexs.Get(global.MESSAGE)
-	if !ok {
-		return posting.EmptyPostings, nil
-	}
-	series := make([]series.Series, 0, len(terms))
-	for _, term := range terms {
-		pointer, _ := postingList.Find(byteutil.Str2bytes(term))
-		if pointer == nil {
-			return posting.EmptyPostings, nil
-		}
-		termList := pointer.(*TermPosting)
-		pList := posting.NewListPostings(termList.seriesID())
-		its = append(its, pList)
-		series = append(series, termList)
-	}
+	// postingList, ok := mt.indexs.Get(global.MESSAGE)
+	// if !ok {
+	// 	return posting.EmptyPostings, nil
+	// }
+	//series := make([]series.Series, 0, len(terms))
+	// for _, term := range terms {
+	// 	pointer, _ := postingList.Find(byteutil.Str2bytes(term))
+	// 	if pointer == nil {
+	// 		return posting.EmptyPostings, nil
+	// 	}
+	// 	termList := pointer.(*TermPosting)
+	// 	pList := posting.NewListPostings(termList.seriesID())
+	// 	its = append(its, pList)
+	// 	series = append(series, termList)
+	// }
 	p := posting.Intersect(its...)
-	return p, series
+	return p, nil
 }
 
-func queryTerm(e temql.Expr) posting.Postings {
+func queryTerm(e temql.Expr, postingList index.Index) posting.Postings {
 	switch e.(type) {
 	case *temql.TermBinaryExpr:
 		expr := e.(*temql.TermBinaryExpr)
-		p1 := queryTerm(expr.LHS)
-		p1 := queryTerm(expr.RHS)
+		p1 := queryTerm(expr.LHS, postingList)
+		p2 := queryTerm(expr.RHS, postingList)
 		switch expr.Op {
 		case temql.LAND:
 			return posting.Intersect(p1, p2)
@@ -325,7 +325,7 @@ func queryTerm(e temql.Expr) posting.Postings {
 		}
 	case *temql.TermExpr:
 		e := e.(*temql.TermExpr)
-		pointer, _ := postingList.Find(byteutil.Str2bytes(term))
+		pointer, _ := postingList.Find(byteutil.Str2bytes(e.Name))
 		if pointer == nil {
 			return posting.EmptyPostings
 		}

@@ -1,6 +1,11 @@
 package temql
 
-import "github.com/sophon-lab/temsearch/pkg/temql/labels"
+import (
+	"fmt"
+	"reflect"
+
+	"github.com/sophon-lab/temsearch/pkg/temql/labels"
+)
 
 type Expr interface {
 	Node
@@ -29,12 +34,31 @@ type TermBinaryExpr struct {
 	LHS, RHS Expr     // The operands on the respective sides of the operator.
 }
 
+func (t *TermBinaryExpr) Print() {
+	printExpr(t)
+}
+
+func printExpr(e Expr) {
+	switch e.(type) {
+	case *TermBinaryExpr:
+		e := e.(*TermBinaryExpr)
+		fmt.Println("e.LHS", reflect.ValueOf(e.LHS))
+		fmt.Println("e.RHS", reflect.ValueOf(e.RHS))
+		printExpr(e.LHS)
+		fmt.Print(keyType[e.Op], " ")
+		printExpr(e.RHS)
+	case *TermExpr:
+		e := e.(*TermExpr)
+		fmt.Print(e.Name, " ")
+	}
+}
+
 func (t *TermBinaryExpr) String() string {
 	return "termBinaryExpr"
 }
 
 type TermExpr struct {
-	name string
+	Name string
 }
 
 func (t *TermExpr) String() string {

@@ -68,41 +68,18 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
-	//r.ParseForm()
-	// s := r.FormValue("start_time")
-	// mint, err := parseTime(s)
-	// if err != nil {
-	// 	w.Write(toErrResult(500, err.Error()))
-	// 	return
-	// }
-	// e := r.FormValue("end_time")
-	// maxt, err := parseTime(e)
-	// if err != nil {
-	// 	w.Write(toErrResult(500, err.Error()))
-	// 	return
-	// }
 
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.Write(toErrResult(500, err.Error()))
 		return
 	}
-	// fmt.Fprintf(w, string(b))
-	// return
 	var sql *search.QueryESL
 	err = json.Unmarshal(b, &sql)
 	if err != nil {
 		w.Write(toErrResult(500, err.Error()))
 		return
 	}
-	// sql:=search.QueryESL{Tags: map[string]string{
-	// 			"job": "wo2",
-	// 		},
-	// 			Term:    [][]byte{[]byte("a")},
-	// 			Opt:     "and",
-	// 			MinTime: now - 1000000,
-	// 			MaxTime: end,
-	// 		})
 	now := time.Now().Unix()
 	if sql.MaxTime == 0 {
 		sql.MaxTime = now + 24*60*60
@@ -144,9 +121,6 @@ func highlight(pos []int, b string) string {
 		return b
 	}
 	return b
-	// for _, v := range pos {
-	// 	//strings.ReplaceAll(s, old, new)
-	// }
 }
 
 func parseTime(s string) (time.Time, error) {

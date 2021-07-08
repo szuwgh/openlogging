@@ -7,10 +7,10 @@ type Server struct {
 	eg *tem.Engine
 }
 
-func (s *Server) Index() {
+func (s *Server) Index(b []byte) {
 
 }
 
-func (s *Server) Search() {
+func (s *Server) Search(input string) {
 
 }

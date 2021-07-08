@@ -15,10 +15,11 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/series"
+	"github.com/sophon-lab/temsearch/pkg/temql"
 )
 
 type IndexReader interface {
-	Search(lset labels.Labels, term []string) (posting.Postings, []series.Series)
+	Search(lset labels.Labels, expr *temql.TermBinaryExpr) (posting.Postings, []series.Series)
 	ChunkReader() chunks.ChunkReader
 	Iterator() disk.IteratorLabel
 	Release() error
@@ -76,11 +77,9 @@ type Block struct {
 	logr       *disk.LogReader
 	lastSegNum uint64
 	rwControl
-	//chunkr
 }
 
 func (b *Block) Index() IndexReader {
-	//b.pendingReaders.Add(1)
 	return b.indexr
 }
 

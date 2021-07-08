@@ -18,6 +18,11 @@ func newParser(input string) *parser {
 	}
 }
 
+func ParseExpr(input string) interface{} {
+	p := newParser(input)
+	return p.parseGenerated()
+}
+
 func (p *parser) newLabelMatcher(label Item, operator Item, value Item) *labels.Matcher {
 	op := operator.Typ
 
