@@ -58,7 +58,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parse_ql.y:145
+//line parse_ql.y:149
 
 //line yacctab:1
 var yyExca = [...]int{
@@ -69,50 +69,50 @@ var yyExca = [...]int{
 
 const yyPrivate = 57344
 
-const yyLast = 39
+const yyLast = 40
 
 var yyAct = [...]int{
-	9, 13, 22, 32, 28, 29, 17, 20, 11, 24,
-	35, 15, 19, 31, 21, 10, 7, 25, 26, 27,
-	14, 16, 5, 30, 17, 18, 1, 8, 36, 33,
-	34, 17, 6, 12, 7, 3, 4, 2, 23,
+	10, 14, 23, 12, 25, 33, 18, 21, 16, 6,
+	11, 8, 26, 20, 22, 32, 7, 15, 17, 27,
+	28, 18, 19, 36, 31, 29, 30, 8, 5, 37,
+	34, 35, 18, 9, 1, 13, 3, 4, 2, 24,
 }
 
 var yyPact = [...]int{
-	28, -1000, -1000, -1000, 10, -1000, 4, 9, -1000, 16,
-	-1000, 4, 0, -1000, 7, -1000, -1000, 4, 4, -4,
-	-1000, 9, -1000, 1, -1000, -1000, -1000, -2, 4, 4,
-	-1000, -1000, -1000, 5, 23, -1000, -1000,
+	5, -1000, -1000, -1000, 21, -1000, -1, -1000, 6, -1000,
+	13, -1000, -1, 0, -1000, 2, -1000, -1000, -1, -1,
+	17, -1000, 6, -1000, 3, -1000, -1000, -1000, -2, -1,
+	-1, -1000, -1000, -1000, 18, 24, -1000, -1000,
 }
 
 var yyPgo = [...]int{
-	0, 38, 37, 0, 36, 22, 35, 33, 1, 26,
+	0, 39, 38, 0, 37, 28, 36, 35, 1, 34,
 }
 
 var yyR1 = [...]int{
-	0, 9, 2, 1, 4, 3, 3, 3, 3, 3,
-	5, 7, 7, 7, 8, 8, 8, 8, 6, 6,
-	6, 6,
+	0, 9, 2, 1, 4, 4, 3, 3, 3, 3,
+	3, 5, 7, 7, 7, 8, 8, 8, 8, 6,
+	6, 6, 6,
 }
 
 var yyR2 = [...]int{
-	0, 1, 1, 1, 3, 1, 5, 5, 3, 3,
-	3, 3, 1, 2, 3, 3, 2, 1, 2, 1,
-	1, 0,
+	0, 1, 1, 1, 3, 1, 1, 5, 5, 3,
+	3, 3, 3, 1, 2, 3, 3, 2, 1, 2,
+	1, 1, 0,
 }
 
 var yyChk = [...]int{
-	-1000, -9, -2, -6, -4, -5, 4, 6, -5, -3,
-	11, 4, -7, -8, 11, 2, 5, 8, 9, -3,
-	7, 14, 2, -1, 2, 10, -3, -3, 8, 9,
-	-8, 12, 2, -3, -3, 5, 5,
+	-1000, -9, -2, -6, -4, -5, 4, 11, 6, -5,
+	-3, 11, 4, -7, -8, 11, 2, 5, 8, 9,
+	-3, 7, 14, 2, -1, 2, 10, -3, -3, 8,
+	9, -8, 12, 2, -3, -3, 5, 5,
 }
 
 var yyDef = [...]int{
-	21, -2, 1, 2, 19, 20, 0, 0, 18, 0,
-	5, 0, 0, 12, 0, 17, 4, 0, 0, 0,
-	10, 0, 13, 0, 16, 3, 8, 9, 0, 0,
-	11, 14, 15, 8, 9, 6, 7,
+	22, -2, 1, 2, 20, 21, 0, 5, 0, 19,
+	0, 6, 0, 0, 13, 0, 18, 4, 0, 0,
+	0, 11, 0, 14, 0, 17, 3, 9, 10, 0,
+	0, 12, 15, 16, 9, 10, 7, 8,
 }
 
 var yyTok1 = [...]int{
@@ -479,15 +479,15 @@ yydefault:
 		}
 	case 5:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:66
+//line parse_ql.y:64
 		{
 			yyVAL.node = yylex.(*parser).newTermExpr(yyDollar[1].item)
 		}
 	case 6:
-		yyDollar = yyS[yypt-5 : yypt+1]
+		yyDollar = yyS[yypt-1 : yypt+1]
 //line parse_ql.y:70
 		{
-			yyVAL.node = yylex.(*parser).newBinaryExpr(yyDollar[2].node, yyDollar[3].item, yyDollar[4].node)
+			yyVAL.node = yylex.(*parser).newTermExpr(yyDollar[1].item)
 		}
 	case 7:
 		yyDollar = yyS[yypt-5 : yypt+1]
@@ -496,10 +496,10 @@ yydefault:
 			yyVAL.node = yylex.(*parser).newBinaryExpr(yyDollar[2].node, yyDollar[3].item, yyDollar[4].node)
 		}
 	case 8:
-		yyDollar = yyS[yypt-3 : yypt+1]
+		yyDollar = yyS[yypt-5 : yypt+1]
 //line parse_ql.y:78
 		{
-			yyVAL.node = yylex.(*parser).newBinaryExpr(yyDollar[1].node, yyDollar[2].item, yyDollar[3].node)
+			yyVAL.node = yylex.(*parser).newBinaryExpr(yyDollar[2].node, yyDollar[3].item, yyDollar[4].node)
 		}
 	case 9:
 		yyDollar = yyS[yypt-3 : yypt+1]
@@ -509,15 +509,21 @@ yydefault:
 		}
 	case 10:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:89
+//line parse_ql.y:86
+		{
+			yyVAL.node = yylex.(*parser).newBinaryExpr(yyDollar[1].node, yyDollar[2].item, yyDollar[3].node)
+		}
+	case 11:
+		yyDollar = yyS[yypt-3 : yypt+1]
+//line parse_ql.y:93
 		{
 			yyVAL.node = &VectorSelector{
 				LabelMatchers: yyDollar[2].matchers,
 			}
 		}
-	case 11:
+	case 12:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:97
+//line parse_ql.y:101
 		{
 			if yyDollar[1].matchers != nil {
 				yyVAL.matchers = append(yyDollar[1].matchers, yyDollar[3].matcher)
@@ -525,57 +531,57 @@ yydefault:
 				yyVAL.matchers = yyDollar[1].matchers
 			}
 		}
-	case 12:
+	case 13:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:105
+//line parse_ql.y:109
 		{
 			yyVAL.matchers = []*labels.Matcher{yyDollar[1].matcher}
 		}
-	case 13:
+	case 14:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parse_ql.y:107
+//line parse_ql.y:111
 		{
 			yylex.(*parser).unexpected("label matching", "\",\" or \"}\"")
 			yyVAL.matchers = yyDollar[1].matchers
 		}
-	case 14:
+	case 15:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:111
+//line parse_ql.y:115
 		{
 			yyVAL.matcher = yylex.(*parser).newLabelMatcher(yyDollar[1].item, yyDollar[2].item, yyDollar[3].item)
 		}
-	case 15:
+	case 16:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parse_ql.y:113
+//line parse_ql.y:117
 		{
 			yylex.(*parser).unexpected("label matching", "string")
 			yyVAL.matcher = nil
 		}
-	case 16:
+	case 17:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parse_ql.y:115
+//line parse_ql.y:119
 		{
 			yylex.(*parser).unexpected("label matching", "label matching operator")
 			yyVAL.matcher = nil
 		}
-	case 17:
+	case 18:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:117
+//line parse_ql.y:121
 		{
 			yylex.(*parser).unexpected("label matching", "identifier or \"}\"")
 			yyVAL.matcher = nil
 		}
-	case 18:
+	case 19:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parse_ql.y:121
+//line parse_ql.y:125
 		{
 			vs := yyDollar[2].node.(*VectorSelector)
 			vs.Expr = yyDollar[1].node
 			yyVAL.node = vs
 		}
-	case 19:
+	case 20:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:127
+//line parse_ql.y:131
 		{
 			fmt.Println("parse term_identifier")
 			vs := &VectorSelector{
@@ -584,15 +590,15 @@ yydefault:
 			}
 			yyVAL.node = vs
 		}
-	case 20:
+	case 21:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parse_ql.y:136
+//line parse_ql.y:140
 		{
 			yyVAL.node = yyDollar[1].node.(*VectorSelector)
 		}
-	case 21:
+	case 22:
 		yyDollar = yyS[yypt-0 : yypt+1]
-//line parse_ql.y:140
+//line parse_ql.y:144
 		{
 			fmt.Println("parse nil")
 		}

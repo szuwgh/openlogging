@@ -1,11 +1,12 @@
 
 state 0
 	$accept: .start $end 
-	vector_selector: .    (21)
+	vector_selector: .    (22)
 
 	LEFT_PAREN  shift 6
-	LEFT_BRACE  shift 7
-	.  reduce 21 (src line 139)
+	LEFT_BRACE  shift 8
+	IDENTIFIER  shift 7
+	.  reduce 22 (src line 143)
 
 	expr  goto 2
 	term_identifier  goto 4
@@ -34,279 +35,285 @@ state 3
 
 state 4
 	vector_selector:  term_identifier.label_matchers 
-	vector_selector:  term_identifier.    (19)
+	vector_selector:  term_identifier.    (20)
 
-	LEFT_BRACE  shift 7
-	.  reduce 19 (src line 126)
+	LEFT_BRACE  shift 8
+	.  reduce 20 (src line 130)
 
-	label_matchers  goto 8
+	label_matchers  goto 9
 
 state 5
-	vector_selector:  label_matchers.    (20)
+	vector_selector:  label_matchers.    (21)
 
-	.  reduce 20 (src line 135)
+	.  reduce 21 (src line 139)
 
 
 state 6
 	term_identifier:  LEFT_PAREN.term_expr RIGHT_PAREN 
 
-	LEFT_PAREN  shift 11
-	IDENTIFIER  shift 10
+	LEFT_PAREN  shift 12
+	IDENTIFIER  shift 11
 	.  error
 
-	term_expr  goto 9
+	term_expr  goto 10
 
 state 7
-	label_matchers:  LEFT_BRACE.label_match_list RIGHT_BRACE 
+	term_identifier:  IDENTIFIER.    (5)
 
-	error  shift 15
-	IDENTIFIER  shift 14
-	.  error
+	.  reduce 5 (src line 63)
 
-	label_match_list  goto 12
-	label_matcher  goto 13
 
 state 8
-	vector_selector:  term_identifier label_matchers.    (18)
+	label_matchers:  LEFT_BRACE.label_match_list RIGHT_BRACE 
 
-	.  reduce 18 (src line 120)
+	error  shift 16
+	IDENTIFIER  shift 15
+	.  error
 
+	label_match_list  goto 13
+	label_matcher  goto 14
 
 state 9
+	vector_selector:  term_identifier label_matchers.    (19)
+
+	.  reduce 19 (src line 124)
+
+
+state 10
 	term_identifier:  LEFT_PAREN term_expr.RIGHT_PAREN 
 	term_expr:  term_expr.LAND term_expr 
 	term_expr:  term_expr.LOR term_expr 
 
-	RIGHT_PAREN  shift 16
-	LAND  shift 17
-	LOR  shift 18
+	RIGHT_PAREN  shift 17
+	LAND  shift 18
+	LOR  shift 19
 	.  error
-
-
-state 10
-	term_expr:  IDENTIFIER.    (5)
-
-	.  reduce 5 (src line 65)
 
 
 state 11
+	term_expr:  IDENTIFIER.    (6)
+
+	.  reduce 6 (src line 69)
+
+
+state 12
 	term_expr:  LEFT_PAREN.term_expr LAND term_expr RIGHT_PAREN 
 	term_expr:  LEFT_PAREN.term_expr LOR term_expr RIGHT_PAREN 
 
-	LEFT_PAREN  shift 11
-	IDENTIFIER  shift 10
+	LEFT_PAREN  shift 12
+	IDENTIFIER  shift 11
 	.  error
 
-	term_expr  goto 19
+	term_expr  goto 20
 
-state 12
+state 13
 	label_matchers:  LEFT_BRACE label_match_list.RIGHT_BRACE 
 	label_match_list:  label_match_list.COMMA label_matcher 
 	label_match_list:  label_match_list.error 
 
-	error  shift 22
-	RIGHT_BRACE  shift 20
-	COMMA  shift 21
+	error  shift 23
+	RIGHT_BRACE  shift 21
+	COMMA  shift 22
 	.  error
 
 
-state 13
-	label_match_list:  label_matcher.    (12)
-
-	.  reduce 12 (src line 104)
-
-
 state 14
+	label_match_list:  label_matcher.    (13)
+
+	.  reduce 13 (src line 108)
+
+
+state 15
 	label_matcher:  IDENTIFIER.match_op STRING 
 	label_matcher:  IDENTIFIER.match_op error 
 	label_matcher:  IDENTIFIER.error 
 
-	error  shift 24
-	EQL  shift 25
+	error  shift 25
+	EQL  shift 26
 	.  error
 
-	match_op  goto 23
-
-state 15
-	label_matcher:  error.    (17)
-
-	.  reduce 17 (src line 116)
-
+	match_op  goto 24
 
 state 16
+	label_matcher:  error.    (18)
+
+	.  reduce 18 (src line 120)
+
+
+state 17
 	term_identifier:  LEFT_PAREN term_expr RIGHT_PAREN.    (4)
 
 	.  reduce 4 (src line 59)
 
 
-state 17
+state 18
 	term_expr:  term_expr LAND.term_expr 
 
-	LEFT_PAREN  shift 11
-	IDENTIFIER  shift 10
-	.  error
-
-	term_expr  goto 26
-
-state 18
-	term_expr:  term_expr LOR.term_expr 
-
-	LEFT_PAREN  shift 11
-	IDENTIFIER  shift 10
+	LEFT_PAREN  shift 12
+	IDENTIFIER  shift 11
 	.  error
 
 	term_expr  goto 27
 
 state 19
+	term_expr:  term_expr LOR.term_expr 
+
+	LEFT_PAREN  shift 12
+	IDENTIFIER  shift 11
+	.  error
+
+	term_expr  goto 28
+
+state 20
 	term_expr:  LEFT_PAREN term_expr.LAND term_expr RIGHT_PAREN 
 	term_expr:  LEFT_PAREN term_expr.LOR term_expr RIGHT_PAREN 
 	term_expr:  term_expr.LAND term_expr 
 	term_expr:  term_expr.LOR term_expr 
 
-	LAND  shift 28
-	LOR  shift 29
+	LAND  shift 29
+	LOR  shift 30
 	.  error
-
-
-state 20
-	label_matchers:  LEFT_BRACE label_match_list RIGHT_BRACE.    (10)
-
-	.  reduce 10 (src line 88)
 
 
 state 21
-	label_match_list:  label_match_list COMMA.label_matcher 
+	label_matchers:  LEFT_BRACE label_match_list RIGHT_BRACE.    (11)
 
-	error  shift 15
-	IDENTIFIER  shift 14
-	.  error
+	.  reduce 11 (src line 92)
 
-	label_matcher  goto 30
 
 state 22
-	label_match_list:  label_match_list error.    (13)
+	label_match_list:  label_match_list COMMA.label_matcher 
 
-	.  reduce 13 (src line 106)
+	error  shift 16
+	IDENTIFIER  shift 15
+	.  error
 
+	label_matcher  goto 31
 
 state 23
-	label_matcher:  IDENTIFIER match_op.STRING 
-	label_matcher:  IDENTIFIER match_op.error 
+	label_match_list:  label_match_list error.    (14)
 
-	error  shift 32
-	STRING  shift 31
-	.  error
+	.  reduce 14 (src line 110)
 
 
 state 24
-	label_matcher:  IDENTIFIER error.    (16)
+	label_matcher:  IDENTIFIER match_op.STRING 
+	label_matcher:  IDENTIFIER match_op.error 
 
-	.  reduce 16 (src line 114)
+	error  shift 33
+	STRING  shift 32
+	.  error
 
 
 state 25
+	label_matcher:  IDENTIFIER error.    (17)
+
+	.  reduce 17 (src line 118)
+
+
+state 26
 	match_op:  EQL.    (3)
 
 	.  reduce 3 (src line 56)
 
 
-state 26
-	term_expr:  term_expr.LAND term_expr 
-	term_expr:  term_expr LAND term_expr.    (8)
-	term_expr:  term_expr.LOR term_expr 
-
-	.  reduce 8 (src line 77)
-
-
 state 27
 	term_expr:  term_expr.LAND term_expr 
+	term_expr:  term_expr LAND term_expr.    (9)
 	term_expr:  term_expr.LOR term_expr 
-	term_expr:  term_expr LOR term_expr.    (9)
 
-	LAND  shift 17
 	.  reduce 9 (src line 81)
 
 
 state 28
+	term_expr:  term_expr.LAND term_expr 
+	term_expr:  term_expr.LOR term_expr 
+	term_expr:  term_expr LOR term_expr.    (10)
+
+	LAND  shift 18
+	.  reduce 10 (src line 85)
+
+
+state 29
 	term_expr:  LEFT_PAREN term_expr LAND.term_expr RIGHT_PAREN 
 	term_expr:  term_expr LAND.term_expr 
 
-	LEFT_PAREN  shift 11
-	IDENTIFIER  shift 10
-	.  error
-
-	term_expr  goto 33
-
-state 29
-	term_expr:  LEFT_PAREN term_expr LOR.term_expr RIGHT_PAREN 
-	term_expr:  term_expr LOR.term_expr 
-
-	LEFT_PAREN  shift 11
-	IDENTIFIER  shift 10
+	LEFT_PAREN  shift 12
+	IDENTIFIER  shift 11
 	.  error
 
 	term_expr  goto 34
 
 state 30
-	label_match_list:  label_match_list COMMA label_matcher.    (11)
+	term_expr:  LEFT_PAREN term_expr LOR.term_expr RIGHT_PAREN 
+	term_expr:  term_expr LOR.term_expr 
 
-	.  reduce 11 (src line 96)
+	LEFT_PAREN  shift 12
+	IDENTIFIER  shift 11
+	.  error
 
+	term_expr  goto 35
 
 state 31
-	label_matcher:  IDENTIFIER match_op STRING.    (14)
+	label_match_list:  label_match_list COMMA label_matcher.    (12)
 
-	.  reduce 14 (src line 110)
+	.  reduce 12 (src line 100)
 
 
 state 32
-	label_matcher:  IDENTIFIER match_op error.    (15)
+	label_matcher:  IDENTIFIER match_op STRING.    (15)
 
-	.  reduce 15 (src line 112)
+	.  reduce 15 (src line 114)
 
 
 state 33
-	term_expr:  LEFT_PAREN term_expr LAND term_expr.RIGHT_PAREN 
-	term_expr:  term_expr.LAND term_expr 
-	term_expr:  term_expr LAND term_expr.    (8)
-	term_expr:  term_expr.LOR term_expr 
+	label_matcher:  IDENTIFIER match_op error.    (16)
 
-	RIGHT_PAREN  shift 35
-	.  reduce 8 (src line 77)
+	.  reduce 16 (src line 116)
 
 
 state 34
-	term_expr:  LEFT_PAREN term_expr LOR term_expr.RIGHT_PAREN 
+	term_expr:  LEFT_PAREN term_expr LAND term_expr.RIGHT_PAREN 
 	term_expr:  term_expr.LAND term_expr 
+	term_expr:  term_expr LAND term_expr.    (9)
 	term_expr:  term_expr.LOR term_expr 
-	term_expr:  term_expr LOR term_expr.    (9)
 
 	RIGHT_PAREN  shift 36
-	LAND  shift 17
 	.  reduce 9 (src line 81)
 
 
 state 35
-	term_expr:  LEFT_PAREN term_expr LAND term_expr RIGHT_PAREN.    (6)
+	term_expr:  LEFT_PAREN term_expr LOR term_expr.RIGHT_PAREN 
+	term_expr:  term_expr.LAND term_expr 
+	term_expr:  term_expr.LOR term_expr 
+	term_expr:  term_expr LOR term_expr.    (10)
 
-	.  reduce 6 (src line 69)
+	RIGHT_PAREN  shift 37
+	LAND  shift 18
+	.  reduce 10 (src line 85)
 
 
 state 36
-	term_expr:  LEFT_PAREN term_expr LOR term_expr RIGHT_PAREN.    (7)
+	term_expr:  LEFT_PAREN term_expr LAND term_expr RIGHT_PAREN.    (7)
 
 	.  reduce 7 (src line 73)
 
 
+state 37
+	term_expr:  LEFT_PAREN term_expr LOR term_expr RIGHT_PAREN.    (8)
+
+	.  reduce 8 (src line 77)
+
+
 16 terminals, 10 nonterminals
-22 grammar rules, 37/16000 states
+23 grammar rules, 38/16000 states
 0 shift/reduce, 0 reduce/reduce conflicts reported
 59 working sets used
 memory: parser 15/240000
 0 extra closures
-35 shift entries, 1 exceptions
+36 shift entries, 1 exceptions
 16 goto entries
 0 entries saved by goto default
-Optimizer space used: output 39/240000
-39 table entries, 0 zero
-maximum spread: 14, maximum offset: 29
+Optimizer space used: output 40/240000
+40 table entries, 0 zero
+maximum spread: 14, maximum offset: 30

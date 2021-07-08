@@ -33,7 +33,7 @@ func Test_PostingIntersect(t *testing.T) {
 
 func Test_QueryTerm(t *testing.T) {
 
-	expr := temql.ParseExpr(`( a AND b AND D )`)
+	expr := temql.ParseExpr(`a`)
 	e := expr.(*temql.VectorSelector)
 	//v.Print()
 	im := make(IndexMap)

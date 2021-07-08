@@ -14,6 +14,7 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/cache.go"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/series"
+	"github.com/sophon-lab/temsearch/pkg/temql"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
@@ -603,7 +604,7 @@ func (t termSeriesReader) GetByID(id uint64) (labels.Labels, []chunks.Chunk, err
 	return t.reader.GetByID(ref)
 }
 
-func (r *IndexReader) Search(lset labels.Labels, terms []string) (posting.Postings, []series.Series) {
+func (r *IndexReader) Search(lset labels.Labels, expr *temql.TermBinaryExpr) (posting.Postings, []series.Series) {
 	var its []posting.Postings
 	for _, v := range lset {
 		value := r.find(v.Name, byteutil.Str2bytes(v.Value))
@@ -614,26 +615,55 @@ func (r *IndexReader) Search(lset labels.Labels, terms []string) (posting.Postin
 		list, _ := r.postingr.readPosting(ref)
 		its = append(its, posting.NewListPostings(list))
 	}
-	if len(terms) == 0 {
+	if expr != nil {
 		p := posting.Intersect(its...)
 		return p, []series.Series{r.seriesr}
 	}
-	series := make([]series.Series, len(terms))
-	for i, term := range terms {
-		value := r.find(global.MESSAGE, byteutil.Str2bytes(term))
+	var series []series.Series
+	// for i, term := range terms {
+	// 	value := r.find(global.MESSAGE, byteutil.Str2bytes(term))
+	// 	if value == nil {
+	// 		return posting.EmptyPostings, nil
+	// 	}
+	// 	ref, _ := binary.Uvarint(value)
+	// 	seriesRef, termMap := r.postingr.readPosting(ref)
+	// 	its = append(its, posting.NewListPostings(seriesRef))
+	// 	series[i] = termSeriesReader{
+	// 		refMap: termMap,
+	// 		reader: r.seriesr,
+	// 	}
+	// }
+	// p := posting.Intersect(its...)
+	return queryTerm(expr, r, &series), series
+}
+
+func queryTerm(e temql.Expr, r *IndexReader, series *[]series.Series) posting.Postings {
+	switch e.(type) {
+	case *temql.TermBinaryExpr:
+		expr := e.(*temql.TermBinaryExpr)
+		p1 := queryTerm(expr.LHS, r, series)
+		p2 := queryTerm(expr.RHS, r, series)
+		switch expr.Op {
+		case temql.LAND:
+			return posting.Intersect(p1, p2)
+		case temql.LOR:
+			return posting.Merge(p1, p2)
+		}
+	case *temql.TermExpr:
+		e := e.(*temql.TermExpr)
+		value := r.find(global.MESSAGE, byteutil.Str2bytes(e.Name))
 		if value == nil {
-			return posting.EmptyPostings, nil
+			return posting.EmptyPostings
 		}
 		ref, _ := binary.Uvarint(value)
 		seriesRef, termMap := r.postingr.readPosting(ref)
-		its = append(its, posting.NewListPostings(seriesRef))
-		series[i] = termSeriesReader{
+		*series = append(*series, termSeriesReader{
 			refMap: termMap,
 			reader: r.seriesr,
-		}
+		})
+		return posting.NewListPostings(seriesRef)
 	}
-	p := posting.Intersect(its...)
-	return p, series
+	return nil
 }
 
 func (r *IndexReader) getDataIter(bh blockHandle) *blockIterator {

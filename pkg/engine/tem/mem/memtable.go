@@ -292,11 +292,13 @@ func (mt *MemTable) Search(lset labels.Labels, expr *temql.TermBinaryExpr) (post
 		p := posting.Intersect(its...)
 		return p, []series.Series{mt.series}
 	}
-	// postingList, ok := mt.indexs.Get(global.MESSAGE)
-	// if !ok {
-	// 	return posting.EmptyPostings, nil
-	// }
+	postingList, ok := mt.indexs.Get(global.MESSAGE)
+	if !ok {
+		return posting.EmptyPostings, nil
+	}
 	//series := make([]series.Series, 0, len(terms))
+	var series []series.Series
+
 	// for _, term := range terms {
 	// 	pointer, _ := postingList.Find(byteutil.Str2bytes(term))
 	// 	if pointer == nil {
@@ -307,16 +309,16 @@ func (mt *MemTable) Search(lset labels.Labels, expr *temql.TermBinaryExpr) (post
 	// 	its = append(its, pList)
 	// 	series = append(series, termList)
 	// }
-	p := posting.Intersect(its...)
-	return p, nil
+	//p := posting.Intersect(its...)
+	return queryTerm(expr, postingList, &series), series
 }
 
-func queryTerm(e temql.Expr, postingList index.Index) posting.Postings {
+func queryTerm(e temql.Expr, postingList index.Index, series *[]series.Series) posting.Postings {
 	switch e.(type) {
 	case *temql.TermBinaryExpr:
 		expr := e.(*temql.TermBinaryExpr)
-		p1 := queryTerm(expr.LHS, postingList)
-		p2 := queryTerm(expr.RHS, postingList)
+		p1 := queryTerm(expr.LHS, postingList, series)
+		p2 := queryTerm(expr.RHS, postingList, series)
 		switch expr.Op {
 		case temql.LAND:
 			return posting.Intersect(p1, p2)
@@ -330,6 +332,7 @@ func queryTerm(e temql.Expr, postingList index.Index) posting.Postings {
 			return posting.EmptyPostings
 		}
 		termList := pointer.(*TermPosting)
+		*series = append(*series, termList)
 		return posting.NewListPostings(termList.seriesID())
 	}
 	return nil

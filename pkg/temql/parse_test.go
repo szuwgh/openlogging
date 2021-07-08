@@ -6,7 +6,7 @@ import (
 )
 
 func Test_Parse(t *testing.T) {
-	expr := ParseExpr(`( aa AND BB OR cc )`)
+	expr := ParseExpr(`aa`)
 	v := expr.(*VectorSelector)
 	fmt.Println(v.Name)
 	switch v.Expr.(type) {
