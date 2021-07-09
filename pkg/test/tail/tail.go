@@ -10,21 +10,21 @@ import (
 
 var testMsg = `[
     {
-        "message": "企业上云就上金蝶云", 
+        "message": "a b c", 
         "tags": {
             "job":"kingdee",
             "instance":"172.18.5.20"
         }
     },
     { 
-        "message": "云基础paas平台",
+        "message": "d f e",
         "tags":  {
             "job":"paas",
             "instance":"172.18.5.22"
         }
     },
     { 
-        "message": "IDC数据，市场占有率第一",
+        "message": "b c",
         "tags":  {
             "job":"IDC",
             "instance":"172.18.5.23"

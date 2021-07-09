@@ -20,7 +20,7 @@ type Node interface {
 type VectorSelector struct {
 	Name string
 
-	Expr Node
+	Expr Expr
 
 	LabelMatchers []*labels.Matcher
 }

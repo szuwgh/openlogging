@@ -31,9 +31,9 @@ const (
 
 	metaFilename = "meta.json"
 
-	maxBlockDuration = 30 //1 * 60 * 60 //1 * 60 * 60 //2h
+	maxBlockDuration = 300 //1 * 60 * 60 //1 * 60 * 60 //2h
 
-	flushWritecoldDuration = 60
+	flushWritecoldDuration = 600
 )
 
 // Options of the DB storage.

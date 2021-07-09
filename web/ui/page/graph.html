@@ -11,9 +11,9 @@
             //console.log(text);
             xmlHttp = new XMLHttpRequest();
             var host = window.location.protocol + "//" + window.location.host;
-            xmlHttp.open("post", host + "/search");
+            xmlHttp.open("get", host + "/search?temql=" + text);
             xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            xmlHttp.send(text);
+            xmlHttp.send(null);
 
             xmlHttp.onload = function () {
                 if (this.status == 200) {

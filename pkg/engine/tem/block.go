@@ -12,14 +12,14 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/disk"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/fileutil"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/series"
 	"github.com/sophon-lab/temsearch/pkg/temql"
+	"github.com/sophon-lab/temsearch/pkg/temql/labels"
 )
 
 type IndexReader interface {
-	Search(lset labels.Labels, expr *temql.TermBinaryExpr) (posting.Postings, []series.Series)
+	Search(lset []*labels.Matcher, expr temql.Expr) (posting.Postings, []series.Series)
 	ChunkReader() chunks.ChunkReader
 	Iterator() disk.IteratorLabel
 	Release() error

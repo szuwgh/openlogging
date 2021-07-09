@@ -22,6 +22,7 @@ import (
 	mybin "github.com/sophon-lab/temsearch/pkg/engine/tem/binary"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
+	temqlLabels "github.com/sophon-lab/temsearch/pkg/temql/labels"
 )
 
 type baseReader struct {
@@ -604,7 +605,7 @@ func (t termSeriesReader) GetByID(id uint64) (labels.Labels, []chunks.Chunk, err
 	return t.reader.GetByID(ref)
 }
 
-func (r *IndexReader) Search(lset labels.Labels, expr *temql.TermBinaryExpr) (posting.Postings, []series.Series) {
+func (r *IndexReader) Search(lset []*temqlLabels.Matcher, expr temql.Expr) (posting.Postings, []series.Series) {
 	var its []posting.Postings
 	for _, v := range lset {
 		value := r.find(v.Name, byteutil.Str2bytes(v.Value))

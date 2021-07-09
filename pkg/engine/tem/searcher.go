@@ -2,6 +2,7 @@ package tem
 
 import (
 	"container/heap"
+	"log"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
@@ -9,34 +10,33 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/temql"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/search"
 )
 
 type Searcher interface {
-	Search(sql *search.QueryESL) SeriesSet
+	Search(expr temql.Expr, mint, maxt int64) SeriesSet
 }
 
 type searcher struct {
 	bs []Searcher
 }
 
-func (s *searcher) Search(sql *search.QueryESL) SeriesSet {
-	return s.search(s.bs, sql)
+func (s *searcher) Search(expr temql.Expr, mint, maxt int64) SeriesSet {
+	return s.search(s.bs, expr, mint, maxt)
 }
 
-func (s *searcher) search(bs []Searcher, sql *search.QueryESL) SeriesSet {
+func (s *searcher) search(bs []Searcher, expr temql.Expr, mint, maxt int64) SeriesSet {
 	if len(bs) == 0 {
 		return nopSeriesSet{}
 	}
 	if len(bs) == 1 {
-		return bs[0].Search(sql)
+		return bs[0].Search(expr, mint, maxt)
 	}
 	l := len(bs) / 2
-	a := s.search(bs[:l], sql)
+	a := s.search(bs[:l], expr, mint, maxt)
 	// if err != nil {
 	// 	return nil
 	// }
-	b := s.search(bs[l:], sql)
+	b := s.search(bs[l:], expr, mint, maxt)
 	// if err != nil {
 	// 	return nil
 	// }
@@ -516,27 +516,28 @@ type bloctemsearcher struct {
 	lastSegNum    uint64
 }
 
-func (s *bloctemsearcher) Search(expr temql.Expr) SeriesSet {
+func (s *bloctemsearcher) Search(expr temql.Expr, mint, maxt int64) SeriesSet {
 	e, ok := expr.(*temql.VectorSelector)
 	if !ok {
 		return nil
 	}
-	posting, series := s.indexr.Search(labels.FromMap(sql.Tags), sql.Term)
-	isTerm := len(sql.Term) > 0
+	posting, series := s.indexr.Search(e.LabelMatchers, e.Expr)
+	log.Println("posting,series", posting, series)
+	isTerm := e.Expr != nil
 	return &blockSeriesSet{
 		set: &populatedChunkSeries{
 			set: &baseChunkSeries{
 				p:      posting,
 				series: series,
 			},
-			mint: sql.MinTime,
-			maxt: sql.MaxTime,
+			mint: mint,
+			maxt: maxt,
 		},
 		isTerm:     isTerm,
 		chunkr:     s.indexr.ChunkReader(),
 		logr:       s.logr,
-		mint:       sql.MinTime,
-		maxt:       sql.MaxTime,
+		mint:       mint,
+		maxt:       maxt,
 		lastSegNum: s.lastSegNum,
 	}
 

@@ -1,7 +1,6 @@
 package web
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,39 +10,19 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
-
-	"github.com/sophon-lab/temsearch/pkg/analysis"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/search"
+	"github.com/sophon-lab/temsearch/pkg/server"
 )
 
 var ok = []byte("ok")
 
 type Handler struct {
-	eg *tem.Engine
+	s *server.Server
 }
 
 func New() *Handler {
-	var err error
 	h := &Handler{}
-	h.eg, err = tem.NewEngine(analysis.NewAnalyzer("gojieba"))
-	if err != nil {
-		return nil
-	}
+	h.s = server.New()
 	return h
-}
-
-type Log struct {
-	T int64  `json:"timestamp"`
-	V uint64 `json:"id"`
-	B string `json:"log"`
-}
-
-type Series struct {
-	Metric labels.Labels `json:"metric"`
-	Logs   []Log         `json:"logs"`
 }
 
 func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +37,7 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
 	// 	w.Write(toErrResult(500, err.Error()))
 	// 	return
 	// }
-	err = h.eg.Index(b)
+	err = h.s.Index(b)
 	if err != nil {
 		w.Write(toErrResult(500, err.Error()))
 		return
@@ -68,59 +47,61 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
-
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		w.Write(toErrResult(500, err.Error()))
-		return
-	}
-	var sql *search.QueryESL
-	err = json.Unmarshal(b, &sql)
-	if err != nil {
-		w.Write(toErrResult(500, err.Error()))
-		return
-	}
-	now := time.Now().Unix()
-	if sql.MaxTime == 0 {
-		sql.MaxTime = now + 24*60*60
-	}
-	if sql.MinTime == 0 {
-		sql.MinTime = now - 24*60*60
-	}
-	searcher, err := h.eg.Searcher(sql.MinTime, sql.MaxTime)
-	if err != nil {
-		w.Write(toErrResult(500, err.Error()))
-		return
-	}
-	var series []Series
-	seriesSet := searcher.Search(sql)
-	for seriesSet.Next() {
-		s := seriesSet.At()
-		metric := Series{Metric: s.Labels()}
-		log.Println(s.Labels())
-		iter := s.Iterator()
-		for iter.Next() {
-			t, v, pos, b := iter.At()
-			metric.Logs = append(metric.Logs, Log{t, v, highlight(pos, byteutil.Byte2Str(b))})
-			//log.Println(t, v, pos, string(b))
-		}
-		series = append(series, metric)
-	}
-	res, err := json.Marshal(series)
+	r.ParseForm()
+	b, err := h.s.Search(r.Form.Get("temql"), 0, 0)
 	if err != nil {
 		w.Write(toErrResult(500, err.Error()))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(res)
+	w.Write(b)
+	// b, err := ioutil.ReadAll(r.Body)
+	// if err != nil {
+	// 	w.Write(toErrResult(500, err.Error()))
+	// 	return
+	// }
+	// var sql *search.QueryESL
+	// err = json.Unmarshal(b, &sql)
+	// if err != nil {
+	// 	w.Write(toErrResult(500, err.Error()))
+	// 	return
+	// }
+	// now := time.Now().Unix()
+	// if sql.MaxTime == 0 {
+	// 	sql.MaxTime = now + 24*60*60
+	// }
+	// if sql.MinTime == 0 {
+	// 	sql.MinTime = now - 24*60*60
+	// }
+	// searcher, err := h.eg.Searcher(sql.MinTime, sql.MaxTime)
+	// if err != nil {
+	// 	w.Write(toErrResult(500, err.Error()))
+	// 	return
+	// }
+	// var series []Series
+	// seriesSet := searcher.Search(sql)
+	// for seriesSet.Next() {
+	// 	s := seriesSet.At()
+	// 	metric := Series{Metric: s.Labels()}
+	// 	log.Println(s.Labels())
+	// 	iter := s.Iterator()
+	// 	for iter.Next() {
+	// 		t, v, pos, b := iter.At()
+	// 		metric.Logs = append(metric.Logs, Log{t, v, highlight(pos, byteutil.Byte2Str(b))})
+	// 		//log.Println(t, v, pos, string(b))
+	// 	}
+	// 	series = append(series, metric)
+	// }
+	// res, err := json.Marshal(series)
+	// if err != nil {
+	// 	w.Write(toErrResult(500, err.Error()))
+	// 	return
+	// }
+	// w.Header().Set("Content-Type", "application/json")
+	// w.Write(res)
 	//fmt.Fprintf(w, "Hello Search!") //这个写入到w的是输出到客户端的
-}
-
-func highlight(pos []int, b string) string {
-	if len(pos) == 0 {
-		return b
-	}
-	return b
+	// w.Header().Set("Content-Type", "application/json")
+	// w.Write(res)
 }
 
 func parseTime(s string) (time.Time, error) {

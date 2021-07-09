@@ -40,6 +40,7 @@ func Test_QueryTerm(t *testing.T) {
 	im["a"] = []uint64{1, 3, 6, 9, 11, 15, 17}
 	im["b"] = []uint64{2, 3, 7, 9, 10, 15, 17}
 	im["c"] = []uint64{2, 3, 7, 9}
+
 	p := testQueryTerm(e.Expr, im)
 	for p.Next() {
 		fmt.Println(p.At())

@@ -124,7 +124,7 @@ label_matcher   : IDENTIFIER match_op STRING
 vector_selector: term_identifier label_matchers
                 {
                         vs := $2.(*VectorSelector)
-                        vs.Expr = $1
+                        vs.Expr = $1.(Expr)
                         $$ = vs
                 }
                 | term_identifier

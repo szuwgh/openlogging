@@ -2,6 +2,7 @@ package mem
 
 import (
 	"bytes"
+	"log"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -21,6 +22,7 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
+	temqlLabels "github.com/sophon-lab/temsearch/pkg/temql/labels"
 )
 
 type MetaIndex []int
@@ -278,7 +280,7 @@ func (mt *MemTable) Iterator() disk.IteratorLabel {
 	return mt.indexs.Iterator(mt.bytePoolReader, mt.series)
 }
 
-func (mt *MemTable) Search(lset labels.Labels, expr *temql.TermBinaryExpr) (posting.Postings, []series.Series) { // ([]*search.SeriesSnapShot, []*search.SnapShot) {
+func (mt *MemTable) Search(lset []*temqlLabels.Matcher, expr temql.Expr) (posting.Postings, []series.Series) { // ([]*search.SeriesSnapShot, []*search.SnapShot) {
 	var its []posting.Postings
 	for _, v := range lset {
 		postingList, ok := mt.indexs.Get(v.Name)
@@ -327,10 +329,13 @@ func queryTerm(e temql.Expr, postingList index.Index, series *[]series.Series) p
 		}
 	case *temql.TermExpr:
 		e := e.(*temql.TermExpr)
+		log.Println("e.Name", e.Name)
 		pointer, _ := postingList.Find(byteutil.Str2bytes(e.Name))
 		if pointer == nil {
+			log.Println("pointer", pointer)
 			return posting.EmptyPostings
 		}
+		log.Println("pointer", pointer)
 		termList := pointer.(*TermPosting)
 		*series = append(*series, termList)
 		return posting.NewListPostings(termList.seriesID())
