@@ -1,5 +1,9 @@
 package labels
 
+import (
+	"strings"
+)
+
 type MatchType int
 
 // Possible MatchTypes.
@@ -21,7 +25,7 @@ func NewMatcher(t MatchType, n, v string) *Matcher {
 	m := &Matcher{
 		Type:  t,
 		Name:  n,
-		Value: v,
+		Value: strings.Trim(v, `"`),
 	}
 	return m
 }

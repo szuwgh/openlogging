@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func Test_Parse(t *testing.T) {  
-	expr := ParseExpr(`a`)
+func Test_Parse(t *testing.T) {
+	expr := ParseExpr(`{job="zhangsan",name="lisi"}`)
 	v := expr.(*VectorSelector)
 	fmt.Println(v.Name)
 	switch v.Expr.(type) {
