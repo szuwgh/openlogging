@@ -311,8 +311,11 @@ func (mt *MemTable) Search(lset []*temqlLabels.Matcher, expr temql.Expr) (postin
 	// 	its = append(its, pList)
 	// 	series = append(series, termList)
 	// }
-	//p := posting.Intersect(its...)
-	return queryTerm(expr, postingList, &series), series
+	//p :=
+	if len(its) > 0 {
+		return posting.Intersect(queryTerm(expr, postingList, &series), posting.Intersect(its...)), series
+	}
+	return posting.Intersect(queryTerm(expr, postingList, &series)), series
 }
 
 func queryTerm(e temql.Expr, postingList index.Index, series *[]series.Series) posting.Postings {

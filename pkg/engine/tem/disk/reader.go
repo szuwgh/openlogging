@@ -635,7 +635,10 @@ func (r *IndexReader) Search(lset []*temqlLabels.Matcher, expr temql.Expr) (post
 	// 	}
 	// }
 	// p := posting.Intersect(its...)
-	return queryTerm(expr, r, &series), series
+	if len(its) > 0 {
+		return posting.Intersect(queryTerm(expr, r, &series), posting.Intersect(its...)), series
+	}
+	return posting.Intersect(queryTerm(expr, r, &series)), series
 }
 
 func queryTerm(e temql.Expr, r *IndexReader, series *[]series.Series) posting.Postings {
