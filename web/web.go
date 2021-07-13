@@ -10,6 +10,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 	"github.com/sophon-lab/temsearch/pkg/server"
 )
 
@@ -117,7 +118,11 @@ func parseTime(s string) (time.Time, error) {
 }
 
 func graph(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("./web/ui/page/graph.html"))
+	b, err := Asset("web/ui/graph.html")
+	if err != nil {
+
+	}
+	tmpl := template.Must(template.New("base").Parse(byteutil.Byte2Str(b)))
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	tmpl.Execute(w, nil)
 }

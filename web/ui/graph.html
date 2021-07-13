@@ -1,10 +1,55 @@
 <!DOCTYPE html>
 <html>
-<h1>日志检索引擎</h1>
+
+<style>
+    .row {
+        margin-top: 15px;
+        margin-right: 150px;
+        margin-left: 15px;
+
+    }
+
+    .btn {
+        border-color: #245580;
+        background-color: #245580;
+        width: 100px;
+        height: 34px;
+        color: white;
+    }
+
+    .col-lg-10 {
+        position: relative;
+        min-height: 1px;
+        width: 83.33333333%;
+    }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        height: 34px;
+        padding: 6px 12px;
+        font-size: 14px;
+        line-height: 1.42857143;
+        color: #555;
+        background-color: #fff;
+        background-image: none;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+
+    }
+
+    .expression_input {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+</style>
+
+<h1>query</h1>
+<!-- https://developer.mozilla.org/zh-CN/docs/Learn/CSS/Styling_text/Styling_lists -->
 
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="/static/graph.css">
+    <!-- <link rel="stylesheet" href="/static/graph.css"> -->
     <script type="text/javascript">
         function search() {
             var text = document.getElementById('text-expr').value;
@@ -30,11 +75,11 @@
                         for (j in dataJson[i]["logs"]) {
                             logStr += "<tr>" +
                                 "<td>" + dataJson[i]["logs"][j]["log"] + "</td >" +
-                                "</tr>";;
+                                "</tr>";
                         }
                         str += "<tr>" +
                             "<td>" + JSON.stringify(dataJson[i]["metric"]) + "</td>" +
-                            "<td >" + "<table cellpadding=5px>" + logStr + "</table>" + "</td >" +
+                            "<td >" + "<table border=\"1\" cellpadding=5px bordercolor=\"#a0c6e5\">" + logStr + "</table>" + "</td >" +
                             "</tr>";;
                     }
                     resBody.innerHTML = str;
@@ -53,7 +98,7 @@
 
     <div class="row">
         <div class="col-lg-10">
-            <input class="btn" type="button" color="white" value="搜索" name="submit" onclick="search()" />
+            <input class="btn" type="button" color="white" value="query" name="submit" onclick="search()" />
         </div>
     </div>
 
@@ -63,8 +108,8 @@
     <table border="2" bordercolor="#a0c6e5" style="border-collapse:collapse;">
         <thead>  
              <tr>  
-                <th>时间序列</th>  
-                <th>日志</th>  
+                <th>time-series</th>  
+                <th>logs</th>  
             </tr>  
         </thead> 
         <tbody id="tbody-result">

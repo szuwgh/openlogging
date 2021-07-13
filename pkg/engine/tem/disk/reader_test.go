@@ -13,11 +13,8 @@ func Test_DiskTableReader(t *testing.T) {
 	ulid, _ := ulid.Parse(filepath.Base(dir))
 	reader := tOps.CreateIndexReader(dir, ulid, 1622037072)
 	reader.print()
-	// reader := NewIndexReader(dir, 1615889619, nil, nil)
-	// reader.print()
 }
 
 func Test_DiskLogReader(t *testing.T) {
 
-	//NewLogReader("E:\\goproject\\temsearch\\src\\data\\my")
 }
