@@ -44,7 +44,7 @@
     }
 </style>
 
-<h1>query</h1>
+<h1>temsearch</h1>
 <!-- https://developer.mozilla.org/zh-CN/docs/Learn/CSS/Styling_text/Styling_lists -->
 
 <head>
@@ -67,20 +67,18 @@
                     var resBody = document.getElementById("tbody-result")
                     console.log("this.responseText", this.responseText)
                     var dataJson = JSON.parse(this.responseText);
-                    resBody.innerHTML = "";
-                    // var str = "";
-                    // var obj = JSON.parse(this.responseText);
+                    resBody.innerHTML = " ";
                     for (i in dataJson) {
                         var logStr = ""
                         for (j in dataJson[i]["logs"]) {
-                            logStr += "<tr>" +
-                                "<td>" + dataJson[i]["logs"][j]["log"] + "</td >" +
+                            logStr += "<tr >" +
+                                "<td >" + dataJson[i]["logs"][j]["log"] + "</td >" +
                                 "</tr>";
                         }
                         str += "<tr>" +
                             "<td>" + JSON.stringify(dataJson[i]["metric"]) + "</td>" +
-                            "<td >" + "<table border=\"1\" cellpadding=5px bordercolor=\"#a0c6e5\">" + logStr + "</table>" + "</td >" +
-                            "</tr>";;
+                            "<td >" + "<table rules=rows cellpadding=\"10\" width=100%>" + logStr + "</table>" + "</td >" +
+                            "</tr>";
                     }
                     resBody.innerHTML = str;
                 }
@@ -105,13 +103,8 @@
 </div>
 
 <div>
-    <table border="2" bordercolor="#a0c6e5" style="border-collapse:collapse;">
-        <thead>  
-             <tr>  
-                <th>time-series</th>  
-                <th>logs</th>  
-            </tr>  
-        </thead> 
+    <table border="2" bordercolor="#a0c6e5" style="border:none;border-collapse:collapse;">
+        <thead>  <tr>  <th>time-series</th>  <th>logs</th>   </tr>  </thead> 
         <tbody id="tbody-result">
         </tbody>
     </table>

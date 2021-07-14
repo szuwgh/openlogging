@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -616,7 +617,7 @@ func (r *IndexReader) Search(lset []*temqlLabels.Matcher, expr temql.Expr) (post
 		list, _ := r.postingr.readPosting(ref)
 		its = append(its, posting.NewListPostings(list))
 	}
-	if expr != nil {
+	if expr == nil {
 		p := posting.Intersect(its...)
 		return p, []series.Series{r.seriesr}
 	}
@@ -655,13 +656,14 @@ func queryTerm(e temql.Expr, r *IndexReader, series *[]series.Series) posting.Po
 		}
 	case *temql.TermExpr:
 		e := e.(*temql.TermExpr)
+		log.Println("disk e.Name", e.Name)
 		value := r.find(global.MESSAGE, byteutil.Str2bytes(e.Name))
 		if value == nil {
 			return posting.EmptyPostings
 		}
 		ref, _ := binary.Uvarint(value)
 		seriesRef, termMap := r.postingr.readPosting(ref)
-		*series = append(*series, termSeriesReader{
+		*series = append(*series, &termSeriesReader{
 			refMap: termMap,
 			reader: r.seriesr,
 		})
