@@ -69,10 +69,10 @@ func (s *Server) Search(input string, mint, maxt int64) ([]byte, error) {
 	}
 	now := time.Now().Unix()
 	if maxt == 0 {
-		maxt = now + 24*60*60
+		maxt = now + 24*24*60*60
 	}
 	if mint == 0 {
-		mint = now - 24*60*60
+		mint = now - 24*24*60*60
 	}
 	searcher, err := s.eg.Searcher(mint, maxt)
 	if err != nil {

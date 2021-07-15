@@ -43,14 +43,47 @@
         margin-bottom: 10px;
     }
 </style>
+<div background-color=#fff;>
+    <h2> temsearch</h2>
+</div>
 
-<h1>temsearch</h1>
 <!-- https://developer.mozilla.org/zh-CN/docs/Learn/CSS/Styling_text/Styling_lists -->
 
 <head>
     <meta charset="UTF-8">
     <!-- <link rel="stylesheet" href="/static/graph.css"> -->
     <script type="text/javascript">
+        //时间戳转本地时间
+        function getLocalTime(ns) {
+            const t = new Date(ns * 1000)
+            // 日期格式
+            format = 'Y-m-d h:i:s'
+            let year = t.getFullYear()
+            // 由于 getMonth 返回值会比正常月份小 1
+            let month = t.getMonth() + 1
+            let day = t.getDate()
+            let hours = t.getHours()
+            let minutes = t.getMinutes()
+            let seconds = t.getSeconds()
+
+            const hash = {
+                'y': year,
+                'm': month,
+                'd': day,
+                'h': hours,
+                'i': minutes,
+                's': seconds
+            }
+            // 是否补 0
+            const isAddZero = (o) => {
+                return /M|D|H|I|S/.test(o)
+            }
+            return format.replace(/\w/g, o => {
+                let rt = hash[o.toLocaleLowerCase()]
+                return rt > 10 || !isAddZero(o) ? rt : `0${rt}`
+            })
+        }
+
         function search() {
             var text = document.getElementById('text-expr').value;
             //console.log(text);
@@ -65,18 +98,28 @@
                     //  var data = this.responseText;
                     var str = "";
                     var resBody = document.getElementById("tbody-result")
-                    console.log("this.responseText", this.responseText)
+                    //console.log("this.responseText", this.responseText)
                     var dataJson = JSON.parse(this.responseText);
                     resBody.innerHTML = " ";
                     for (i in dataJson) {
                         var logStr = ""
+                        var timeStr = ""
                         for (j in dataJson[i]["logs"]) {
                             logStr += "<tr >" +
                                 "<td >" + dataJson[i]["logs"][j]["log"] + "</td >" +
                                 "</tr>";
+                            timeStr += "<tr >" +
+                                "<td >" + getLocalTime(dataJson[i]["logs"][j]["timestamp"]) + "</td >" +
+                                "</tr>";
+                        }
+                        let obj = Object.create(null);
+                        var metric = dataJson[i]["metric"]
+                        for (let j in dataJson[i]["metric"]) {
+                            obj[dataJson[i]["metric"][j]["Name"]] = dataJson[i]["metric"][j]["Value"]
                         }
                         str += "<tr>" +
-                            "<td>" + JSON.stringify(dataJson[i]["metric"]) + "</td>" +
+                            "<td>" + JSON.stringify(obj) + "</td>" +
+                            "<td >" + "<table rules=rows cellpadding=\"10\" width=100%>" + timeStr + "</table>" + "</td >" +
                             "<td >" + "<table rules=rows cellpadding=\"10\" width=100%>" + logStr + "</table>" + "</td >" +
                             "</tr>";
                     }
@@ -103,8 +146,8 @@
 </div>
 
 <div>
-    <table border="2" bordercolor="#a0c6e5" style="border:none;border-collapse:collapse;">
-        <thead>  <tr>  <th>time-series</th>  <th>logs</th>   </tr>  </thead> 
+    <table border="2" bordercolor="gray" style="border-collapse:collapse;">
+        <thead>  <tr>  <th>time-series</th>   <th>date</th> <th>logs</th>  </tr>  </thead> 
         <tbody id="tbody-result">
         </tbody>
     </table>
