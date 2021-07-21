@@ -66,15 +66,6 @@ func NewTableOps() *TableOps {
 	return t
 }
 
-//const dataDir = "E:\\goproject\\temsearch\\src\\data"
-
-// func CreateIndexFrom(dir string) (*IndexW, error) {
-// 	if err := os.MkdirAll(dir, 0777); err != nil {
-// 		return nil, err
-// 	}
-// 	return newIndexW(dir)
-// }
-
 func (d *TableOps) CreateIndexFrom(dir string) (*IndexW, error) {
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return nil, err
@@ -93,10 +84,6 @@ func (d *TableOps) CreateLogFrom(dir string) *LogW {
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return nil
 	}
-	// p, _, err := nextSequenceFile(dir)
-	// if err != nil {
-	// 	return nil
-	// }
 	return newLogWriter(dir)
 }
 
@@ -104,16 +91,9 @@ func CreateLogFrom(dir string) *LogW {
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return nil
 	}
-	// p, _, err := nextSequenceFile(dir)
-	// if err != nil {
-	// 	return nil
-	// }
+
 	return newLogWriter(dir)
 }
-
-// func CreateIndexReader(dir string, baseTime int64) *IndexReader {
-// 	return NewIndexReader(dir, baseTime, nil, nil)
-// }
 
 func (t *TableOps) CreateIndexReader(dir string, ulid ulid.ULID, baseTime int64) *IndexReader {
 
@@ -136,10 +116,6 @@ func (t *TableOps) RemoveIndexReader(dir string, ulid ulid.ULID) error {
 	}
 	return nil
 }
-
-// func CreateLogReader(dir string, offset []uint64) *LogReader {
-// 	return NewLogReader(dir, offset)
-// }
 
 func LastSequenceFile(dir string) (string, error) {
 	names, err := fileutil.ReadDir(dir)

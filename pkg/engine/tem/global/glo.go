@@ -6,6 +6,4 @@ const (
 	//并发协程数
 
 	MESSAGE = "~msg"
-
-//	LABEL = "label"
 )
