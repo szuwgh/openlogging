@@ -356,7 +356,8 @@ type cutWriter struct {
 	files   []*os.File
 	fbuf    *bufio.Writer
 	n       uint64
-	buf     byteutil.EncBuf
+	buf1    byteutil.EncBuf
+	buf2    byteutil.EncBuf
 	seq     uint64
 }
 
@@ -481,29 +482,29 @@ func (cw *chunkWriter) newWriter(fileName string) error {
 }
 
 func (cw *chunkWriter) putInt(v int) int {
-	return cw.buf.PutUvarint(v)
+	return cw.buf2.PutUvarint(v)
 }
 
 func (cw *chunkWriter) putUvarint64(v uint64) int {
-	return cw.buf.PutUvarint64(v)
+	return cw.buf2.PutUvarint64(v)
 }
 
 func (cw *chunkWriter) putBytes(b []byte) (int, error) {
-	return cw.buf.Write(b)
+	return cw.buf2.Write(b)
 }
 
 func (cw *chunkWriter) writeChunks(b [][]byte) (uint64, error) {
 	var err error
-	cw.buf.Reset()
+	cw.buf2.Reset()
 	var i int
 	for _, v := range b {
 		i += len(v)
 	}
-	cw.buf.PutUvarint(i)
-	if err = cw.isCut(cw.buf.Len() + i); err != nil {
+	cw.buf2.PutUvarint(i)
+	if err = cw.isCut(cw.buf2.Len() + i); err != nil {
 		return 0, err
 	}
-	if err = cw.writeToF(cw.buf.Get()); err != nil {
+	if err = cw.writeToF(cw.buf2.Get()); err != nil {
 		return 0, err
 	}
 	for _, v := range b {
@@ -513,7 +514,7 @@ func (cw *chunkWriter) writeChunks(b [][]byte) (uint64, error) {
 	}
 	seq := cw.seq << 32
 	pos := seq | cw.n
-	cw.n += uint64(cw.buf.Len() + i)
+	cw.n += uint64(cw.buf2.Len() + i)
 	return pos, nil
 }
 
@@ -542,34 +543,35 @@ func newSeriesWriter(dir string) (*seriesWriter, error) {
 }
 
 func (sw *seriesWriter) addSeries(isSeries bool, lset labels.Labels, chunks ...ChunkMeta) (uint64, error) {
-
-	sw.buf.Reset()
-	sw.buf.PutUvarint(len(lset))
+	sw.buf1.Reset()
+	sw.buf2.Reset()
+	sw.buf2.PutUvarint(len(lset))
 	for _, l := range lset {
-		sw.buf.PutUvarintStr(l.Name)
-		sw.buf.PutUvarintStr(l.Value)
+		sw.buf2.PutUvarintStr(l.Name)
+		sw.buf2.PutUvarintStr(l.Value)
 	}
-	sw.buf.PutUvarint(len(chunks))
+	sw.buf2.PutUvarint(len(chunks))
 	if len(chunks) > 0 {
 		c := chunks[0]
-		sw.buf.PutVarint64(c.MinT)
-		sw.buf.PutVarint64(c.MaxT - c.MinT)
-		sw.buf.PutUvarint64(c.Ref)
+		sw.buf2.PutVarint64(c.MinT)
+		sw.buf2.PutVarint64(c.MaxT - c.MinT)
+		sw.buf2.PutUvarint64(c.Ref)
 
 		t0 := c.MaxT
 		ref0 := c.Ref
 		for _, c := range chunks[1:] {
-			sw.buf.PutVarint64(c.MinT - t0)
-			sw.buf.PutVarint64(c.MaxT - c.MinT)
+			sw.buf2.PutVarint64(c.MinT - t0)
+			sw.buf2.PutVarint64(c.MaxT - c.MinT)
 			t0 = c.MaxT
-			sw.buf.PutUvarint64(c.Ref - ref0)
+			sw.buf2.PutUvarint64(c.Ref - ref0)
 			ref0 = c.Ref
 		}
 	}
-	if err := sw.isCut(sw.buf.Len()); err != nil {
+	sw.buf1.PutUvarint(sw.buf2.Len())
+	if err := sw.isCut(sw.buf1.Len() + sw.buf2.Len()); err != nil {
 		return 0, err
 	}
-	err := sw.writeToF(sw.buf.Get())
+	err := sw.writeToF(sw.buf2.Get())
 	if err != nil {
 		return 0, err
 	}
@@ -578,7 +580,7 @@ func (sw *seriesWriter) addSeries(isSeries bool, lset labels.Labels, chunks ...C
 	if isSeries {
 		sw.seriesOffsets[lset.Serialize()] = pos
 	}
-	sw.n += uint64(sw.buf.Len())
+	sw.n += uint64(sw.buf2.Len())
 	return pos, nil
 }
 
@@ -611,29 +613,29 @@ func newPostingWriter(dir string) (*postingWriter, error) {
 
 func (pw *postingWriter) writePosting(refs ...[]uint64) (uint64, error) {
 
-	pw.buf.Reset()
+	pw.buf2.Reset()
 	refCount := len(refs)
-	pw.buf.PutUvarint(refCount)
-	pw.buf.PutUvarint(len(refs[0]))
+	pw.buf2.PutUvarint(refCount)
+	pw.buf2.PutUvarint(len(refs[0]))
 	var ref0 uint64
 	var ref1 uint64
 	for i, r := range refs[0] {
-		pw.buf.PutUvarint64(r - ref0)
+		pw.buf2.PutUvarint64(r - ref0)
 		ref0 = r
 		if refCount > 1 {
-			pw.buf.PutUvarint64(refs[1][i] - ref1)
+			pw.buf2.PutUvarint64(refs[1][i] - ref1)
 			ref1 = refs[1][i]
 		}
 	}
-	if err := pw.isCut(pw.buf.Len()); err != nil {
+	if err := pw.isCut(pw.buf2.Len()); err != nil {
 		return 0, err
 	}
-	if err := pw.writeToF(pw.buf.Get()); err != nil {
+	if err := pw.writeToF(pw.buf2.Get()); err != nil {
 		return 0, err
 	}
 	seq := pw.seq << 32
 	pos := seq | pw.n
-	pw.n += uint64(pw.buf.Len())
+	pw.n += uint64(pw.buf2.Len())
 	return pos, nil
 }
 
