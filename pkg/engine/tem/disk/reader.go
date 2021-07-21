@@ -108,6 +108,14 @@ func (cr *chunkReader) readLabelChunk(ref uint64) *chunks.SeriesSnapShot {
 		return nil
 	}
 	debuf := mmap.decbufAt(off)
+
+	length := debuf.uvarint()
+	b := debuf.bytes(length)
+	if crc32.ChecksumIEEE(b) != debuf.uint32() {
+		return nil
+	}
+	debuf.reset(b)
+
 	snap := chunks.NewSeriesSnapShot()
 	seriesSnap := &memSeriesSnapReader{}
 	seriesSnap.r = debuf
@@ -128,6 +136,13 @@ func (cr *chunkReader) readTermChunk(ref uint64) *chunks.TermSnapShot {
 		return nil
 	}
 	debuf := mmap.decbufAt(off)
+
+	length := debuf.uvarint()
+	b := debuf.bytes(length)
+	if crc32.ChecksumIEEE(b) != debuf.uint32() {
+		return nil
+	}
+	debuf.reset(b)
 
 	//segmentNum := debuf.uvarint64()
 	snap := chunks.NewTermSnapShot() //&chunks.SnapShot{}
@@ -241,9 +256,16 @@ func (pr *seriesReader) getByID(ref uint64) (labels.Labels, []ChunkMeta, error) 
 		}
 	}()
 	if mmap == nil {
-		return nil, nil, nil
+		return nil, nil, errors.New("mmap is nil")
 	}
 	debuf := mmap.decbufAt(off)
+	length := debuf.uvarint()
+
+	b := debuf.bytes(length)
+	if crc32.ChecksumIEEE(b) != debuf.uint32() {
+		return nil, nil, errors.New("crc not match")
+	}
+	debuf.reset(b)
 	k := debuf.uvarint()
 	var lsets labels.Labels
 	for i := 0; i < k; i++ {
@@ -320,31 +342,31 @@ func (pr *postingReader) release() {
 	pr.mcache = nil
 }
 
-func (pr *postingReader) readLabelPosting(ref uint64) []uint64 {
-	seq := ref >> 32
-	off := int((ref << 32) >> 32)
-	mmap, rel := pr.getMmapCache(seq)
-	defer func() {
-		if rel != nil {
-			rel.Release()
-		}
-	}()
-	if mmap == nil {
-		return nil
-	}
-	debuf := mmap.decbufAt(off)
-	debuf.uvarint()
-	refLen := debuf.uvarint()
-	seriesRef := make([]uint64, refLen)
-	for i := 0; i < refLen; i++ {
-		if i == 0 {
-			seriesRef[i] = debuf.uvarint64()
-		} else {
-			seriesRef[i] = seriesRef[i-1] + debuf.uvarint64()
-		}
-	}
-	return seriesRef
-}
+// func (pr *postingReader) readLabelPosting(ref uint64) []uint64 {
+// 	seq := ref >> 32
+// 	off := int((ref << 32) >> 32)
+// 	mmap, rel := pr.getMmapCache(seq)
+// 	defer func() {
+// 		if rel != nil {
+// 			rel.Release()
+// 		}
+// 	}()
+// 	if mmap == nil {
+// 		return nil
+// 	}
+// 	debuf := mmap.decbufAt(off)
+// 	debuf.uvarint()
+// 	refLen := debuf.uvarint()
+// 	seriesRef := make([]uint64, refLen)
+// 	for i := 0; i < refLen; i++ {
+// 		if i == 0 {
+// 			seriesRef[i] = debuf.uvarint64()
+// 		} else {
+// 			seriesRef[i] = seriesRef[i-1] + debuf.uvarint64()
+// 		}
+// 	}
+// 	return seriesRef
+// }
 
 func (pr *postingReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
 	seq := ref >> 32
@@ -359,6 +381,15 @@ func (pr *postingReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
 		return nil, nil
 	}
 	debuf := mmap.decbufAt(off)
+
+	length := debuf.uvarint()
+
+	b := debuf.bytes(length)
+	if crc32.ChecksumIEEE(b) != debuf.uint32() {
+		return nil, nil
+	}
+	debuf.reset(b)
+
 	refCount := debuf.uvarint()
 	refLen := debuf.uvarint()
 	seriesRef := make([]uint64, refLen)
@@ -397,6 +428,14 @@ func (pr *postingReader) readPosting2(ref uint64) ([]uint64, []uint64) {
 		return nil, nil
 	}
 	debuf := mmap.decbufAt(off)
+
+	length := debuf.uvarint()
+	b := debuf.bytes(length)
+	if crc32.ChecksumIEEE(b) != debuf.uint32() {
+		return nil, nil
+	}
+	debuf.reset(b)
+
 	refCount := debuf.uvarint()
 	refLen := debuf.uvarint()
 	seriesRef := make([]uint64, refLen)

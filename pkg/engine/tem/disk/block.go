@@ -160,12 +160,18 @@ type decbuf struct {
 	e error
 }
 
-func (d *decbuf) err() error  { return d.e }
-func (d *decbuf) len() int    { return len(d.b) }
-func (d *decbuf) get() []byte { return d.b }
+func (d *decbuf) reset(b []byte) { d.b = b }
+func (d *decbuf) err() error     { return d.e }
+func (d *decbuf) len() int       { return len(d.b) }
+func (d *decbuf) get() []byte    { return d.b }
 
 func (d *decbuf) uvarint() int      { return int(d.uvarint64()) }
 func (d *decbuf) uvarint32() uint32 { return uint32(d.uvarint64()) }
+
+func (d *decbuf) uint32() uint32 {
+	b4 := d.bytes(4)
+	return binary.LittleEndian.Uint32(b4)
+}
 
 // func (d *decbuf) be32int() int      { return int(d.be32()) }
 // func (d *decbuf) be64int64() int64  { return int64(d.be64()) }

@@ -1,6 +1,8 @@
 package byteutil
 
 import (
+	"encoding/binary"
+
 	mybin "github.com/sophon-lab/temsearch/pkg/engine/tem/binary"
 )
 
@@ -27,6 +29,11 @@ func (e *EncBuf) PutUvarint64(x uint64) int {
 func (e *EncBuf) PutVarint64(x int64) int {
 	_, i := mybin.Putvarint64(e, 0, x)
 	return i
+}
+
+func (e *EncBuf) PutUint32(x uint32) {
+	tmp := e.bytes.Alloc(4)
+	binary.LittleEndian.PutUint32(tmp, x)
 }
 
 func (e *EncBuf) PutUvarint(x int) int { return e.PutUvarint64(uint64(x)) }

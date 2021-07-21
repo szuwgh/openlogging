@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"io/ioutil"
 	"os"
@@ -495,26 +496,36 @@ func (cw *chunkWriter) putBytes(b []byte) (int, error) {
 
 func (cw *chunkWriter) writeChunks(b [][]byte) (uint64, error) {
 	var err error
+	cw.buf1.Reset()
 	cw.buf2.Reset()
 	var i int
 	for _, v := range b {
 		i += len(v)
 	}
 	cw.buf2.PutUvarint(i)
-	if err = cw.isCut(cw.buf2.Len() + i); err != nil {
+	if _, err = cw.buf2.Write(b...); err != nil {
+		return 0, err
+	}
+
+	crc := crc32.ChecksumIEEE(cw.buf2.Get())
+	cw.buf1.PutUvarint(cw.buf2.Len())
+	cw.buf2.PutUint32(crc)
+	length := cw.buf1.Len() + cw.buf2.Len()
+
+	if err = cw.isCut(length); err != nil {
 		return 0, err
 	}
 	if err = cw.writeToF(cw.buf2.Get()); err != nil {
 		return 0, err
 	}
-	for _, v := range b {
-		if err = cw.writeToF(v); err != nil {
-			return 0, err
-		}
-	}
+	// for _, v := range b {
+	// 	if err = cw.writeToF(v); err != nil {
+	// 		return 0, err
+	// 	}
+	// }
 	seq := cw.seq << 32
 	pos := seq | cw.n
-	cw.n += uint64(cw.buf2.Len() + i)
+	cw.n += uint64(length)
 	return pos, nil
 }
 
@@ -567,11 +578,15 @@ func (sw *seriesWriter) addSeries(isSeries bool, lset labels.Labels, chunks ...C
 			ref0 = c.Ref
 		}
 	}
+	//写入crc32校验码
+	crc := crc32.ChecksumIEEE(sw.buf2.Get())
 	sw.buf1.PutUvarint(sw.buf2.Len())
-	if err := sw.isCut(sw.buf1.Len() + sw.buf2.Len()); err != nil {
+	sw.buf2.PutUint32(crc)
+	length := sw.buf1.Len() + sw.buf2.Len()
+	if err := sw.isCut(length); err != nil {
 		return 0, err
 	}
-	err := sw.writeToF(sw.buf2.Get())
+	err := sw.writeToF(sw.buf1.Get(), sw.buf2.Get())
 	if err != nil {
 		return 0, err
 	}
@@ -580,7 +595,7 @@ func (sw *seriesWriter) addSeries(isSeries bool, lset labels.Labels, chunks ...C
 	if isSeries {
 		sw.seriesOffsets[lset.Serialize()] = pos
 	}
-	sw.n += uint64(sw.buf2.Len())
+	sw.n += uint64(length)
 	return pos, nil
 }
 
@@ -612,7 +627,7 @@ func newPostingWriter(dir string) (*postingWriter, error) {
 }
 
 func (pw *postingWriter) writePosting(refs ...[]uint64) (uint64, error) {
-
+	pw.buf1.Reset()
 	pw.buf2.Reset()
 	refCount := len(refs)
 	pw.buf2.PutUvarint(refCount)
@@ -627,7 +642,14 @@ func (pw *postingWriter) writePosting(refs ...[]uint64) (uint64, error) {
 			ref1 = refs[1][i]
 		}
 	}
-	if err := pw.isCut(pw.buf2.Len()); err != nil {
+
+	//写入crc32校验码
+	crc := crc32.ChecksumIEEE(pw.buf2.Get())
+	pw.buf1.PutUvarint(pw.buf2.Len())
+	pw.buf2.PutUint32(crc)
+	length := pw.buf1.Len() + pw.buf2.Len()
+
+	if err := pw.isCut(length); err != nil {
 		return 0, err
 	}
 	if err := pw.writeToF(pw.buf2.Get()); err != nil {
@@ -635,7 +657,7 @@ func (pw *postingWriter) writePosting(refs ...[]uint64) (uint64, error) {
 	}
 	seq := pw.seq << 32
 	pos := seq | pw.n
-	pw.n += uint64(pw.buf2.Len())
+	pw.n += uint64(length)
 	return pos, nil
 }
 
