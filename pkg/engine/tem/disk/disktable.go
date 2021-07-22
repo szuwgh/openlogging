@@ -8,6 +8,7 @@ import (
 	"hash/crc32"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -45,7 +46,7 @@ const (
 	dirSeries  = "series"
 	dirPosting = "posting"
 
-	valueMaxSize = 100 * KiB //100 	KB
+	LogMaxSize = 100 * KiB //100 	KB
 
 	defaultSegmentSize = 1 * MiB //32 * MiB //1024 * 1024
 
@@ -515,14 +516,9 @@ func (cw *chunkWriter) writeChunks(b [][]byte) (uint64, error) {
 	if err = cw.isCut(length); err != nil {
 		return 0, err
 	}
-	if err = cw.writeToF(cw.buf2.Get()); err != nil {
+	if err = cw.writeToF(cw.buf1.Get(), cw.buf2.Get()); err != nil {
 		return 0, err
 	}
-	// for _, v := range b {
-	// 	if err = cw.writeToF(v); err != nil {
-	// 		return 0, err
-	// 	}
-	// }
 	seq := cw.seq << 32
 	pos := seq | cw.n
 	cw.n += uint64(length)
@@ -645,6 +641,7 @@ func (pw *postingWriter) writePosting(refs ...[]uint64) (uint64, error) {
 
 	//写入crc32校验码
 	crc := crc32.ChecksumIEEE(pw.buf2.Get())
+	log.Println("crc", crc)
 	pw.buf1.PutUvarint(pw.buf2.Len())
 	pw.buf2.PutUint32(crc)
 	length := pw.buf1.Len() + pw.buf2.Len()
@@ -652,7 +649,7 @@ func (pw *postingWriter) writePosting(refs ...[]uint64) (uint64, error) {
 	if err := pw.isCut(length); err != nil {
 		return 0, err
 	}
-	if err := pw.writeToF(pw.buf2.Get()); err != nil {
+	if err := pw.writeToF(pw.buf1.Get(), pw.buf2.Get()); err != nil {
 		return 0, err
 	}
 	seq := pw.seq << 32

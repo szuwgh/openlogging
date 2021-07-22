@@ -31,9 +31,9 @@ const (
 
 	metaFilename = "meta.json"
 
-	maxBlockDuration = 300 //1 * 60 * 60 //1 * 60 * 60 //2h
+	maxBlockDuration = 30 //1 * 60 * 60 //1 * 60 * 60 //2h
 
-	flushWritecoldDuration = 600
+	flushWritecoldDuration = 60
 )
 
 // Options of the DB storage.
@@ -164,7 +164,6 @@ func (e *Engine) openBlock(dir string) (*Block, error) {
 	}
 
 	ir := e.tOps.CreateIndexReader(dir, meta.ULID, meta.MinTime)
-	//	ir.SetValueOffset(meta.Invert)
 	wr := e.tOps.CreateLogReader(dir, meta.ULID, meta.LogID)
 	b := &Block{
 		meta:   *meta,

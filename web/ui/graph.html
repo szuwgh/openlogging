@@ -60,11 +60,11 @@
             format = 'Y-m-d h:i:s'
             let year = t.getFullYear()
             // 由于 getMonth 返回值会比正常月份小 1
-            let month = t.getMonth() + 1
-            let day = t.getDate()
-            let hours = t.getHours()
-            let minutes = t.getMinutes()
-            let seconds = t.getSeconds()
+            let month = t.getMonth() + 1; if (month < 10) { month = "0" + month }
+            let day = t.getDate(); if (day < 10) { day = "0" + day }
+            let hours = t.getHours(); if (hours < 10) { hours = "0" + hours }
+            let minutes = t.getMinutes(); if (minutes < 10) { minutes = "0" + minutes }
+            let seconds = t.getSeconds(); if (seconds < 10) { seconds = "0" + seconds }
 
             const hash = {
                 'y': year,

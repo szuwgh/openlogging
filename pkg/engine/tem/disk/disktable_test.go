@@ -91,9 +91,15 @@ func Test_seriesWriter_addSeries(t *testing.T) {
 }
 
 func Test_postingWriter_writePosting(t *testing.T) {
+	dir := "./"
+	pw, err := newPostingWriter(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	type args struct {
 		refs [][]uint64
 	}
+
 	tests := []struct {
 		name    string
 		pw      *postingWriter
@@ -110,14 +116,13 @@ func Test_postingWriter_writePosting(t *testing.T) {
 			wantErr bool
 		}{
 			name: "test1",
-			pw:   sw,
+			pw:   pw,
 			args: args{
-				isSeries: false,
-				lset:     labels.Labels{labels.Label{"zhangshan", "baidu"}, labels.Label{"lisi", "google"}},
-				chunks:   []ChunkMeta{ChunkMeta{1, 1626851373, 1626854373}, ChunkMeta{2, 1626851373, 1626856373}},
+				refs: [][]uint64{[]uint64{1, 2, 3, 4}},
 			},
 		},
 	}
+	gots := make([]uint64, 0, len(tests))
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.pw.writePosting(tt.args.refs...)
@@ -125,9 +130,77 @@ func Test_postingWriter_writePosting(t *testing.T) {
 				t.Errorf("postingWriter.writePosting() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
+			if got == tt.want {
 				t.Errorf("postingWriter.writePosting() = %v, want %v", got, tt.want)
 			}
+			gots = append(gots, got)
 		})
+	}
+	pw.close()
+	pr := newPostingReader(dir, &cache.NamespaceGetter{cache.NewCache(cache.NewLRU(defaultSegmentSize * 10)), 1})
+	for _, got := range gots {
+		ref, refmap := pr.readPosting(got)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(ref)
+		t.Log(refmap)
+	}
+}
+
+func Test_chunkWriter_writeChunks(t *testing.T) {
+	dir := "./"
+	cw, err := newChunkWriter(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type args struct {
+		b [][]byte
+	}
+	tests := []struct {
+		name    string
+		cw      *chunkWriter
+		args    args
+		want    uint64
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		struct {
+			name    string
+			cw      *chunkWriter
+			args    args
+			want    uint64
+			wantErr bool
+		}{
+			name: "test",
+			cw:   cw,
+			args: args{[][]byte{[]byte("abcdefg123456"), []byte("123456789")}},
+		},
+	}
+	gots := make([]uint64, 0, len(tests))
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.cw.writeChunks(tt.args.b)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("chunkWriter.writeChunks() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got == tt.want {
+				t.Errorf("chunkWriter.writeChunks() = %v, want %v", got, tt.want)
+			}
+			gots = append(gots, got)
+		})
+	}
+	cw.close()
+	cr := newchunkReader(dir, 0, &cache.NamespaceGetter{cache.NewCache(cache.NewLRU(defaultSegmentSize * 10)), 2})
+	for _, got := range gots {
+		chunks := cr.ReadChunk(false, got)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, v := range chunks.Bytes() {
+			t.Log(string(v))
+		}
 	}
 }
