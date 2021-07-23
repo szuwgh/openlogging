@@ -2,7 +2,6 @@ package mem
 
 import (
 	"bytes"
-	"log"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -54,7 +53,6 @@ func NewMemTable(bytePool byteutil.Inverted) *MemTable {
 	mt.bytePool = bytePool
 	mt.bytePoolReader = byteutil.NewInvertedBytePoolReader(bytePool, 0) //newByteBlockReader(bytePool)
 	mt.indexs = NewDefalutTagGroup()
-	//mt.Init()
 	mt.series = newStripeSeries()
 	c := NewChain()
 	c.Use(TermMiddleware())
@@ -298,20 +296,7 @@ func (mt *MemTable) Search(lset []*temqlLabels.Matcher, expr temql.Expr) (postin
 	if !ok {
 		return posting.EmptyPostings, nil
 	}
-	//series := make([]series.Series, 0, len(terms))
 	var series []series.Series
-
-	// for _, term := range terms {
-	// 	pointer, _ := postingList.Find(byteutil.Str2bytes(term))
-	// 	if pointer == nil {
-	// 		return posting.EmptyPostings, nil
-	// 	}
-	// 	termList := pointer.(*TermPosting)
-	// 	pList := posting.NewListPostings(termList.seriesID())
-	// 	its = append(its, pList)
-	// 	series = append(series, termList)
-	// }
-	//p :=
 	if len(its) > 0 {
 		return posting.Intersect(queryTerm(expr, postingList, &series), posting.Intersect(its...)), series
 	}
@@ -332,13 +317,10 @@ func queryTerm(e temql.Expr, postingList index.Index, series *[]series.Series) p
 		}
 	case *temql.TermExpr:
 		e := e.(*temql.TermExpr)
-		log.Println("e.Name", e.Name)
 		pointer, _ := postingList.Find(byteutil.Str2bytes(e.Name))
 		if pointer == nil {
-			log.Println("pointer", pointer)
 			return posting.EmptyPostings
 		}
-		log.Println("pointer", pointer)
 		termList := pointer.(*TermPosting)
 		*series = append(*series, termList)
 		return posting.NewListPostings(termList.seriesID())
