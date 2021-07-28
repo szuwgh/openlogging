@@ -38,17 +38,13 @@ const (
 	magic     = "\x57\xfb\x80\x8b\x24\x75\x47\xdb"
 	footerLen = 48
 
-	ExtIndex = "index"
-	ExtData  = "data"
-	ExtLog   = ".logs"
-
 	dirChunk   = "chunk"
 	dirSeries  = "series"
 	dirPosting = "posting"
 
-	LogMaxSize = 100 * KiB //100 	KB
+	LogMaxSize = 128 * KiB //100 	KB
 
-	defaultSegmentSize = 1 * MiB //32 * MiB //1024 * 1024
+	defaultSegmentSize = 64 * MiB //32 * MiB //1024 * 1024
 
 	DefaultBlockCacheCapacity = 8 * MiB
 )
@@ -64,7 +60,7 @@ func NewTableOps() *TableOps {
 	t := &TableOps{}
 	t.bcache = cache.NewCache(cache.NewLRU(DefaultBlockCacheCapacity))
 	t.mcache = cache.NewCache(cache.NewLRU(defaultSegmentSize * 10))
-	t.lcache = cache.NewCache(cache.NewLRU(valueMaxSize * 10))
+	t.lcache = cache.NewCache(cache.NewLRU(LogMaxSize * 10))
 	return t
 }
 
@@ -369,6 +365,7 @@ func (c *cutWriter) close() error {
 	}
 	return c.dirFile.Close()
 }
+
 func (c *cutWriter) isCut(n int) error {
 	newsz := c.n + uint64(n)
 	if c.fbuf == nil || c.n > defaultSegmentSize || newsz > defaultSegmentSize && n <= defaultSegmentSize {
@@ -922,7 +919,7 @@ func (w *LogW) FinishLog(length uint64) (uint64, error) {
 	w.index = append(w.index, w.n)
 	w.n += length
 	var err error
-	if w.n >= valueMaxSize {
+	if w.n >= LogMaxSize {
 		if err = w.WriteIndex(); err != nil {
 			return 0, err
 		}

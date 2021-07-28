@@ -54,7 +54,7 @@ func highlight(pos []int, b string) string {
 	return b
 }
 
-func (s *Server) Search(input string, mint, maxt int64) ([]byte, error) {
+func (s *Server) Search(input string, mint, maxt, count int64) ([]byte, error) {
 
 	// var sql *search.QueryESL
 	// err = json.Unmarshal(b, &sql)
@@ -83,12 +83,10 @@ func (s *Server) Search(input string, mint, maxt int64) ([]byte, error) {
 	for seriesSet.Next() {
 		s := seriesSet.At()
 		metric := Series{Metric: s.Labels()}
-		log.Println(s.Labels())
 		iter := s.Iterator()
 		for iter.Next() {
 			t, v, pos, b := iter.At()
 			metric.Logs = append(metric.Logs, Log{t, v, highlight(pos, byteutil.Byte2Str(b))})
-			//log.Println(t, v, pos, string(b))
 		}
 		series = append(series, metric)
 	}
