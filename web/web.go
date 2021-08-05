@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sophon-lab/temsearch/util"
+
 	"github.com/sophon-lab/temsearch/pkg/server"
 )
 
@@ -48,60 +50,16 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	b, err := h.s.Search(r.Form.Get("temql"), 0, 0)
+	temql := r.Form.Get("temql")
+	mint, maxt := util.Str2Int64(r.Form.Get("mint")), util.Str2Int64(r.Form.Get("maxt"))
+	count := util.Str2Int64(r.Form.Get("count"))
+	b, err := h.s.Search(temql, mint, maxt, count)
 	if err != nil {
 		w.Write(toErrResult(500, err.Error()))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(b)
-	// b, err := ioutil.ReadAll(r.Body)
-	// if err != nil {
-	// 	w.Write(toErrResult(500, err.Error()))
-	// 	return
-	// }
-	// var sql *search.QueryESL
-	// err = json.Unmarshal(b, &sql)
-	// if err != nil {
-	// 	w.Write(toErrResult(500, err.Error()))
-	// 	return
-	// }
-	// now := time.Now().Unix()
-	// if sql.MaxTime == 0 {
-	// 	sql.MaxTime = now + 24*60*60
-	// }
-	// if sql.MinTime == 0 {
-	// 	sql.MinTime = now - 24*60*60
-	// }
-	// searcher, err := h.eg.Searcher(sql.MinTime, sql.MaxTime)
-	// if err != nil {
-	// 	w.Write(toErrResult(500, err.Error()))
-	// 	return
-	// }
-	// var series []Series
-	// seriesSet := searcher.Search(sql)
-	// for seriesSet.Next() {
-	// 	s := seriesSet.At()
-	// 	metric := Series{Metric: s.Labels()}
-	// 	log.Println(s.Labels())
-	// 	iter := s.Iterator()
-	// 	for iter.Next() {
-	// 		t, v, pos, b := iter.At()
-	// 		metric.Logs = append(metric.Logs, Log{t, v, highlight(pos, byteutil.Byte2Str(b))})
-	// 		//log.Println(t, v, pos, string(b))
-	// 	}
-	// 	series = append(series, metric)
-	// }
-	// res, err := json.Marshal(series)
-	// if err != nil {
-	// 	w.Write(toErrResult(500, err.Error()))
-	// 	return
-	// }
-	// w.Header().Set("Content-Type", "application/json")
-	// w.Write(res)
-	//fmt.Fprintf(w, "Hello Search!") //这个写入到w的是输出到客户端的
-	// w.Header().Set("Content-Type", "application/json")
-	// w.Write(res)
 }
 
 func parseTime(s string) (time.Time, error) {

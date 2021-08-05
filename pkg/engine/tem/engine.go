@@ -517,13 +517,6 @@ func (e *Engine) ShouldCompactMem(h *Head) bool {
 	return h.MaxTime()-h.MinTime() > maxBlockDuration || time.Now().Unix()-h.MaxTime() > flushWritecoldDuration
 }
 
-// func (e *Engine) Add(logs logmsg.LogMsgArray) int64 {
-// 	//先写入
-// 	now := e.writeWal(logs)
-// 	e.indexChan <- logs
-// 	return now
-// }
-
 func (e *Engine) Searcher(mint, maxt int64) (Searcher, error) {
 	var blocks []BlockReader
 	var segNums []uint64
@@ -573,9 +566,7 @@ func (e *Engine) mcompact() error {
 	}
 	//等待索引完成
 	e.frozeHead.waitIndex()
-	//meta := newMeta(e.frozeHead.mint, e.frozeHead.MaxT)
 	return e.compactor.Write(e.dataDir, e.frozeHead, e.frozeHead.mint, e.frozeHead.MaxT)
-	//return e.compactor.write(e.dataDir, meta, e.frozeHead)
 }
 
 func newMeta(minT, maxT int64) *BlockMeta {

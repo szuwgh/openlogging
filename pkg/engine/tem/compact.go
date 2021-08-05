@@ -120,7 +120,6 @@ func splitByRange(ds []dirMeta, tr int64) [][]dirMeta {
 			splitDirs = append(splitDirs, group)
 		}
 	}
-
 	return splitDirs
 }
 
