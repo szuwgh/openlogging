@@ -21,11 +21,9 @@ type Head struct {
 }
 
 func NewHead(alloc byteutil.Allocator, chunkRange int64) *Head {
-	//now := time.Now().Unix()
 	h := &Head{
 		mint: math.MinInt64,
 		MaxT: math.MinInt64,
-		//rwControl.
 	}
 	h.indexMem = mem.NewMemTable(byteutil.NewInvertedBytePool(alloc))
 	h.logsMem = mem.NewLogsTable(byteutil.NewForwardBytePool(alloc))

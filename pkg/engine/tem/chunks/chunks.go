@@ -24,7 +24,6 @@ type Chunk interface {
 	MinTime() int64
 	MaxTime() int64
 	ChunkEnc(bool, ChunkReader) ChunkEnc
-	//Posting(bool, int64, int64, ChunkReader) Postings //文档id 倒排表
 }
 
 type ChunkEnc interface {
