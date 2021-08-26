@@ -662,8 +662,7 @@ type LogWriter interface {
 }
 
 type DiskLogIterator struct {
-	logr *LogReader
-	//i     int
+	logr  *LogReader
 	j     uint64
 	share [8]byte
 }
@@ -671,7 +670,6 @@ type DiskLogIterator struct {
 func newDiskLogIterator(logr *LogReader) *DiskLogIterator {
 	iter := &DiskLogIterator{}
 	iter.logr = logr
-	//iter.i = 0
 	iter.j = 0
 	return iter
 }

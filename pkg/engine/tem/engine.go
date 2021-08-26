@@ -36,18 +36,13 @@ const (
 	flushWritecoldDuration = 60
 )
 
-// Options of the DB storage.
 type Options struct {
-	// The interval at which the write ahead log is flushed to disk.
 	WALFlushInterval time.Duration
 
-	// Duration of persisted data to keep.
 	RetentionDuration uint64
 
-	// The sizes of the Blocks.
 	BlockRanges []int64
 
-	// NoLockfile disables creation and consideration of a lock file.
 	NoLockfile bool
 }
 
@@ -112,6 +107,12 @@ func NewEngine(a *analysis.Analyzer) (*Engine, error) {
 	go e.compact()
 	return e, nil
 }
+
+func (e *Engine) process() {
+
+}
+
+func  
 
 func (e *Engine) recoverWal() error {
 	//walDir := filepath.Join(e.dataDir, "wal")
@@ -245,7 +246,6 @@ func (e *Engine) reload() error {
 		if err != nil {
 			return errors.Wrapf(err, "read meta information %s", dir)
 		}
-		// Don't load blocks that are scheduled for deletion.
 		if _, ok := deleteable[meta.ULID]; ok {
 			continue
 		}

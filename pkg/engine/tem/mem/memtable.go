@@ -186,6 +186,7 @@ func (mt *MemTable) Index(context *Context, a *analysis.Analyzer, log *logmsg.Lo
 	mt.addLabel(s, log.TimeStamp, logID)
 
 	tokens := a.Analyze([]byte(log.Msg))
+
 	postingList, ok := mt.indexs.Get(global.MESSAGE) //e.processMap[global.MESSAGE]
 	if !ok {
 		return

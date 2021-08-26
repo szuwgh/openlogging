@@ -7,11 +7,12 @@ type LogMsgArray []*LogMsg
 //文档
 type LogMsg struct {
 	//文档ID
-	ID string `json:"-"`
-	//	InterID   uint64            `json:"-"`
+	ID        string            `json:"-"`
+	InterID   uint64            `json:"-"`
 	Msg       string            `json:"message"` //日志信息
 	Tags      map[string]string `json:"tags"`    //标签
 	TimeStamp int64             `json:"timestamp"`
+	Token     []string          `json:"-"`
 }
 
 func New(logID string) *LogMsg {
