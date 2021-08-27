@@ -105,14 +105,13 @@ func NewEngine(a *analysis.Analyzer) (*Engine, error) {
 	}
 	e.walFile = append(e.walFile, lastWal)
 	go e.compact()
+	go e.process()
 	return e, nil
 }
 
 func (e *Engine) process() {
 
 }
-
-func  
 
 func (e *Engine) recoverWal() error {
 	//walDir := filepath.Join(e.dataDir, "wal")
