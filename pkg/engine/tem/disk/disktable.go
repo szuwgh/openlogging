@@ -16,7 +16,7 @@ import (
 
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/cache.go"
+	"github.com/sophon-lab/temsearch/pkg/engine/tem/cache"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/fileutil"
@@ -769,14 +769,6 @@ func (tw *IndexW) WritePostings(ref ...[]uint64) (uint64, error) {
 func (tw *IndexW) SetBaseTimeStamp(timeStamp int64) {
 	tw.kw.baseTimeStamp = timeStamp
 }
-
-// func (tw *IndexW) FinishAppend(length int) (uint64, error) {
-// 	//完成keyblock写入
-// 	if tw.kw.byteLen() >= tw.maxBlockSize {
-// 		tw.kw.finishBlock()
-// 	}
-// 	return 0, nil
-// }
 
 func (tw *IndexW) FinishTag() error {
 	return tw.kw.finishTag()

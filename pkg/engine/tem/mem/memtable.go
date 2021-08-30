@@ -139,6 +139,27 @@ func (mt *MemTable) ReleaseBuff(recycle, alloced *int) error {
 	//mt.indexs.
 }
 
+func (mt *MemTable) addLabel(s *memSeries, t int64, v uint64) error {
+	var offset uint64
+	var size, length int
+	//var size int = s.seriesLen
+	offset, length = mt.bytePool.WriteVInt64(s.seriesIndex, t-s.lastTimeStamp)
+	size += length
+	offset, length = mt.bytePool.WriteVUint64(offset, v-s.lastLogID)
+	size += length
+	if s.minT == -1 {
+		s.minT = t
+	}
+	s.maxT = t
+	atomic.StoreUint64(&s.seriesIndex, offset)
+	atomic.AddUint64(&s.seriesLen, uint64(size))
+
+	s.lastTimeStamp = t
+	s.lastLogID = v
+	s.logNum++
+	return nil
+}
+
 func (mt *MemTable) addTerm(context *Context, ref uint64, lset labels.Labels, pList index.Index) {
 	pointer, ok := pList.Find(context.Term)
 	//未出现过的词
@@ -205,27 +226,6 @@ func (mt *MemTable) Index(context *Context, a *analysis.Analyzer, log *logmsg.Lo
 
 func (mt *MemTable) Size() uint64 {
 	return atomic.LoadUint64(&mt.size)
-}
-
-func (mt *MemTable) addLabel(s *memSeries, t int64, v uint64) error {
-	var offset uint64
-	var size, length int
-	//var size int = s.seriesLen
-	offset, length = mt.bytePool.WriteVInt64(s.seriesIndex, t-s.lastTimeStamp)
-	size += length
-	offset, length = mt.bytePool.WriteVUint64(offset, v-s.lastLogID)
-	size += length
-	if s.minT == -1 {
-		s.minT = t
-	}
-	s.maxT = t
-	atomic.StoreUint64(&s.seriesIndex, offset)
-	atomic.AddUint64(&s.seriesLen, uint64(size))
-
-	s.lastTimeStamp = t
-	s.lastLogID = v
-	s.logNum++
-	return nil
 }
 
 func (mt *MemTable) getOrCreate(hash uint64, lset labels.Labels) (*memSeries, bool) {

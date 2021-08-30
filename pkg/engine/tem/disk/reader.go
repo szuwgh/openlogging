@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/cache.go"
+	"github.com/sophon-lab/temsearch/pkg/engine/tem/cache"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/series"
 	"github.com/sophon-lab/temsearch/pkg/temql"

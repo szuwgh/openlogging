@@ -61,10 +61,6 @@ func (fb *ForwardBytePool) writeByteAt(i uint64, b byte) uint64 {
 }
 
 func (fb *ForwardBytePool) writeBytes(l int, b []byte) error {
-	// end := len(b)
-	// for offset := 0; offset < end; offset++ {
-	// 	fb.writeByte(b[offset])
-	// }
 	m := uint64(l)
 	if fb.bufOffset+m >= BYTE_BLOCK_SIZE {
 		n := BYTE_BLOCK_SIZE - fb.bufOffset

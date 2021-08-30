@@ -9,9 +9,8 @@ import (
 
 type memIterator struct {
 	iter    index.Iterator
-	chunkr  chunks.ChunkReader // posting.InvertListReader
+	chunkr  chunks.ChunkReader
 	seriesr seriesReader
-	//isTag   bool
 }
 
 func (i *memIterator) First() bool {

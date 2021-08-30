@@ -5,22 +5,24 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/sophon-lab/temsearch/pkg/concept/logmsg"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/mem"
 )
 
 type Head struct {
-	mint         int64 `json:"minTime"`
-	MaxT         int64 `json:"maxTime"`
+	mint         int64
+	MaxT         int64
 	indexMem     *mem.MemTable
 	logsMem      *mem.LogsTable
 	indexControl sync.WaitGroup
 	rwControl
 	chunkRange int64
 	lastSegNum uint64
+	stat       *station
 }
 
-func NewHead(alloc byteutil.Allocator, chunkRange int64) *Head {
+func NewHead(alloc byteutil.Allocator, chunkRange int64, num, bufLen int) *Head {
 	h := &Head{
 		mint: math.MinInt64,
 		MaxT: math.MinInt64,
@@ -28,9 +30,16 @@ func NewHead(alloc byteutil.Allocator, chunkRange int64) *Head {
 	h.indexMem = mem.NewMemTable(byteutil.NewInvertedBytePool(alloc))
 	h.logsMem = mem.NewLogsTable(byteutil.NewForwardBytePool(alloc))
 	h.chunkRange = chunkRange
+	h.stat = newStation(num, bufLen)
 	return h
 }
 
+//add some logs
+func (h *Head) addLogs(logs logmsg.LogMsgArray) error {
+	return h.stat.addLogs(logs)
+}
+
+//read a log
 func (h *Head) readLog(id uint64) []byte {
 	return h.logsMem.ReadLog(id)
 }

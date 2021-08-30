@@ -21,18 +21,19 @@ type station struct {
 	j int
 }
 
-func NewStation() *station {
+func newStation(num, bufLen int) *station {
 	s := &station{}
 	s.transferChan = make(chan *logmsg.LogMsg)
-	s.pipes = make([]*pipeline, 3)
+	s.pipes = make([]*pipeline, num)
 	for i := range s.pipes {
-		s.pipes[i] = newPipeline(s, i)
+		s.pipes[i] = newPipeline(s, bufLen, i)
 	}
 	s.forwardID = 1
 	return s
 }
 
-func (s *station) AddLogs(l logmsg.LogMsgArray) error {
+//add some logs
+func (s *station) addLogs(l logmsg.LogMsgArray) error {
 	for i := 0; i < len(s.pipes); i++ {
 		err := s.pipes[s.j].addLogs(l)
 		s.j++
@@ -42,7 +43,6 @@ func (s *station) AddLogs(l logmsg.LogMsgArray) error {
 		if err == nil {
 			return err
 		}
-
 	}
 	return blockErr
 }
@@ -74,11 +74,11 @@ type pipeline struct {
 	stat *station
 }
 
-func newPipeline(stat *station, num int) *pipeline {
+func newPipeline(stat *station, bufLen, num int) *pipeline {
 	p := &pipeline{}
 	p.num = num
-	p.tokenChan = make(chan logmsg.LogMsgArray, 128)
-	p.waitChan = make(chan *logmsg.LogMsg, 512)
+	p.tokenChan = make(chan logmsg.LogMsgArray, bufLen)
+	p.waitChan = make(chan *logmsg.LogMsg, bufLen*2)
 	p.noticeChan = make(chan struct{})
 	p.stat = stat
 	go p.processTokener()

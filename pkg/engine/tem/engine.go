@@ -43,7 +43,11 @@ type Options struct {
 
 	BlockRanges []int64
 
-	NoLockfile bool
+	IndexBufferNum int
+
+	IndexBufferLength int
+
+	DataDir string
 }
 
 type Engine struct {
@@ -68,19 +72,21 @@ type Engine struct {
 	headPool        chan *Head
 	walDir          string
 	wal             Wal
+	opt             *Options
 }
 
-func NewEngine(a *analysis.Analyzer) (*Engine, error) {
+func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
 	//读取域元信息 这里先不读取
 	e := &Engine{}
 	e.a = a
+	e.opt = opt
 	e.alloc = byteutil.NewByteBlockAllocator()
 	e.tOps = disk.NewTableOps()
-	e.dataDir = "E:\\goproject\\temsearch\\src\\data"
+	e.dataDir = opt.DataDir
 	e.opts = &Options{RetentionDuration: 12 * 60 * 60, BlockRanges: exponentialBlockRanges(maxBlockDuration, 10, 3)} //15d
 	e.walDir = filepath.Join(e.dataDir, "wal")
 	e.headPool = make(chan *Head, 1)
-	e.head = NewHead(e.alloc, e.opts.BlockRanges[0])
+	e.head = NewHead(e.alloc, e.opts.BlockRanges[0], opt.IndexBufferNum, opt.IndexBufferLength)
 	e.head.open()
 	err := e.recoverWal()
 	if err != nil {
@@ -110,6 +116,10 @@ func NewEngine(a *analysis.Analyzer) (*Engine, error) {
 }
 
 func (e *Engine) process() {
+
+}
+
+func (e *Engine) chew() {
 
 }
 
@@ -398,7 +408,7 @@ func (e *Engine) allocHead() *Head {
 	default:
 	}
 	if h == nil {
-		h = NewHead(e.alloc, e.opts.BlockRanges[0])
+		h = NewHead(e.alloc, e.opts.BlockRanges[0], e.opt.IndexBufferNum, e.opt.IndexBufferLength)
 	}
 	h.open()
 	return h
