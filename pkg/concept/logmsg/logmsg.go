@@ -2,6 +2,12 @@ package logmsg
 
 import "encoding/json"
 
+type LogStream struct {
+}
+
+type Stream struct {
+}
+
 type LogMsgArray []*LogMsg
 
 //文档

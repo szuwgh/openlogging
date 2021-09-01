@@ -62,7 +62,6 @@ func (bp *bytePool) newBuffer() {
 	if bp.bufIndex > 0 {
 		bp.usedBufSize += BYTE_BLOCK_SIZE
 	}
-
 }
 
 func (bp *bytePool) Release(recycle, alloced *int) {

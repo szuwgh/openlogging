@@ -32,6 +32,10 @@ func (l *Label) ToByte() []byte {
 	return byteutil.Str2bytes(fmt.Sprint(*l))
 }
 
+func (l *Label) Tag() string {
+	return l.Name
+}
+
 // Labels is a sorted set of labels. Order has to be guaranteed upon
 // instantiation.
 type Labels []Label

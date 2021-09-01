@@ -24,6 +24,11 @@ import (
 	temqlLabels "github.com/sophon-lab/temsearch/pkg/temql/labels"
 )
 
+const (
+	stripeSize = 1 << 14
+	stripeMask = stripeSize - 1
+)
+
 type MetaIndex []int
 
 //内存数据库
@@ -42,11 +47,6 @@ type MemTable struct {
 	size           uint64
 	logID          uint64
 }
-
-const (
-	stripeSize = 1 << 14
-	stripeMask = stripeSize - 1
-)
 
 func NewMemTable(bytePool byteutil.Inverted) *MemTable {
 	mt := &MemTable{}
@@ -245,25 +245,25 @@ func (mt *MemTable) getOrCreateWithID(id, hash uint64, lset labels.Labels) (*mem
 	if !created {
 		return s, false
 	}
-	s.byteStart = mt.bytePool.InitBytes()
-	s.seriesIndex = s.byteStart
-	for _, l := range lset {
-		postingList, ok := mt.indexs.Get(l.Name)
-		if !ok {
-			postingList = mt.newIndex(true) //newSkipList(true)
-			mt.indexs.Set(l.Name, postingList)
-		}
-		b := byteutil.Str2bytes(l.Value)
-		pointer, ok := postingList.Find(b)
-		var posting *LabelPosting
-		if !ok {
-			posting = &LabelPosting{}
-			postingList.Insert(b, posting)
-		} else {
-			posting = pointer.(*LabelPosting)
-		}
-		posting.seriesID = append(posting.seriesID, id)
-	}
+	// s.byteStart = mt.bytePool.InitBytes()
+	// s.seriesIndex = s.byteStart
+	// for _, l := range lset {
+	// 	postingList, ok := mt.indexs.Get(l.Name)
+	// 	if !ok {
+	// 		postingList = mt.newIndex(true) //newSkipList(true)
+	// 		mt.indexs.Set(l.Name, postingList)
+	// 	}
+	// 	b := byteutil.Str2bytes(l.Value)
+	// 	pointer, ok := postingList.Find(b)
+	// 	var posting *LabelPosting
+	// 	if !ok {
+	// 		posting = &LabelPosting{}
+	// 		postingList.Insert(b, posting)
+	// 	} else {
+	// 		posting = pointer.(*LabelPosting)
+	// 	}
+	// 	posting.seriesID = append(posting.seriesID, id)
+	// }
 	return s, true
 }
 

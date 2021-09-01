@@ -11,15 +11,15 @@ import (
 )
 
 type Head struct {
+	rwControl
 	mint         int64
 	MaxT         int64
 	indexMem     *mem.MemTable
 	logsMem      *mem.LogsTable
 	indexControl sync.WaitGroup
-	rwControl
-	chunkRange int64
-	lastSegNum uint64
-	stat       *station
+	chunkRange   int64
+	lastSegNum   uint64
+	stat         *station
 }
 
 func NewHead(alloc byteutil.Allocator, chunkRange int64, num, bufLen int) *Head {
@@ -30,13 +30,13 @@ func NewHead(alloc byteutil.Allocator, chunkRange int64, num, bufLen int) *Head 
 	h.indexMem = mem.NewMemTable(byteutil.NewInvertedBytePool(alloc))
 	h.logsMem = mem.NewLogsTable(byteutil.NewForwardBytePool(alloc))
 	h.chunkRange = chunkRange
-	h.stat = newStation(num, bufLen)
+	h.stat = newStation(num, bufLen, nil)
 	return h
 }
 
 //add some logs
-func (h *Head) addLogs(logs logmsg.LogMsgArray) error {
-	return h.stat.addLogs(logs)
+func (h *Head) addLogs(l logmsg.LogMsgArray) error {
+	return h.stat.addLogs(l)
 }
 
 //read a log
@@ -44,10 +44,25 @@ func (h *Head) readLog(id uint64) []byte {
 	return h.logsMem.ReadLog(id)
 }
 
+func (h *Head) getLog() *logmsg.LogMsg {
+	return h.stat.Pull()
+}
+
+func (h *Head) process() {
+	for {
+		// log := h.getLog()
+	}
+}
+
+func (h *Head) chew() {
+	for {
+
+	}
+}
+
 func (h *Head) setMinTime(t int64) {
 	if h.mint == math.MinInt64 {
 		atomic.StoreInt64(&h.mint, t)
-		//h.mint = h.chunkRange * (t / h.chunkRange)
 		h.indexMem.SetBaseTimeStamp(t)
 	}
 }

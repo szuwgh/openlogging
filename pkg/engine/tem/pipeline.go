@@ -1,8 +1,6 @@
 package tem
 
 import (
-	"strings"
-
 	"github.com/pkg/errors"
 	"github.com/sophon-lab/temsearch/pkg/concept/logmsg"
 )
@@ -21,12 +19,12 @@ type station struct {
 	j int
 }
 
-func newStation(num, bufLen int) *station {
+func newStation(num, bufLen int, fn func()) *station {
 	s := &station{}
 	s.transferChan = make(chan *logmsg.LogMsg)
 	s.pipes = make([]*pipeline, num)
 	for i := range s.pipes {
-		s.pipes[i] = newPipeline(s, bufLen, i)
+		s.pipes[i] = newPipeline(s, bufLen, i, fn)
 	}
 	s.forwardID = 1
 	return s
@@ -74,14 +72,14 @@ type pipeline struct {
 	stat *station
 }
 
-func newPipeline(stat *station, bufLen, num int) *pipeline {
+func newPipeline(stat *station, bufLen, num int, fn func()) *pipeline {
 	p := &pipeline{}
 	p.num = num
 	p.tokenChan = make(chan logmsg.LogMsgArray, bufLen)
 	p.waitChan = make(chan *logmsg.LogMsg, bufLen*2)
 	p.noticeChan = make(chan struct{})
 	p.stat = stat
-	go p.processTokener()
+	go p.processTokener(fn)
 	go p.transfer()
 	return p
 }
@@ -98,13 +96,14 @@ func (p *pipeline) addLogs(l logmsg.LogMsgArray) error {
 }
 
 //dealing with word segmentation loops
-func (p *pipeline) processTokener() {
+func (p *pipeline) processTokener(fn func()) {
 	for {
 		logs := <-p.tokenChan
 
 		for i := range logs {
 			//tokener
-			strings.Split(logs[i].Msg, ",")
+			//strings.Split(logs[i].Msg, ",")
+			//fn()
 			//Enter waiting
 			p.waitChan <- logs[i]
 		}

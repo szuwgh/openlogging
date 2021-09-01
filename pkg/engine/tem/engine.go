@@ -111,16 +111,7 @@ func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
 	}
 	e.walFile = append(e.walFile, lastWal)
 	go e.compact()
-	go e.process()
 	return e, nil
-}
-
-func (e *Engine) process() {
-
-}
-
-func (e *Engine) chew() {
-
 }
 
 func (e *Engine) recoverWal() error {
