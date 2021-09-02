@@ -4,10 +4,12 @@ import (
 	"encoding/binary"
 
 	//"binary"
-	//"github.com/sophon-lab/temsearch/pkg/engine/tem/binary"
+	//"github.com/sophon-lab/temsearch/pkg/engine/tem/mybinary"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/disk"
 )
+
+const blockSize = 4 * 1024
 
 //存储域
 type LogsTable struct {
@@ -42,8 +44,6 @@ func (lt *LogsTable) GetByteSize(b []byte) {
 	lt.index = append(lt.index, lt.bytePool.UseByteOffset())
 	lt.bytePool.WriteMsg(b)
 }
-
-const blockSize = 4 * 1024
 
 func (lt *LogsTable) Iterator() disk.LogIterator {
 	return newForwardLogIterator(lt.reader, lt.index)

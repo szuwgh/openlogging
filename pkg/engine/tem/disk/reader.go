@@ -20,7 +20,7 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
 
-	mybin "github.com/sophon-lab/temsearch/pkg/engine/tem/binary"
+	mybin "github.com/sophon-lab/temsearch/pkg/engine/tem/mybinary"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 	temqlLabels "github.com/sophon-lab/temsearch/pkg/temql/labels"

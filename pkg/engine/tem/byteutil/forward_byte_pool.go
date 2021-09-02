@@ -1,7 +1,7 @@
 package byteutil
 
 import (
-	bin "github.com/sophon-lab/temsearch/pkg/engine/tem/binary"
+	bin "github.com/sophon-lab/temsearch/pkg/engine/tem/mybinary"
 )
 
 type ForwardBytePool struct {

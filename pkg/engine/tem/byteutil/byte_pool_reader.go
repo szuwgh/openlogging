@@ -4,9 +4,9 @@ import (
 	"encoding/binary"
 	"errors"
 
-	bin "github.com/sophon-lab/temsearch/pkg/engine/tem/binary"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
+	bin "github.com/sophon-lab/temsearch/pkg/engine/tem/mybinary"
 )
 
 //对byte块进行写入

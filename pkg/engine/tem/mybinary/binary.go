@@ -1,11 +1,11 @@
-package binary
+package mybinary
 
 type bufRead interface {
 	ReadByte() (byte, error)
 }
 
 type bufWrite interface {
-	WriteByte(uint64, byte) uint64
+	PutByte(uint64, byte) uint64
 }
 
 // //‭0101 1010‬
@@ -26,11 +26,11 @@ type bufWrite interface {
 func PutUvarint64(buf bufWrite, n uint64, x uint64) (uint64, int) {
 	i := 0
 	for x >= 0x80 {
-		n = buf.WriteByte(n, byte(x)|0x80)
+		n = buf.PutByte(n, byte(x)|0x80)
 		x >>= 7
 		i++
 	}
-	n = buf.WriteByte(n, byte(x))
+	n = buf.PutByte(n, byte(x))
 	return n, i + 1
 }
 

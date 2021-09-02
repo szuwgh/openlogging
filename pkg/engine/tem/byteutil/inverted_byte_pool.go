@@ -1,8 +1,8 @@
 package byteutil
 
 import (
-	bin "github.com/sophon-lab/temsearch/pkg/engine/tem/binary"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
+	bin "github.com/sophon-lab/temsearch/pkg/engine/tem/mybinary"
 )
 
 //内存分配

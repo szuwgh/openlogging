@@ -3,7 +3,7 @@ package byteutil
 import (
 	"encoding/binary"
 
-	mybin "github.com/sophon-lab/temsearch/pkg/engine/tem/binary"
+	mybin "github.com/sophon-lab/temsearch/pkg/engine/tem/mybinary"
 )
 
 type EncBuf struct {
