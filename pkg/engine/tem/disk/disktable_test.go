@@ -3,7 +3,7 @@ package disk
 import (
 	"testing"
 
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/cache.go"
+	"github.com/sophon-lab/temsearch/pkg/engine/tem/cache"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 )
 

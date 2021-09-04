@@ -221,7 +221,7 @@ func (mt *MemTable) Index(context *Context, a *analysis.Analyzer, log *logmsg.Lo
 		context.Position = t.Position
 		mt.addTerm(context, s.ref, lset, postingList)
 	}
-	atomic.AddUint64(&mt.size, uint64(log.Size()))
+	//atomic.AddUint64(&mt.size, uint64(log.Size()))
 }
 
 func (mt *MemTable) Size() uint64 {

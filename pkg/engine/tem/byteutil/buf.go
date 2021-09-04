@@ -16,7 +16,7 @@ func (e *EncBuf) Len() int           { return e.bytes.Len() }
 func (e *EncBuf) Get() []byte        { return e.bytes.Bytes() }
 func (e *EncBuf) Alloc(n int) []byte { return e.bytes.Alloc(n) }
 
-func (e *EncBuf) WriteByte(i uint64, b byte) uint64 {
+func (e *EncBuf) PutByte(i uint64, b byte) uint64 {
 	e.bytes.WriteByte(b)
 	return 0
 }

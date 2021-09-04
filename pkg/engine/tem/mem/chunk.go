@@ -9,7 +9,7 @@ type chunkAlloc interface {
 type chunk struct {
 	data []byte
 	a    chunkAlloc
-	i    uint64
+	//i    uint64
 }
 
 func (c *chunk) PutByte(i uint64, b byte) uint64 {
@@ -22,19 +22,22 @@ func (c *chunk) PutByte(i uint64, b byte) uint64 {
 		c.data[i] = b
 	}
 	i++
-	return 0, i
+	return i
 }
 
 func (c *chunk) putVInt(b int) int {
 	var size int
-	c.i, size = mybinary.Putvarint(c, c.i, b)
+	i, size = mybinary.Putvarint(c, i, b)
+
 	return size
 }
 
 func (c *chunk) putVInt64(b int64) int {
 	var size int
-	c.i, size = mybinary.Putvarint(c, c.i, b)
-	return 0
+	var i uint64
+	i, size = mybinary.Putvarint64(c, i, b)
+	c.data = c.data[i:]
+	return size
 }
 
 type labelChunk struct {
@@ -43,6 +46,6 @@ type labelChunk struct {
 
 type temChunk struct {
 	logFreq chunk
-	skip    chunk
+	skip    []chunk
 	pos     chunk
 }

@@ -36,7 +36,7 @@ func (fb *ForwardBytePool) Bytes(m, n, l uint64) []byte {
 	return fb.buffers[m][n : n+l]
 }
 
-func (fb *ForwardBytePool) WriteByte(i uint64, b byte) uint64 {
+func (fb *ForwardBytePool) PutByte(i uint64, b byte) uint64 {
 	return fb.writeByteAt(i, b)
 }
 

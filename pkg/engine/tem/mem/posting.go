@@ -27,14 +27,16 @@ type RawPosting struct {
 	IsCommit           bool
 	//meta
 	minT, maxT int64
+	byteStart  uint64
+	chunk      *temChunk
 
-	byteStart      uint64 //byte开始地方
-	logFreqIndex   uint64
-	logFreqLen     uint64
-	skipStartIndex [global.FreqSkipListLevel]uint64
-	skipLen        [global.FreqSkipListLevel]uint64
-	posIndex       uint64
-	posLen         uint64
+	// byteStart      uint64 //byte开始地方
+	// logFreqIndex   uint64
+	// logFreqLen     uint64
+	// skipStartIndex [global.FreqSkipListLevel]uint64
+	// skipLen        [global.FreqSkipListLevel]uint64
+	// posIndex       uint64
+	// posLen         uint64
 }
 
 func (t *RawPosting) MinTime() int64 {

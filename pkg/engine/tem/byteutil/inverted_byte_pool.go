@@ -1,6 +1,8 @@
 package byteutil
 
 import (
+	"sync"
+
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
 	bin "github.com/sophon-lab/temsearch/pkg/engine/tem/mybinary"
 )
@@ -15,6 +17,8 @@ type InvertedBytePool struct {
 	MaxblockSize int
 
 	baseTimeStamp int64
+
+	mu sync.Mutex
 }
 
 func (b *InvertedBytePool) GetBuffers() [][]byte {
@@ -77,6 +81,24 @@ func (ib *InvertedBytePool) Bytes(m, n, l uint64) []byte {
 	return ib.buffers[m][n : n+l]
 }
 
+func (ib *InvertedBytePool) Alloc(slice []byte, size byte) []byte {
+	ib.mu.Lock()
+	defer ib.mu.Unlock()
+
+	newLevel := size
+	if newLevel >= 10 {
+		newLevel = 9
+	}
+	newSize := SizeClass[newLevel]
+	offset := ib.newBytes(newSize)
+	ib.buffer[ib.bufOffset-PointerLen] = classEOP[newLevel]
+	length := len(slice)
+	for i := 0; i < length; i++ {
+		slice[i] = byte(offset >> uint(8*(3-i)))
+	}
+	return ib.buffer[offset : offset+newSize]
+}
+
 //allocBytes 扩容bytes
 func (ib *InvertedBytePool) allocBytes(slice []byte, size byte) uint64 {
 
@@ -111,7 +133,7 @@ func (ib *InvertedBytePool) writeByte(i uint64, b byte) uint64 {
 	return i
 }
 
-func (ib *InvertedBytePool) WriteByte(i uint64, b byte) uint64 {
+func (ib *InvertedBytePool) PutByte(i uint64, b byte) uint64 {
 	return ib.writeByte(i, b)
 }
 
