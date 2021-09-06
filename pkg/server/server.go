@@ -13,6 +13,16 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 )
 
+type Config struct {
+	RetentionDuration uint64
+
+	IndexBufferNum int
+
+	IndexBufferLength int
+
+	DataDir string
+}
+
 //服务
 type Server struct {
 	eg *tem.Engine

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"runtime"
 
@@ -12,6 +11,7 @@ import (
 )
 
 func init() {
+	StartCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory to read from")
 	rootCmd.AddCommand(StartCmd)
 }
 
@@ -23,7 +23,6 @@ var StartCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("start")
 		start(args)
 	},
 }

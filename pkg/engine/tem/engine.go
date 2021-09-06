@@ -37,8 +37,6 @@ const (
 )
 
 type Options struct {
-	WALFlushInterval time.Duration
-
 	RetentionDuration uint64
 
 	BlockRanges []int64
@@ -48,6 +46,14 @@ type Options struct {
 	IndexBufferLength int
 
 	DataDir string
+
+	MaxBlockDuration int
+
+	FlushWritecoldDuration int
+
+	DefaultCacheSnapshotMemorySize int
+
+	SkipInterval int
 }
 
 type Engine struct {
