@@ -1,28 +1,37 @@
 package tem
 
 import (
+	"log"
 	"math"
 	"sync"
 	"sync/atomic"
 
+	"github.com/sophon-lab/temsearch/pkg/analysis"
 	"github.com/sophon-lab/temsearch/pkg/concept/logmsg"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
+	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/mem"
 )
 
 type Head struct {
 	rwControl
-	mint         int64
-	MaxT         int64
-	indexMem     *mem.MemTable
-	logsMem      *mem.LogsTable
-	indexControl sync.WaitGroup
-	chunkRange   int64
-	lastSegNum   uint64
-	stat         *station
+	mint          int64
+	MaxT          int64
+	indexMem      *mem.MemTable
+	logsMem       *mem.LogsTable
+	indexControl  sync.WaitGroup
+	chunkRange    int64
+	lastSegNum    uint64
+	stat          *station
+	a             *analysis.Analyzer
+	EndID         uint64
+	startChan     chan struct{}
+	headStartChan chan struct{}
+	isWaitfroze   bool
+	logSize       uint64
 }
 
-func NewHead(alloc byteutil.Allocator, chunkRange int64, num, bufLen int) *Head {
+func NewHead(alloc byteutil.Allocator, chunkRange int64, num, bufLen int, compactChan chan struct{}, a *analysis.Analyzer) *Head {
 	h := &Head{
 		mint: math.MinInt64,
 		MaxT: math.MinInt64,
@@ -30,7 +39,10 @@ func NewHead(alloc byteutil.Allocator, chunkRange int64, num, bufLen int) *Head 
 	h.indexMem = mem.NewMemTable(byteutil.NewInvertedBytePool(alloc))
 	h.logsMem = mem.NewLogsTable(byteutil.NewForwardBytePool(alloc))
 	h.chunkRange = chunkRange
-	h.stat = newStation(num, bufLen, nil)
+	h.a = a
+	h.stat = newStation(num, bufLen, h.pretreat)
+	h.startChan = make(chan struct{}, 1)
+	go h.process(compactChan)
 	return h
 }
 
@@ -44,19 +56,45 @@ func (h *Head) readLog(id uint64) []byte {
 	return h.logsMem.ReadLog(id)
 }
 
-func (h *Head) getLog() *logmsg.LogMsg {
+func (h *Head) getLog() mem.LogSummary {
 	return h.stat.Pull()
 }
 
-func (h *Head) process() {
+func (h *Head) process(compactChan chan struct{}) {
+	context := mem.Context{}
 	for {
-		// log := h.getLog()
+		if h.isWaitfroze {
+			log.Println("wait start index")
+			<-h.startChan
+			log.Println("ok start index")
+			h.isWaitfroze = false
+		}
+		logSumm := h.getLog()
+		log.Println(logSumm.DocID)
+		if logSumm.DocID == h.EndID {
+			log.Println("endID", h.EndID)
+			h.headStartChan <- struct{}{}
+			compactChan <- struct{}{}
+			continue
+		}
+		h.logsMem.WriteLog(logSumm.Msg)
+		h.indexMem.Index(&context, logSumm)
+		h.indexMem.Flush()
 	}
 }
 
-func (h *Head) chew() {
-	for {
-
+func (h *Head) pretreat(log *logmsg.LogMsg) mem.LogSummary {
+	lset := labels.FromMap(log.Tags)
+	s, _ := h.indexMem.GetOrCreate(lset.Hash(), lset)
+	msg := byteutil.Str2bytes(log.Msg)
+	tokens := h.a.Analyze(msg)
+	return mem.LogSummary{
+		DocID:     log.InterID,
+		Series:    s,
+		Tokens:    tokens,
+		TimeStamp: log.TimeStamp,
+		Lset:      lset,
+		Msg:       msg,
 	}
 }
 
@@ -75,6 +113,10 @@ func (h *Head) setMaxTime(t int64) {
 func (h *Head) reset() {
 	h.mint = math.MinInt64
 	h.lastSegNum = 0
+	h.EndID = 0
+	h.isWaitfroze = false
+	h.logSize = 0
+	h.stat.forwardID = 1
 }
 
 func (h *Head) Index() IndexReader {
@@ -102,7 +144,7 @@ func (h *Head) LastSegNum() uint64 {
 }
 
 func (h *Head) size() uint64 {
-	return h.indexMem.Size()
+	return atomic.LoadUint64(&h.logSize)
 }
 
 func (h *Head) startIndex() {

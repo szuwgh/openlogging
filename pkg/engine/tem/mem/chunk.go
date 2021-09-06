@@ -27,7 +27,7 @@ func (c *chunk) PutByte(i uint64, b byte) uint64 {
 
 func (c *chunk) putVInt(b int) int {
 	var size int
-	i, size = mybinary.Putvarint(c, i, b)
+	//i, size = mybinary.Putvarint(c, i, b)
 
 	return size
 }

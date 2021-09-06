@@ -8,7 +8,6 @@ import (
 	"hash/crc32"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -638,7 +637,6 @@ func (pw *postingWriter) writePosting(refs ...[]uint64) (uint64, error) {
 
 	//写入crc32校验码
 	crc := crc32.ChecksumIEEE(pw.buf2.Get())
-	log.Println("crc", crc)
 	pw.buf1.PutUvarint(pw.buf2.Len())
 	pw.buf2.PutUint32(crc)
 	length := pw.buf1.Len() + pw.buf2.Len()

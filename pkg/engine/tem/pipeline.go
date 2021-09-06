@@ -1,11 +1,16 @@
 package tem
 
 import (
+	"log"
+
 	"github.com/pkg/errors"
 	"github.com/sophon-lab/temsearch/pkg/concept/logmsg"
+	"github.com/sophon-lab/temsearch/pkg/engine/tem/mem"
 )
 
 var blockErr = errors.New("log channel block")
+
+type pretreatmentFunc func(*logmsg.LogMsg) mem.LogSummary
 
 //
 type station struct {
@@ -14,14 +19,14 @@ type station struct {
 	//Looking forward to the next log, enter the index loop
 	forwardID uint64
 
-	transferChan chan *logmsg.LogMsg
+	transferChan chan mem.LogSummary
 
 	j int
 }
 
-func newStation(num, bufLen int, fn func()) *station {
+func newStation(num, bufLen int, fn pretreatmentFunc) *station {
 	s := &station{}
-	s.transferChan = make(chan *logmsg.LogMsg)
+	s.transferChan = make(chan mem.LogSummary)
 	s.pipes = make([]*pipeline, num)
 	for i := range s.pipes {
 		s.pipes[i] = newPipeline(s, bufLen, i, fn)
@@ -54,7 +59,7 @@ func (s *station) broadCast(ignoreNum int) {
 	}
 }
 
-func (s *station) Pull() *logmsg.LogMsg {
+func (s *station) Pull() mem.LogSummary {
 	return <-s.transferChan
 }
 
@@ -65,18 +70,18 @@ type pipeline struct {
 	tokenChan chan logmsg.LogMsgArray
 
 	//complete word segmentation and enter the waiting queue
-	waitChan chan *logmsg.LogMsg
+	waitChan chan mem.LogSummary //*logmsg.LogMsg
 
 	noticeChan chan struct{}
 	//
 	stat *station
 }
 
-func newPipeline(stat *station, bufLen, num int, fn func()) *pipeline {
+func newPipeline(stat *station, bufLen, num int, fn pretreatmentFunc) *pipeline {
 	p := &pipeline{}
 	p.num = num
 	p.tokenChan = make(chan logmsg.LogMsgArray, bufLen)
-	p.waitChan = make(chan *logmsg.LogMsg, bufLen*2)
+	p.waitChan = make(chan mem.LogSummary, bufLen*2)
 	p.noticeChan = make(chan struct{})
 	p.stat = stat
 	go p.processTokener(fn)
@@ -96,16 +101,12 @@ func (p *pipeline) addLogs(l logmsg.LogMsgArray) error {
 }
 
 //dealing with word segmentation loops
-func (p *pipeline) processTokener(fn func()) {
+func (p *pipeline) processTokener(fn pretreatmentFunc) {
 	for {
 		logs := <-p.tokenChan
-
 		for i := range logs {
-			//tokener
-			//strings.Split(logs[i].Msg, ",")
-			//fn()
-			//Enter waiting
-			p.waitChan <- logs[i]
+			log.Println("processTokener", logs[i].InterID)
+			p.waitChan <- fn(logs[i])
 		}
 	}
 }
@@ -123,10 +124,10 @@ func (p *pipeline) wait() {
 
 func (p *pipeline) transfer() {
 	for {
-		log := <-p.waitChan
+		summ := <-p.waitChan
 		for {
-			if log.InterID == p.stat.forwardID {
-				p.stat.transferChan <- log
+			if summ.DocID == p.stat.forwardID {
+				p.stat.transferChan <- summ
 				p.stat.forwardID++
 				p.stat.broadCast(p.num)
 				break

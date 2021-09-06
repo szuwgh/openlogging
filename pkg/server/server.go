@@ -21,7 +21,13 @@ type Server struct {
 func New() *Server {
 	s := &Server{}
 	var err error
-	s.eg, err = tem.NewEngine(analysis.NewAnalyzer("gojieba"))
+	opts := &tem.Options{}
+	opts.RetentionDuration = 12 * 60 * 60
+	opts.BlockRanges = exponentialBlockRanges(tem.MaxBlockDuration, 10, 3)
+	opts.IndexBufferNum = 1
+	opts.IndexBufferLength = 1
+	opts.DataDir = "E:\\goproject\\temsearch\\data"
+	s.eg, err = tem.NewEngine(opts, analysis.NewAnalyzer("gojieba"))
 	if err != nil {
 		return nil
 	}
@@ -78,6 +84,7 @@ func (s *Server) Search(input string, mint, maxt, count int64) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	//defer searcher.Close()
 	var series []Series
 	seriesSet := searcher.Search(expr.(temql.Expr), mint, maxt)
 	for seriesSet.Next() {
@@ -95,4 +102,14 @@ func (s *Server) Search(input string, mint, maxt, count int64) ([]byte, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+func exponentialBlockRanges(minSize int64, steps, stepSize int) []int64 {
+	ranges := make([]int64, 0, steps)
+	curRange := minSize
+	for i := 0; i < steps; i++ {
+		ranges = append(ranges, curRange)
+		curRange = curRange * int64(stepSize)
+	}
+	return ranges
 }

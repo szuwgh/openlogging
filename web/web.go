@@ -24,6 +24,9 @@ type Handler struct {
 func New() *Handler {
 	h := &Handler{}
 	h.s = server.New()
+	if h.s == nil {
+		return nil
+	}
 	return h
 }
 

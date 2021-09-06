@@ -33,5 +33,8 @@ func start(args []string) {
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 	tokenizer.Init()
 	webHandler := web.New()
+	if webHandler == nil {
+		log.Fatalln("temsearch handler is nil")
+	}
 	webHandler.Run()
 }

@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
@@ -19,8 +21,6 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/analysis"
 	"github.com/sophon-lab/temsearch/pkg/concept/logmsg"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/disk"
-
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/mem"
 )
 
 const (
@@ -31,7 +31,7 @@ const (
 
 	metaFilename = "meta.json"
 
-	maxBlockDuration = 30 //1 * 60 * 60 //1 * 60 * 60 //2h
+	MaxBlockDuration = 30 //1 * 60 * 60 //1 * 60 * 60 //2h
 
 	flushWritecoldDuration = 60
 )
@@ -51,12 +51,12 @@ type Options struct {
 }
 
 type Engine struct {
-	tOps      *disk.TableOps
-	blocks    []*Block
-	lastLogID uint64
-	opts      *Options
-	a         *analysis.Analyzer
-	mu        sync.RWMutex
+	tOps   *disk.TableOps
+	blocks []*Block
+	//lastLogID uint64
+	//opts      *Options
+	a  *analysis.Analyzer
+	mu sync.RWMutex
 
 	memMu           sync.RWMutex
 	nextID          uint64
@@ -70,23 +70,25 @@ type Engine struct {
 	indexChan       chan logmsg.LogMsgArray
 	done            chan struct{}
 	headPool        chan *Head
+	compactChan     chan struct{}
 	walDir          string
 	wal             Wal
-	opt             *Options
+	opts            *Options
+	//logID           uint64
 }
 
 func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
 	//读取域元信息 这里先不读取
 	e := &Engine{}
 	e.a = a
-	e.opt = opt
+	e.opts = opt
 	e.alloc = byteutil.NewByteBlockAllocator()
 	e.tOps = disk.NewTableOps()
 	e.dataDir = opt.DataDir
-	e.opts = &Options{RetentionDuration: 12 * 60 * 60, BlockRanges: exponentialBlockRanges(maxBlockDuration, 10, 3)} //15d
 	e.walDir = filepath.Join(e.dataDir, "wal")
 	e.headPool = make(chan *Head, 1)
-	e.head = NewHead(e.alloc, e.opts.BlockRanges[0], opt.IndexBufferNum, opt.IndexBufferLength)
+	e.compactChan = make(chan struct{}, 1)
+	e.head = e.newHead()
 	e.head.open()
 	err := e.recoverWal()
 	if err != nil {
@@ -112,6 +114,10 @@ func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
 	e.walFile = append(e.walFile, lastWal)
 	go e.compact()
 	return e, nil
+}
+
+func (e *Engine) newHead() *Head {
+	return NewHead(e.alloc, e.opts.BlockRanges[0], e.opts.IndexBufferNum, e.opts.IndexBufferLength, e.compactChan, e.a)
 }
 
 func (e *Engine) recoverWal() error {
@@ -146,16 +152,6 @@ func (e *Engine) recoverWal() error {
 		e.shouldCompact()
 	}
 	return nil
-}
-
-func exponentialBlockRanges(minSize int64, steps, stepSize int) []int64 {
-	ranges := make([]int64, 0, steps)
-	curRange := minSize
-	for i := 0; i < steps; i++ {
-		ranges = append(ranges, curRange)
-		curRange = curRange * int64(stepSize)
-	}
-	return ranges
 }
 
 func (e *Engine) openBlock(dir string) (*Block, error) {
@@ -341,15 +337,15 @@ func (e *Engine) index(b []byte) error {
 	if err != nil {
 		return err
 	}
-	nowt := time.Now().Unix()
-	context := mem.Context{}
 	e.memMu.Lock()
 	defer e.memMu.Unlock()
+	nowt := time.Now().Unix()
 	err = e.wal.log(b)
 	if err != nil {
 		return err
 	}
-	return e.addToMemDB(nowt, &context, logs)
+	return e.addToMemDB(nowt, logs)
+
 }
 
 func (e *Engine) recoverMemDB(b []byte) error {
@@ -359,19 +355,21 @@ func (e *Engine) recoverMemDB(b []byte) error {
 		return err
 	}
 	nowt := time.Now().Unix()
-	context := mem.Context{}
-	return e.addToMemDB(nowt, &context, logs)
+	return e.addToMemDB(nowt, logs)
 }
 
-func (e *Engine) addToMemDB(nowt int64, context *mem.Context, logs logmsg.LogMsgArray) error {
+func (e *Engine) addToMemDB(nowt int64, logs logmsg.LogMsgArray) error {
 	head := e.getIndexHead()
 	head.setMinTime(nowt)
 	for _, log := range logs {
 		log.TimeStamp = nowt
-		head.logsMem.WriteLog(byteutil.Str2bytes(log.Msg))
-		head.indexMem.Index(context, e.a, log)
+		log.InterID = e.GetNextID()
+		atomic.AddUint64(&head.logSize, uint64(log.Size()))
+		//head.logsMem.WriteLog(byteutil.Str2bytes(log.Msg))
+		//head.indexMem.Index(context, e.a, log)
 	}
-	e.indexCommit(head, nowt)
+	head.addLogs(logs)
+	head.setMaxTime(nowt)
 	return nil
 }
 
@@ -399,7 +397,7 @@ func (e *Engine) allocHead() *Head {
 	default:
 	}
 	if h == nil {
-		h = NewHead(e.alloc, e.opts.BlockRanges[0], e.opt.IndexBufferNum, e.opt.IndexBufferLength)
+		h = e.newHead()
 	}
 	h.open()
 	return h
@@ -420,9 +418,8 @@ func (e *Engine) compact() {
 			return
 		default:
 			e.shouldCompact()
-
 		}
-		time.Sleep(time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -430,6 +427,7 @@ func (e *Engine) shouldCompact() error {
 	if !e.ShouldCompactMem(e.head) {
 		return nil
 	}
+	var endID uint64
 	e.memMu.Lock()
 	if e.wal != nil {
 		err := e.wal.close()
@@ -456,8 +454,28 @@ func (e *Engine) shouldCompact() error {
 	}
 	e.frozeHead = e.head
 	e.head = e.allocHead() //NewHead(e.alloc)
+	e.head.isWaitfroze = true
+	e.frozeHead.headStartChan = e.head.startChan
 	e.head.lastSegNum = e.frozeHead.lastSegNum + e.frozeHead.LogNum()
+	endID = e.GetNextID()
+	e.frozeHead.EndID = endID
+	e.nextID = 0
 	e.memMu.Unlock()
+	logs := logmsg.LogMsgArray{&logmsg.LogMsg{InterID: endID}}
+	//notification needs to be written to disk
+	log.Println("add end logs")
+	e.frozeHead.addLogs(logs)
+	for {
+		select {
+		case <-e.compactChan:
+			log.Println("do compact")
+			return e.doCompact()
+
+		}
+	}
+}
+
+func (e *Engine) doCompact() error {
 	err := e.mcompact()
 	if err != nil {
 		return err
@@ -504,17 +522,19 @@ func (e *Engine) compactionCommit() {
 }
 
 func (e *Engine) ShouldCompactMem(h *Head) bool {
+	//	log.Println("minTime", h.MinTime())
 	if h.MinTime() == math.MinInt64 {
 		return false
 	}
 	sz := e.head.size()
+	//log.Println("sz", sz)
 	if sz == 0 {
 		return false
 	}
 	if sz > DefaultCacheSnapshotMemorySize {
 		return true
 	}
-	return h.MaxTime()-h.MinTime() > maxBlockDuration || time.Now().Unix()-h.MaxTime() > flushWritecoldDuration
+	return h.MaxTime()-h.MinTime() > MaxBlockDuration || time.Now().Unix()-h.MaxTime() > flushWritecoldDuration
 }
 
 func (e *Engine) Searcher(mint, maxt int64) (Searcher, error) {
@@ -565,7 +585,7 @@ func (e *Engine) mcompact() error {
 		return nil
 	}
 	//等待索引完成
-	e.frozeHead.waitIndex()
+	//e.frozeHead.waitIndex()
 	return e.compactor.Write(e.dataDir, e.frozeHead, e.frozeHead.mint, e.frozeHead.MaxT)
 }
 

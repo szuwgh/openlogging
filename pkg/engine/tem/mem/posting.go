@@ -27,16 +27,16 @@ type RawPosting struct {
 	IsCommit           bool
 	//meta
 	minT, maxT int64
-	byteStart  uint64
-	chunk      *temChunk
+	//	byteStart  uint64
+	//	chunk      *temChunk
 
-	// byteStart      uint64 //byte开始地方
-	// logFreqIndex   uint64
-	// logFreqLen     uint64
-	// skipStartIndex [global.FreqSkipListLevel]uint64
-	// skipLen        [global.FreqSkipListLevel]uint64
-	// posIndex       uint64
-	// posLen         uint64
+	byteStart      uint64 //byte开始地方
+	logFreqIndex   uint64
+	logFreqLen     uint64
+	skipStartIndex [global.FreqSkipListLevel]uint64
+	skipLen        [global.FreqSkipListLevel]uint64
+	posIndex       uint64
+	posLen         uint64
 }
 
 func (t *RawPosting) MinTime() int64 {
@@ -128,14 +128,14 @@ type LabelPosting struct {
 	seriesID []uint64
 }
 
-type memSeriesList []*memSeries
+type MemSeriesList []*MemSeries
 
-func (p memSeriesList) Len() int           { return len(p) }
-func (p memSeriesList) Less(i, j int) bool { return labels.Compare(p[i].lset, p[j].lset) < 0 }
-func (p memSeriesList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p MemSeriesList) Len() int           { return len(p) }
+func (p MemSeriesList) Less(i, j int) bool { return labels.Compare(p[i].lset, p[j].lset) < 0 }
+func (p MemSeriesList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-func (t *LabelPosting) toPosting(s seriesReader) memSeriesList {
-	p := make(memSeriesList, 0, len(t.seriesID))
+func (t *LabelPosting) toPosting(s seriesReader) MemSeriesList {
+	p := make(MemSeriesList, 0, len(t.seriesID))
 	for _, v := range t.seriesID {
 		p = append(p, s.getByID(v))
 	}
@@ -161,7 +161,7 @@ type tagIterator interface {
 }
 
 type seriesReader interface {
-	getByID(id uint64) *memSeries
+	getByID(id uint64) *MemSeries
 }
 
 //

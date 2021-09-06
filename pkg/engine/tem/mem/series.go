@@ -8,7 +8,7 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 )
 
-type memSeries struct {
+type MemSeries struct {
 	ref                    uint64
 	lset                   labels.Labels
 	byteStart              uint64 //byte开始地方
@@ -20,15 +20,15 @@ type memSeries struct {
 	lastTimeStamp int64  //上一次时间
 }
 
-func (m *memSeries) MinTime() int64 {
+func (m *MemSeries) MinTime() int64 {
 	return m.minT
 }
 
-func (m *memSeries) MaxTime() int64 {
+func (m *MemSeries) MaxTime() int64 {
 	return m.maxT
 }
 
-func (m *memSeries) ChunkEnc(isTerm bool, cr chunks.ChunkReader) chunks.ChunkEnc {
+func (m *MemSeries) ChunkEnc(isTerm bool, cr chunks.ChunkReader) chunks.ChunkEnc {
 	ref := make([]uint64, 3)
 	ref[0] = m.byteStart
 	ref[1] = m.seriesIndex
@@ -36,10 +36,10 @@ func (m *memSeries) ChunkEnc(isTerm bool, cr chunks.ChunkReader) chunks.ChunkEnc
 	return cr.ReadChunk(isTerm, ref...)
 }
 
-//func (s *memSeries)newS
+//func (s *MemSeries)newS
 
-func newMemSeries(lset labels.Labels, id uint64) *memSeries {
-	s := &memSeries{
+func newMemSeries(lset labels.Labels, id uint64) *MemSeries {
+	s := &MemSeries{
 		lset: lset,
 		ref:  id,
 		minT: -1,
@@ -47,7 +47,7 @@ func newMemSeries(lset labels.Labels, id uint64) *memSeries {
 	return s
 }
 
-type seriesHashmap map[uint64][]*memSeries
+type seriesHashmap map[uint64][]*MemSeries
 
 type stripeLock struct {
 	sync.RWMutex
@@ -56,7 +56,7 @@ type stripeLock struct {
 }
 
 type stripeSeries struct {
-	series [stripeSize]map[uint64]*memSeries
+	series [stripeSize]map[uint64]*MemSeries
 	hashes [stripeSize]seriesHashmap
 	locks  [stripeSize]stripeLock
 }
@@ -78,7 +78,7 @@ func newStripeSeries() *stripeSeries {
 	s := &stripeSeries{}
 
 	for i := range s.series {
-		s.series[i] = map[uint64]*memSeries{}
+		s.series[i] = map[uint64]*MemSeries{}
 	}
 	for i := range s.hashes {
 		s.hashes[i] = seriesHashmap{}
@@ -86,7 +86,7 @@ func newStripeSeries() *stripeSeries {
 	return s
 }
 
-func (s *stripeSeries) getByHash(hash uint64, lset labels.Labels) *memSeries {
+func (s *stripeSeries) getByHash(hash uint64, lset labels.Labels) *MemSeries {
 	i := hash & stripeMask
 
 	s.locks[i].RLock()
@@ -96,7 +96,7 @@ func (s *stripeSeries) getByHash(hash uint64, lset labels.Labels) *memSeries {
 	return series
 }
 
-func (s *stripeSeries) getOrSet(hash uint64, series *memSeries) (*memSeries, bool) {
+func (s *stripeSeries) getOrSet(hash uint64, series *MemSeries) (*MemSeries, bool) {
 	i := hash & stripeMask
 
 	s.locks[i].Lock()
@@ -122,7 +122,7 @@ func (s *stripeSeries) GetByID(id uint64) (labels.Labels, []chunks.Chunk, error)
 	return series.lset, []chunks.Chunk{series}, nil
 }
 
-func (s *stripeSeries) getByID(id uint64) *memSeries {
+func (s *stripeSeries) getByID(id uint64) *MemSeries {
 	i := id & stripeMask
 
 	s.locks[i].RLock()
@@ -132,7 +132,7 @@ func (s *stripeSeries) getByID(id uint64) *memSeries {
 	return series
 }
 
-func (m seriesHashmap) get(hash uint64, lset labels.Labels) *memSeries {
+func (m seriesHashmap) get(hash uint64, lset labels.Labels) *MemSeries {
 	for _, s := range m[hash] {
 		if s.lset.Equals(lset) {
 			return s
@@ -141,7 +141,7 @@ func (m seriesHashmap) get(hash uint64, lset labels.Labels) *memSeries {
 	return nil
 }
 
-func (m seriesHashmap) set(hash uint64, s *memSeries) {
+func (m seriesHashmap) set(hash uint64, s *MemSeries) {
 	l := m[hash]
 	for i, prev := range l {
 		if prev.lset.Equals(s.lset) {

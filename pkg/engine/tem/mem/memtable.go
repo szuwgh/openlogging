@@ -9,6 +9,7 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/index"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/index/skiplist"
 	"github.com/sophon-lab/temsearch/pkg/temql"
+	"github.com/sophon-lab/temsearch/pkg/tokenizer"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/disk"
@@ -16,8 +17,6 @@ import (
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 
-	"github.com/sophon-lab/temsearch/pkg/analysis"
-	"github.com/sophon-lab/temsearch/pkg/concept/logmsg"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
@@ -29,11 +28,22 @@ const (
 	stripeMask = stripeSize - 1
 )
 
+type LogSummary struct {
+	DocID     uint64
+	Series    *MemSeries
+	Tokens    tokenizer.Tokens
+	Msg       []byte
+	Lset      labels.Labels
+	TimeStamp int64
+}
+
 type MetaIndex []int
 
 //内存数据库
 type MemTable struct {
-	mutex          sync.RWMutex
+	//mutex  sync.RWMutex
+	symMtx sync.RWMutex
+
 	indexs         indexGroup
 	bytePool       byteutil.Inverted                //byteArrayPool
 	bytePoolReader *byteutil.InvertedBytePoolReader //chunks.ChunkReader //*byteutil.InvertedBytePoolReader
@@ -44,8 +54,8 @@ type MemTable struct {
 	flushPosting   []*RawPosting
 	series         *stripeSeries
 	lastSeriesID   uint64
-	size           uint64
-	logID          uint64
+
+	logID uint64
 }
 
 func NewMemTable(bytePool byteutil.Inverted) *MemTable {
@@ -75,7 +85,7 @@ func (mt *MemTable) SetBaseTimeStamp(t int64) {
 }
 
 func (mt *MemTable) reset() {
-	mt.size = 0
+	//mt.size = 0
 	mt.lastSeriesID = 0
 	mt.logID = 0
 }
@@ -139,7 +149,7 @@ func (mt *MemTable) ReleaseBuff(recycle, alloced *int) error {
 	//mt.indexs.
 }
 
-func (mt *MemTable) addLabel(s *memSeries, t int64, v uint64) error {
+func (mt *MemTable) addLabel(s *MemSeries, t int64, v uint64) error {
 	var offset uint64
 	var size, length int
 	//var size int = s.seriesLen
@@ -194,41 +204,39 @@ func (mt *MemTable) LogNum() uint64 {
 }
 
 //索引文档
-func (mt *MemTable) Index(context *Context, a *analysis.Analyzer, log *logmsg.LogMsg) {
-	logID := mt.getNextLogID()
-	context.LogID = logID //mt.getNextLogID()
-	context.TimeStamp = log.TimeStamp
+func (mt *MemTable) Index(context *Context, logSum LogSummary) {
+	//logID := mt.getNextLogID()
+	s := logSum.Series
+	context.LogID = logSum.DocID //mt.getNextLogID()
+	context.TimeStamp = logSum.TimeStamp
+	mt.addLabel(s, logSum.TimeStamp, logSum.DocID)
 
-	lset := labels.FromMap(log.Tags)
-	if len(lset) == 0 {
-		return
-	}
-	s, _ := mt.getOrCreate(lset.Hash(), lset)
-	mt.addLabel(s, log.TimeStamp, logID)
-
-	tokens := a.Analyze([]byte(log.Msg))
+	//	tokens := a.Analyze([]byte(log.Msg))
 
 	postingList, ok := mt.indexs.Get(global.MESSAGE) //e.processMap[global.MESSAGE]
 	if !ok {
 		return
 	}
 	//分词 全文索引
-	for _, t := range tokens {
+	for _, t := range logSum.Tokens {
 		if strings.TrimSpace(t.Term) == "" {
 			continue
 		}
 		context.Term = bytes.TrimSpace([]byte(t.Term)) //词
 		context.Position = t.Position
-		mt.addTerm(context, s.ref, lset, postingList)
+		mt.addTerm(context, s.ref, logSum.Lset, postingList)
 	}
 	//atomic.AddUint64(&mt.size, uint64(log.Size()))
 }
 
-func (mt *MemTable) Size() uint64 {
-	return atomic.LoadUint64(&mt.size)
-}
+// func (mt *MemTable) Size() uint64 {
+// 	return atomic.LoadUint64(&mt.size)
+// }
 
-func (mt *MemTable) getOrCreate(hash uint64, lset labels.Labels) (*memSeries, bool) {
+func (mt *MemTable) GetOrCreate(hash uint64, lset labels.Labels) (*MemSeries, bool) {
+	if len(lset) == 0 {
+		return nil, false
+	}
 	s := mt.series.getByHash(hash, lset)
 	if s != nil {
 		return s, false
@@ -238,32 +246,34 @@ func (mt *MemTable) getOrCreate(hash uint64, lset labels.Labels) (*memSeries, bo
 	return mt.getOrCreateWithID(id, hash, lset)
 }
 
-func (mt *MemTable) getOrCreateWithID(id, hash uint64, lset labels.Labels) (*memSeries, bool) {
+func (mt *MemTable) getOrCreateWithID(id, hash uint64, lset labels.Labels) (*MemSeries, bool) {
 
 	s := newMemSeries(lset, id)
 	s, created := mt.series.getOrSet(hash, s)
 	if !created {
 		return s, false
 	}
-	// s.byteStart = mt.bytePool.InitBytes()
-	// s.seriesIndex = s.byteStart
-	// for _, l := range lset {
-	// 	postingList, ok := mt.indexs.Get(l.Name)
-	// 	if !ok {
-	// 		postingList = mt.newIndex(true) //newSkipList(true)
-	// 		mt.indexs.Set(l.Name, postingList)
-	// 	}
-	// 	b := byteutil.Str2bytes(l.Value)
-	// 	pointer, ok := postingList.Find(b)
-	// 	var posting *LabelPosting
-	// 	if !ok {
-	// 		posting = &LabelPosting{}
-	// 		postingList.Insert(b, posting)
-	// 	} else {
-	// 		posting = pointer.(*LabelPosting)
-	// 	}
-	// 	posting.seriesID = append(posting.seriesID, id)
-	// }
+	mt.symMtx.Lock()
+	defer mt.symMtx.Unlock()
+	s.byteStart = mt.bytePool.InitBytes()
+	s.seriesIndex = s.byteStart
+	for _, l := range lset {
+		postingList, ok := mt.indexs.Get(l.Name)
+		if !ok {
+			postingList = mt.newIndex(true) //newSkipList(true)
+			mt.indexs.Set(l.Name, postingList)
+		}
+		b := byteutil.Str2bytes(l.Value)
+		pointer, ok := postingList.Find(b)
+		var posting *LabelPosting
+		if !ok {
+			posting = &LabelPosting{}
+			postingList.Insert(b, posting)
+		} else {
+			posting = pointer.(*LabelPosting)
+		}
+		posting.seriesID = append(posting.seriesID, id)
+	}
 	return s, true
 }
 
