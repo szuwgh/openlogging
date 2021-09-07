@@ -86,7 +86,13 @@
 
         function search() {
             var text = document.getElementById('text-expr').value;
-            //console.log(text);
+            var startTime = document.getElementById('start-time').value;
+            var endTime = document.getElementById('end-time').value;
+
+            var startTimeStamp = new Date(startTime).getTime();
+            console.log(startTime);
+            console.log(endTime);
+            return
             xmlHttp = new XMLHttpRequest();
             var host = window.location.protocol + "//" + window.location.host;
             xmlHttp.open("get", host + "/search?temql=" + text);
@@ -136,6 +142,11 @@
         <div class="col-lg-10"></div>
         <textarea id="text-expr" placeholder="输入表达式" name="expr" class="form-control"></textarea>
     </div>
+
+    <div class="row">
+        <input id="start-time" type="datetime-local"> - <input id="end-time" type="datetime-local">
+    </div>
+
 
     <div class="row">
         <div class="col-lg-10">

@@ -20,9 +20,9 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
 
-	mybin "github.com/sophon-lab/temsearch/pkg/engine/tem/mybinary"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
+	mybin "github.com/sophon-lab/temsearch/pkg/engine/tem/mybinary"
 	temqlLabels "github.com/sophon-lab/temsearch/pkg/temql/labels"
 )
 
@@ -781,7 +781,7 @@ func (r *IndexReader) getIndexBlock(tagName string) (*blockReader, error) {
 	return r.indexBlocks[tagName], nil
 }
 
-func (r *IndexReader) Release() error {
+func (r *IndexReader) Close() error {
 	r.indexr.close()
 	r.tagsBlock.Release()
 	for k, v := range r.indexBlocks {
@@ -882,7 +882,8 @@ func (cr *LogReader) Iterator() LogIterator {
 	return newDiskLogIterator(cr)
 }
 
-func (cr *LogReader) Release() error {
+func (cr *LogReader) Close() error {
+	//cr.lcache.Cache.EvictAll()
 	cr.lcache = nil
 	return nil
 }

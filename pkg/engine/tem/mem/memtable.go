@@ -131,7 +131,7 @@ func (mt *MemTable) ShowSeries() {
 }
 
 //回收内存
-func (mt *MemTable) Release() error {
+func (mt *MemTable) Close() error {
 	// mt.bytePool.Release(recycle, alloced)
 	// mt.indexs.Release()
 	// mt.series.gc()

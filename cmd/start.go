@@ -4,14 +4,18 @@ import (
 	"log"
 	"runtime"
 
+	"github.com/sophon-lab/temsearch/pkg/server"
 	"github.com/sophon-lab/temsearch/pkg/tokenizer"
 	_ "github.com/sophon-lab/temsearch/pkg/tokenizer/buildinit"
 	"github.com/sophon-lab/temsearch/web"
 	"github.com/spf13/cobra"
 )
 
+var config server.Config
+
 func init() {
-	StartCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory to read from")
+
+	//StartCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory to read from")
 	rootCmd.AddCommand(StartCmd)
 }
 

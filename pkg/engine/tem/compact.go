@@ -1,6 +1,7 @@
 package tem
 
 import (
+	"io"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -182,11 +183,19 @@ func (c *leveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 	Logiter := make([]disk.LogIterator, len(blocks))
 	segmentNum := make([]uint64, len(blocks))
 	baseTime := make([]int64, len(blocks))
+
+	var closers = []io.Closer{}
+	defer func() { closeAll(closers...) }()
 	for i := range iters {
-		iters[i] = blocks[i].Index().Iterator()
-		Logiter[i] = blocks[i].Logs().Iterator()
-		segmentNum[i] = blocks[i].LogNum()
-		baseTime[i] = blocks[i].MinTime()
+		block := blocks[i]
+		indexr := block.Index()
+		logr := block.Logs()
+		closers = append(closers, indexr, logr)
+		iters[i] = indexr.Iterator()
+		Logiter[i] = logr.Iterator()
+
+		segmentNum[i] = block.LogNum()
+		baseTime[i] = block.MinTime()
 	}
 
 	err = c.composeBlock(segmentNum, baseTime, disk.NewMergeLabelIterator(iters...), disk.NewMergeLogIterator(Logiter...), meta, indexw, chunkw)
@@ -259,4 +268,13 @@ func (c *leveledCompactor) composeBlock(segmentNum []uint64, baseTime []int64,
 	}
 	meta.LogID = append(meta.LogID, logID)
 	return nil
+}
+
+func closeAll(cs ...io.Closer) error {
+	var merr MultiError
+
+	for _, c := range cs {
+		merr.Add(c.Close())
+	}
+	return merr.Err()
 }

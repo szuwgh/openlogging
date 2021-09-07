@@ -1,7 +1,6 @@
 package tem
 
 import (
-	"log"
 	"math"
 	"sync"
 	"sync/atomic"
@@ -64,15 +63,11 @@ func (h *Head) process(compactChan chan struct{}) {
 	context := mem.Context{}
 	for {
 		if h.isWaitfroze {
-			log.Println("wait start index")
 			<-h.startChan
-			log.Println("ok start index")
 			h.isWaitfroze = false
 		}
 		logSumm := h.getLog()
-		log.Println(logSumm.DocID)
 		if logSumm.DocID == h.EndID {
-			log.Println("endID", h.EndID)
 			h.headStartChan <- struct{}{}
 			compactChan <- struct{}{}
 			continue
@@ -119,12 +114,18 @@ func (h *Head) reset() {
 	h.stat.forwardID = 1
 }
 
+func (h *Head) ReadDone() {
+	h.pendingReaders.Done()
+}
+
 func (h *Head) Index() IndexReader {
-	return h.indexMem
+	h.startRead()
+	return &blockIndexReader{h.indexMem, h}
 }
 
 func (h *Head) Logs() LogReader {
-	return h.logsMem
+	h.startRead()
+	return &blockLogReader{h.logsMem, h}
 }
 
 func (h *Head) MinTime() int64 {

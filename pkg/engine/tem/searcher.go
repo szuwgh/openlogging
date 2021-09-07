@@ -2,7 +2,6 @@ package tem
 
 import (
 	"container/heap"
-	"log"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
@@ -14,6 +13,7 @@ import (
 
 type Searcher interface {
 	Search(expr temql.Expr, mint, maxt int64) SeriesSet
+	Close() error
 }
 
 type searcher struct {
@@ -22,6 +22,14 @@ type searcher struct {
 
 func (s *searcher) Search(expr temql.Expr, mint, maxt int64) SeriesSet {
 	return s.search(s.bs, expr, mint, maxt)
+}
+
+func (s *searcher) Close() error {
+	var merr MultiError
+	for _, b := range s.bs {
+		merr.Add(b.Close())
+	}
+	return merr.Err()
 }
 
 func (s *searcher) search(bs []Searcher, expr temql.Expr, mint, maxt int64) SeriesSet {
@@ -33,13 +41,7 @@ func (s *searcher) search(bs []Searcher, expr temql.Expr, mint, maxt int64) Seri
 	}
 	l := len(bs) / 2
 	a := s.search(bs[:l], expr, mint, maxt)
-	// if err != nil {
-	// 	return nil
-	// }
 	b := s.search(bs[l:], expr, mint, maxt)
-	// if err != nil {
-	// 	return nil
-	// }
 	return newMergedSeriesSet(a, b)
 }
 
@@ -184,8 +186,8 @@ func (it *chainedSeriesIterator) Err() error {
 	return it.cur.Err()
 }
 
-func NewBloctemsearcher(b BlockReader) *bloctemsearcher {
-	bs := &bloctemsearcher{
+func NewBloctemsearcher(b BlockReader) *blockSearcher {
+	bs := &blockSearcher{
 		indexr:        b.Index(),
 		logr:          b.Logs(),
 		baseTimeStamp: b.MinTime(),
@@ -509,20 +511,19 @@ func (c *baseChunkSeries) Err() error {
 	return c.err
 }
 
-type bloctemsearcher struct {
+type blockSearcher struct {
 	indexr        IndexReader
 	logr          LogReader
 	baseTimeStamp int64
 	lastSegNum    uint64
 }
 
-func (s *bloctemsearcher) Search(expr temql.Expr, mint, maxt int64) SeriesSet {
+func (s *blockSearcher) Search(expr temql.Expr, mint, maxt int64) SeriesSet {
 	e, ok := expr.(*temql.VectorSelector)
 	if !ok {
 		return nil
 	}
 	posting, series := s.indexr.Search(e.LabelMatchers, e.Expr)
-	log.Println("posting,series", posting, series)
 	isTerm := e.Expr != nil
 	return &blockSeriesSet{
 		set: &populatedChunkSeries{
@@ -540,6 +541,16 @@ func (s *bloctemsearcher) Search(expr temql.Expr, mint, maxt int64) SeriesSet {
 		maxt:       maxt,
 		lastSegNum: s.lastSegNum,
 	}
+}
+
+func (s *blockSearcher) Close() error {
+
+	var merr MultiError
+
+	merr.Add(s.indexr.Close())
+	merr.Add(s.logr.Close())
+
+	return merr.Err()
 
 }
 

@@ -1,8 +1,6 @@
 package tem
 
 import (
-	"log"
-
 	"github.com/pkg/errors"
 	"github.com/sophon-lab/temsearch/pkg/concept/logmsg"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/mem"
@@ -105,7 +103,7 @@ func (p *pipeline) processTokener(fn pretreatmentFunc) {
 	for {
 		logs := <-p.tokenChan
 		for i := range logs {
-			log.Println("processTokener", logs[i].InterID)
+			//log.Println("processTokener", logs[i].InterID)
 			p.waitChan <- fn(logs[i])
 		}
 	}

@@ -25,15 +25,15 @@ import (
 
 const (
 	//NOMOREDOCS   = 0x7fffffff
-	skipInterval = 3
+	//skipInterval = 3
 
 	DefaultCacheSnapshotMemorySize = 25 * 1024 * 1024 // 25MB
 
 	metaFilename = "meta.json"
 
-	MaxBlockDuration = 30 //1 * 60 * 60 //1 * 60 * 60 //2h
+	//MaxBlockDuration = 30 //1 * 60 * 60 //1 * 60 * 60 //2h
 
-	flushWritecoldDuration = 60
+	//flushWritecoldDuration = 60
 )
 
 type Options struct {
@@ -47,9 +47,9 @@ type Options struct {
 
 	DataDir string
 
-	MaxBlockDuration int
+	MaxBlockDuration int64
 
-	FlushWritecoldDuration int
+	FlushWritecoldDuration int64
 
 	DefaultCacheSnapshotMemorySize int
 
@@ -235,6 +235,7 @@ func (e *Engine) reload() error {
 			continue
 		}
 		if e.beyondRetention(meta) {
+			log.Println("beyondRetention", meta.ULID.String())
 			deleteable[meta.ULID] = struct{}{}
 			continue
 		}
@@ -274,6 +275,7 @@ func (e *Engine) reload() error {
 		b.Close()
 	}
 	for ulid := range deleteable {
+		log.Println("delete", ulid.String())
 		if err := e.tOps.RemoveIndexReader(filepath.Join(e.dataDir, ulid.String()), ulid); err != nil {
 			return err
 		}
@@ -540,7 +542,7 @@ func (e *Engine) ShouldCompactMem(h *Head) bool {
 	if sz > DefaultCacheSnapshotMemorySize {
 		return true
 	}
-	return h.MaxTime()-h.MinTime() > MaxBlockDuration || time.Now().Unix()-h.MaxTime() > flushWritecoldDuration
+	return h.MaxTime()-h.MinTime() > e.opts.MaxBlockDuration || time.Now().Unix()-h.MaxTime() > e.opts.FlushWritecoldDuration
 }
 
 func (e *Engine) Searcher(mint, maxt int64) (Searcher, error) {

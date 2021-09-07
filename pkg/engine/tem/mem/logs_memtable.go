@@ -50,7 +50,7 @@ func (lt *LogsTable) Iterator() disk.LogIterator {
 }
 
 //回收内存
-func (lt *LogsTable) Release() error {
+func (lt *LogsTable) Close() error {
 	return nil
 }
 

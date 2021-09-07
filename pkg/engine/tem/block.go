@@ -3,6 +3,7 @@ package tem
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -22,13 +23,17 @@ type IndexReader interface {
 	Search(lset []*labels.Matcher, expr temql.Expr) (posting.Postings, []series.Series)
 	ChunkReader() chunks.ChunkReader
 	Iterator() disk.IteratorLabel
-	Release() error
+	Close() error
 }
 
 type LogReader interface {
 	ReadLog(uint64) []byte
 	Iterator() disk.LogIterator
-	Release() error
+	Close() error
+}
+
+type BlockControl interface {
+	ReadDone()
 }
 
 type BlockReader interface {
@@ -80,11 +85,17 @@ type Block struct {
 }
 
 func (b *Block) Index() IndexReader {
-	return b.indexr
+	b.startRead()
+	return &blockIndexReader{b.indexr, b}
 }
 
 func (b *Block) Logs() LogReader {
-	return b.logr
+	b.startRead()
+	return &blockLogReader{b.logr, b}
+}
+
+func (b *Block) ReadDone() {
+	b.pendingReaders.Done()
 }
 
 func (b *Block) MinTime() int64 {
@@ -106,29 +117,52 @@ func (b *Block) LastSegNum() uint64 {
 func (b *Block) Close() error {
 	b.waitRead()
 	var merr MultiError
-	merr.Add(b.logr.Release())
-	merr.Add(b.indexr.Release())
+	merr.Add(b.logr.Close())
+	merr.Add(b.indexr.Close())
 
+	log.Println("Block Close")
 	return merr.Err()
 }
 
 type blockIndexReader struct {
-	IndexReader
-	b *Block
+	ir IndexReader
+	b  BlockControl
+}
+
+func (r blockIndexReader) Search(lset []*labels.Matcher, expr temql.Expr) (posting.Postings, []series.Series) {
+	return r.ir.Search(lset, expr)
+}
+
+func (r blockIndexReader) ChunkReader() chunks.ChunkReader {
+	return r.ir.ChunkReader()
+}
+
+func (r blockIndexReader) Iterator() disk.IteratorLabel {
+	return r.ir.Iterator()
 }
 
 func (r blockIndexReader) Close() error {
-	r.b.pendingReaders.Done()
+	r.b.ReadDone()
+	log.Println("blockIndexReader readdone")
 	return nil
 }
 
 type blockLogReader struct {
-	LogReader
-	b *Block
+	lr LogReader
+	b  BlockControl
+}
+
+func (r blockLogReader) ReadLog(v uint64) []byte {
+	return r.lr.ReadLog(v)
+}
+
+func (r blockLogReader) Iterator() disk.LogIterator {
+	return r.lr.Iterator()
 }
 
 func (r blockLogReader) Close() error {
-	r.b.pendingReaders.Done()
+	r.b.ReadDone()
+	log.Println("blockLogReader readdone")
 	return nil
 }
 
