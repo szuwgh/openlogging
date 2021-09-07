@@ -6,7 +6,10 @@
         margin-top: 15px;
         margin-right: 150px;
         margin-left: 15px;
+    }
 
+    .ele {
+        margin-left: 15px;
     }
 
     .btn {
@@ -15,12 +18,14 @@
         width: 100px;
         height: 34px;
         color: white;
+        margin-left: 30px;
     }
 
     .col-lg-10 {
         position: relative;
         min-height: 1px;
         width: 83.33333333%;
+        margin-left: 15px;
     }
 
     .form-control {
@@ -43,7 +48,7 @@
         margin-bottom: 10px;
     }
 </style>
-<div background-color=#fff;>
+<div background-color=#fff class="row">
     <h2> temsearch</h2>
 </div>
 
@@ -84,18 +89,36 @@
             })
         }
 
+        function formatParams(params) {
+            return "?" + Object
+                .keys(params)
+                .map(function (key) {
+                    return key + "=" + encodeURIComponent(params[key])
+                })
+                .join("&")
+        }
+
         function search() {
             var text = document.getElementById('text-expr').value;
             var startTime = document.getElementById('start-time').value;
             var endTime = document.getElementById('end-time').value;
+            var startTimeStamp = new Date(startTime).getTime() / 1000;
+            var endTimeStamp = new Date(endTime).getTime() / 1000;
+            var last = new 
+            if (startTimeStamp == 0 || endTimeStamp == 0) {
 
-            var startTimeStamp = new Date(startTime).getTime();
-            console.log(startTime);
-            console.log(endTime);
-            return
+            }
+            var count = document.getElementById('sel-count').value;
             xmlHttp = new XMLHttpRequest();
             var host = window.location.protocol + "//" + window.location.host;
-            xmlHttp.open("get", host + "/search?temql=" + text);
+            var params = {
+                "temql": text,
+                "mint": startTimeStamp,
+                "maxt": endTimeStamp
+            }
+            console.log(formatParams(params));
+            return
+            xmlHttp.open("get", host + "/search" + formatParams(params));
             xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xmlHttp.send(null);
 
@@ -140,24 +163,33 @@
 
     <div class="row">
         <div class="col-lg-10"></div>
-        <textarea id="text-expr" placeholder="输入表达式" name="expr" class="form-control"></textarea>
+        <textarea id="text-expr" placeholder="Expression" name="expr" class="form-control"></textarea>
     </div>
 
     <div class="row">
-        <input id="start-time" type="datetime-local"> - <input id="end-time" type="datetime-local">
+        <b>last</b>
+        <select id="sel-count">
+            <option value="1">5min</option>
+            <option value="2">1h</option>
+            <option value="3">3h</option>
+            <option value="4">24h</option>
+        </select>
+        <input class="ele" id="start-time" type="datetime-local"> - <input id="end-time" type="datetime-local">
+        <b class="ele">count:</b>
+        <select id="sel-count" margin-left="30px">
+            <option value="10">10</option>
+            <option value="30">30</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+        <input class="btn" type="button" color="white" value="query" name="submit" onclick="search()" />
     </div>
 
-
-    <div class="row">
-        <div class="col-lg-10">
-            <input class="btn" type="button" color="white" value="query" name="submit" onclick="search()" />
-        </div>
-    </div>
 
 </div>
 
 <div>
-    <table border="2" bordercolor="gray" style="border-collapse:collapse;">
+    <table class="row" border="2" bordercolor="gray" style="border-collapse:collapse;">
         <thead>  <tr>  <th>time-series</th>   <th>date</th> <th>logs</th>  </tr>  </thead> 
         <tbody id="tbody-result">
         </tbody>
