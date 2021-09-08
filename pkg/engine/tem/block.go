@@ -16,11 +16,11 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/series"
 	"github.com/sophon-lab/temsearch/pkg/temql"
-	"github.com/sophon-lab/temsearch/pkg/temql/labels"
+	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
 )
 
 type IndexReader interface {
-	Search(lset []*labels.Matcher, expr temql.Expr) (posting.Postings, []series.Series)
+	Search(lset []*prompb.LabelMatcher, expr temql.Expr) (posting.Postings, []series.Series)
 	ChunkReader() chunks.ChunkReader
 	Iterator() disk.IteratorLabel
 	Close() error
@@ -129,7 +129,7 @@ type blockIndexReader struct {
 	b  BlockControl
 }
 
-func (r blockIndexReader) Search(lset []*labels.Matcher, expr temql.Expr) (posting.Postings, []series.Series) {
+func (r blockIndexReader) Search(lset []*prompb.LabelMatcher, expr temql.Expr) (posting.Postings, []series.Series) {
 	return r.ir.Search(lset, expr)
 }
 

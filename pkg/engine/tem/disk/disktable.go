@@ -41,7 +41,7 @@ const (
 	dirSeries  = "series"
 	dirPosting = "posting"
 
-	LogMaxSize = 128 * KiB //100 	KB
+	LogMaxSize = 128 * MiB //100 	KB
 
 	defaultSegmentSize = 64 * MiB //32 * MiB //1024 * 1024
 

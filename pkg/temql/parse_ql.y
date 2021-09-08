@@ -1,6 +1,6 @@
 %{
 package temql
-import "github.com/sophon-lab/temsearch/pkg/temql/labels"
+import "github.com/sophon-lab/temsearch/pkg/lib/prompb"
 import "fmt"
 %}
 
@@ -8,8 +8,8 @@ import "fmt"
 %union {
     item Item
     node Node
-    matchers  []*labels.Matcher
-    matcher   *labels.Matcher
+    matchers  []*prompb.LabelMatcher
+    matcher   *prompb.LabelMatcher
 }
 
 %token <item>
@@ -106,7 +106,7 @@ label_match_list: label_match_list COMMA label_matcher
                         }
                         }
                 | label_matcher
-                        { $$ = []*labels.Matcher{$1}}
+                        { $$ = []*prompb.LabelMatcher{$1}}
                 | label_match_list error
                         { yylex.(*parser).unexpected("label matching", "\",\" or \"}\""); $$ = $1 }
                 ;
@@ -132,7 +132,7 @@ vector_selector: term_identifier label_matchers
                      fmt.Println("parse term_identifier")
                      vs := &VectorSelector{
                                 Expr: $1,
-                                LabelMatchers: []*labels.Matcher{},
+                                LabelMatchers: []*prompb.LabelMatcher{},
                         }
                      $$ = vs  
                 }

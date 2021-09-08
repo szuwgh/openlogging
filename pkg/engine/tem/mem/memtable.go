@@ -8,6 +8,7 @@ import (
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/index"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/index/skiplist"
+	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
 	"github.com/sophon-lab/temsearch/pkg/temql"
 	"github.com/sophon-lab/temsearch/pkg/tokenizer"
 
@@ -20,7 +21,7 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
-	temqlLabels "github.com/sophon-lab/temsearch/pkg/temql/labels"
+	//temqlLabels "github.com/sophon-lab/temsearch/pkg/lib/prompb"
 )
 
 const (
@@ -289,7 +290,7 @@ func (mt *MemTable) Iterator() disk.IteratorLabel {
 	return mt.indexs.Iterator(mt.bytePoolReader, mt.series)
 }
 
-func (mt *MemTable) Search(lset []*temqlLabels.Matcher, expr temql.Expr) (posting.Postings, []series.Series) { // ([]*search.SeriesSnapShot, []*search.SnapShot) {
+func (mt *MemTable) Search(lset []*prompb.LabelMatcher, expr temql.Expr) (posting.Postings, []series.Series) { // ([]*search.SeriesSnapShot, []*search.SnapShot) {
 	var its []posting.Postings
 	for _, v := range lset {
 		postingList, ok := mt.indexs.Get(v.Name)

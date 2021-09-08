@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/sophon-lab/temsearch/pkg/temql/labels"
+	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
 )
 
 type Expr interface {
@@ -22,7 +22,7 @@ type VectorSelector struct {
 
 	Expr Expr
 
-	LabelMatchers []*labels.Matcher
+	LabelMatchers []*prompb.LabelMatcher
 }
 
 func (*VectorSelector) String() string {

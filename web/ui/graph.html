@@ -58,6 +58,14 @@
     <meta charset="UTF-8">
     <!-- <link rel="stylesheet" href="/static/graph.css"> -->
     <script type="text/javascript">
+
+        const lastMap = {
+            "1": 5 * 60,
+            "2": 60 * 60,
+            "3": 3 * 60 * 60,
+            "4": 24 * 60 * 60,
+        }
+
         //时间戳转本地时间
         function getLocalTime(ns) {
             const t = new Date(ns * 1000)
@@ -104,9 +112,10 @@
             var endTime = document.getElementById('end-time').value;
             var startTimeStamp = new Date(startTime).getTime() / 1000;
             var endTimeStamp = new Date(endTime).getTime() / 1000;
-            var last = new 
-            if (startTimeStamp == 0 || endTimeStamp == 0) {
-
+            var last = document.getElementById('sel-last').value;
+            if (isNaN(startTimeStamp) || isNaN(endTimeStamp)) {
+                endTimeStamp = Date.parse(new Date()) / 1000;
+                startTimeStamp = endTimeStamp - lastMap[last];
             }
             var count = document.getElementById('sel-count').value;
             xmlHttp = new XMLHttpRequest();
@@ -114,10 +123,10 @@
             var params = {
                 "temql": text,
                 "mint": startTimeStamp,
-                "maxt": endTimeStamp
+                "maxt": endTimeStamp,
+                "count": count,
             }
-            console.log(formatParams(params));
-            return
+            console.log(formatParams(params))
             xmlHttp.open("get", host + "/search" + formatParams(params));
             xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xmlHttp.send(null);
@@ -131,23 +140,28 @@
                     var dataJson = JSON.parse(this.responseText);
                     resBody.innerHTML = " ";
                     for (i in dataJson) {
-                        var logStr = ""
-                        var timeStr = ""
+                        var logStr = "";
+                        var timeStr = "";
                         for (j in dataJson[i]["logs"]) {
-                            logStr += "<tr >" +
-                                "<td >" + dataJson[i]["logs"][j]["log"] + "</td >" +
+                            logStr += "<tr>" +
+                                "<td>" + dataJson[i]["logs"][j]["log"] + "</td>" +
                                 "</tr>";
                             timeStr += "<tr >" +
                                 "<td >" + getLocalTime(dataJson[i]["logs"][j]["timestamp"]) + "</td >" +
                                 "</tr>";
                         }
                         let obj = Object.create(null);
-                        var metric = dataJson[i]["metric"]
+                        var total = dataJson[i]["total_count"];
+                        var metric = dataJson[i]["metric"];
                         for (let j in dataJson[i]["metric"]) {
                             obj[dataJson[i]["metric"][j]["Name"]] = dataJson[i]["metric"][j]["Value"]
                         }
+                        var series =
+                            "<tr>" + "<td>" + "series: " + JSON.stringify(obj) + "</td>" + "</tr>" +
+                            "<tr>" + "<td>" + "total : " + total + "</td>" + "</tr>"
+
                         str += "<tr>" +
-                            "<td>" + JSON.stringify(obj) + "</td>" +
+                            "<td >" + "<table frame=void border rules=none width=100%>" + series + "</table>" + "</td>" +
                             "<td >" + "<table rules=rows cellpadding=\"10\" width=100%>" + timeStr + "</table>" + "</td >" +
                             "<td >" + "<table rules=rows cellpadding=\"10\" width=100%>" + logStr + "</table>" + "</td >" +
                             "</tr>";
@@ -168,13 +182,16 @@
 
     <div class="row">
         <b>last</b>
-        <select id="sel-count">
+        <select id="sel-last">
             <option value="1">5min</option>
             <option value="2">1h</option>
             <option value="3">3h</option>
             <option value="4">24h</option>
         </select>
-        <input class="ele" id="start-time" type="datetime-local"> - <input id="end-time" type="datetime-local">
+        <form style="margin:0px;display:inline;"> <input class="ele" id="start-time" type="datetime-local"
+                value="0-0-0T0:0"> - <input id="end-time" type="datetime-local"><input class="ele" type="reset"
+                value="Reset">
+        </form>
         <b class="ele">count:</b>
         <select id="sel-count" margin-left="30px">
             <option value="10">10</option>
@@ -182,7 +199,7 @@
             <option value="50">50</option>
             <option value="100">100</option>
         </select>
-        <input class="btn" type="button" color="white" value="query" name="submit" onclick="search()" />
+        <input class="btn" type="button" color="white" value="Search" name="submit" onclick="search()" />
     </div>
 
 
@@ -190,7 +207,7 @@
 
 <div>
     <table class="row" border="2" bordercolor="gray" style="border-collapse:collapse;">
-        <thead>  <tr>  <th>time-series</th>   <th>date</th> <th>logs</th>  </tr>  </thead> 
+        <thead>  <tr>  <th width=300px>time-series</th>   <th>date</th> <th>logs</th>  </tr>  </thead> 
         <tbody id="tbody-result">
         </tbody>
     </table>

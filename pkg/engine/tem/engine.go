@@ -312,7 +312,6 @@ func (e *Engine) releaseFroze() {
 	e.recoHead(e.frozeHead)
 	e.frozeHead = nil
 	recycle = e.alloc.Len()
-
 }
 
 func (e *Engine) GetNextID() uint64 {

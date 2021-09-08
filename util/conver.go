@@ -1,6 +1,9 @@
 package util
 
-import "unsafe"
+import (
+	"strconv"
+	"unsafe"
+)
 
 func Str2bytes(s string) []byte {
 	return str2bytes(s)
@@ -23,6 +26,6 @@ func fill(b []byte, value byte) {
 }
 
 func Str2Int64(s string) int64 {
-
-	return 0
+	i, _ := strconv.ParseInt(s, 10, 64)
+	return i
 }

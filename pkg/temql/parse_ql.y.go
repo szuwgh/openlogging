@@ -7,7 +7,7 @@ package temql
 import __yyfmt__ "fmt"
 
 //line parse_ql.y:3
-import "github.com/sophon-lab/temsearch/pkg/temql/labels"
+import "github.com/sophon-lab/temsearch/pkg/lib/prompb"
 import "fmt"
 
 //line parse_ql.y:8
@@ -15,8 +15,8 @@ type yySymType struct {
 	yys      int
 	item     Item
 	node     Node
-	matchers []*labels.Matcher
-	matcher  *labels.Matcher
+	matchers []*prompb.LabelMatcher
+	matcher  *prompb.LabelMatcher
 }
 
 const LEFT_PAREN = 57346
@@ -535,7 +535,7 @@ yydefault:
 		yyDollar = yyS[yypt-1 : yypt+1]
 //line parse_ql.y:109
 		{
-			yyVAL.matchers = []*labels.Matcher{yyDollar[1].matcher}
+			yyVAL.matchers = []*prompb.LabelMatcher{yyDollar[1].matcher}
 		}
 	case 14:
 		yyDollar = yyS[yypt-2 : yypt+1]
@@ -586,7 +586,7 @@ yydefault:
 			fmt.Println("parse term_identifier")
 			vs := &VectorSelector{
 				Expr:          yyDollar[1].node,
-				LabelMatchers: []*labels.Matcher{},
+				LabelMatchers: []*prompb.LabelMatcher{},
 			}
 			yyVAL.node = vs
 		}

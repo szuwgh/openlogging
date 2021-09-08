@@ -10,21 +10,21 @@ import (
 
 var testMsg = `[
     {
-        "message": "a b c", 
+        "message": "There were a sensitivity and a beauty to her that have nothing to do with looks. She was one to be listened to, whose words were so easy to take to heart", 
         "tags": {
             "job":"kingdee",
             "instance":"172.18.5.20"
         }
     },
     { 
-        "message": "d f e",
+        "message": "In some cases it can even be fatal, if pleasure is one's truth and its attainment more important than life itself. In other lives, though, the search for what is truthful gives life",
         "tags":  {
             "job":"paas",
             "instance":"172.18.5.22"
         }
     },
     { 
-        "message": "b c",
+        "message": "The notes fascinated me. Here was someone immersed in a search for truth and beauty. Words had been treasured, words that were beautiful. And I felt as if the words somehow delighted in being discovered",
         "tags":  {
             "job":"IDC",
             "instance":"172.18.5.23"
@@ -61,5 +61,3 @@ func main() {
 
 	}
 }
-
-

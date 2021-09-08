@@ -6,13 +6,14 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/series"
+	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
 	"github.com/sophon-lab/temsearch/pkg/temql"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 )
 
 type Searcher interface {
-	Search(expr temql.Expr, mint, maxt int64) SeriesSet
+	Search(lset []*prompb.LabelMatcher, expr temql.Expr, mint, maxt int64) SeriesSet
 	Close() error
 }
 
@@ -20,8 +21,8 @@ type searcher struct {
 	bs []Searcher
 }
 
-func (s *searcher) Search(expr temql.Expr, mint, maxt int64) SeriesSet {
-	return s.search(s.bs, expr, mint, maxt)
+func (s *searcher) Search(lset []*prompb.LabelMatcher, expr temql.Expr, mint, maxt int64) SeriesSet {
+	return s.search(s.bs, lset, expr, mint, maxt)
 }
 
 func (s *searcher) Close() error {
@@ -32,16 +33,16 @@ func (s *searcher) Close() error {
 	return merr.Err()
 }
 
-func (s *searcher) search(bs []Searcher, expr temql.Expr, mint, maxt int64) SeriesSet {
+func (s *searcher) search(bs []Searcher, lset []*prompb.LabelMatcher, expr temql.Expr, mint, maxt int64) SeriesSet {
 	if len(bs) == 0 {
 		return nopSeriesSet{}
 	}
 	if len(bs) == 1 {
-		return bs[0].Search(expr, mint, maxt)
+		return bs[0].Search(lset, expr, mint, maxt)
 	}
 	l := len(bs) / 2
-	a := s.search(bs[:l], expr, mint, maxt)
-	b := s.search(bs[l:], expr, mint, maxt)
+	a := s.search(bs[:l], lset, expr, mint, maxt)
+	b := s.search(bs[l:], lset, expr, mint, maxt)
 	return newMergedSeriesSet(a, b)
 }
 
@@ -518,13 +519,9 @@ type blockSearcher struct {
 	lastSegNum    uint64
 }
 
-func (s *blockSearcher) Search(expr temql.Expr, mint, maxt int64) SeriesSet {
-	e, ok := expr.(*temql.VectorSelector)
-	if !ok {
-		return nil
-	}
-	posting, series := s.indexr.Search(e.LabelMatchers, e.Expr)
-	isTerm := e.Expr != nil
+func (s *blockSearcher) Search(lset []*prompb.LabelMatcher, expr temql.Expr, mint, maxt int64) SeriesSet {
+	posting, series := s.indexr.Search(lset, expr)
+	isTerm := expr != nil
 	return &blockSeriesSet{
 		set: &populatedChunkSeries{
 			set: &baseChunkSeries{

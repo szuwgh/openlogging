@@ -1,7 +1,9 @@
 package temql
 
 import (
-	"github.com/sophon-lab/temsearch/pkg/temql/labels"
+	"strings"
+
+	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
 )
 
 type parser struct {
@@ -23,18 +25,19 @@ func ParseExpr(input string) interface{} {
 	return p.parseGenerated()
 }
 
-func (p *parser) newLabelMatcher(label Item, operator Item, value Item) *labels.Matcher {
+func (p *parser) newLabelMatcher(label Item, operator Item, value Item) *prompb.LabelMatcher {
 	op := operator.Typ
 
-	var matchType labels.MatchType
+	var matchType prompb.LabelMatcher_Type
 	switch op {
 	case EQL:
-		matchType = labels.MatchEqual
+		matchType = prompb.LabelMatcher_EQ
 	default:
 
 		panic("invalid operator")
 	}
-	return labels.NewMatcher(matchType, label.Val, value.Val)
+
+	return &prompb.LabelMatcher{Type: matchType, Name: label.Val, Value: strings.Trim(value.Val, `"`)} //labels.NewMatcher(matchType, label.Val, value.Val)
 }
 
 func (p *parser) newBinaryExpr(lhs Node, op Item, rhs Node) Node {

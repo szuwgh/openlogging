@@ -10,9 +10,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/sophon-lab/temsearch/util"
-
+	"github.com/gogo/protobuf/proto"
+	"github.com/golang/snappy"
+	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
 	"github.com/sophon-lab/temsearch/pkg/server"
+	"github.com/sophon-lab/temsearch/util"
 )
 
 var ok = []byte("ok")
@@ -56,6 +58,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	temql := r.Form.Get("temql")
 	mint, maxt := util.Str2Int64(r.Form.Get("mint")), util.Str2Int64(r.Form.Get("maxt"))
 	count := util.Str2Int64(r.Form.Get("count"))
+	log.Println("count", count)
 	b, err := h.s.Search(temql, mint, maxt, count)
 	if err != nil {
 		w.Write(toErrResult(500, err.Error()))
@@ -63,6 +66,31 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(b)
+}
+
+func (h *Handler) read(w http.ResponseWriter, r *http.Request) {
+	compressed, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Println("msg", "Read header validation error", "err", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	reqBuf, err := snappy.Decode(nil, compressed)
+	if err != nil {
+		log.Println("msg", "Decode error", "err", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var req prompb.ReadRequest
+	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		log.Println("msg", "Unmarshal error", "err", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	log.Println(req.String())
+	//h.s.Read(&req)
 }
 
 func parseTime(s string) (time.Time, error) {
@@ -96,9 +124,10 @@ func graph(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Run() {
 	http.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./web/ui/static"))))
-	http.HandleFunc("/graph", graph)     //设置访问的路由
-	http.HandleFunc("/index", h.index)   //设置访问的路由
-	http.HandleFunc("/search", h.search) //设置访问的路由
+	http.HandleFunc("/graph", graph)      //设置访问的路由
+	http.HandleFunc("/index", h.index)    //设置访问的路由
+	http.HandleFunc("/search", h.search)  //设置访问的路由
+	http.HandleFunc("/prom/read", h.read) //设置访问的路由
 	log.Println("server start:", 9400)
 	err := http.ListenAndServe(":9400", nil) //设置监听的端口
 	if err != nil {
