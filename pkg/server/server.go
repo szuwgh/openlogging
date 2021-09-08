@@ -129,38 +129,71 @@ func (s *Server) Search(input string, mint, maxt, count int64) ([]byte, error) {
 	return res, nil
 }
 
-func (s *Server) Read(req *prompb.ReadRequest) *prompb.ReadResponse {
-	// resp := prompb.ReadResponse{
-	// 	Results: make([]*prompb.QueryResult, len(req.Queries)),
-	// }
-	// for _, q := range req.Queries {
-
-	// }
-	return nil
+func (s *Server) Read(req *prompb.ReadRequest) prompb.ReadResponse {
+	resp := prompb.ReadResponse{
+		Results: make([]*prompb.QueryResult, len(req.Queries)),
+	}
+	for i, q := range req.Queries {
+		v, err := s.query(q)
+		if err == nil {
+			resp.Results[i].Timeseries = v
+		}
+	}
+	return resp
 }
 
+//0--10
+//step = 5
+//0-2 2-4 4-6 6-8 8-10
 func (s *Server) query(q *prompb.Query) ([]*prompb.TimeSeries, error) {
-	// searcher, err := s.eg.Searcher(q.StartTimestampMs, q.EndTimestampMs)
-	// if err != nil {
-	// 	return nil, nil
-	// }
-	// var series []Series
-	// seriesSet := searcher.Search(q.Matchers, nil, q.StartTimestampMs, q.EndTimestampMs)
-	// for seriesSet.Next() {
-	// 	s := seriesSet.At()
-	// 	labels := s.Labels()
-	// 	promLabels := make([]prompb.Label, 0, len(labels))
-	// 	for i, v := range labels {
-	// 		promLabels[i].Name = v.Name
-	// 		promLabels[i].Value = v.Value
-	// 	}
-	// 	iter := s.Iterator()
-	// 	for iter.Next() {
+	searcher, err := s.eg.Searcher(q.StartTimestampMs, q.EndTimestampMs)
+	if err != nil {
+		return nil, err
+	}
+	//var series []Series
+	//series := &prompb.TimeSeries{}
+	var series []*prompb.TimeSeries
+	seriesSet := searcher.Search(q.Matchers, nil, q.StartTimestampMs, q.EndTimestampMs)
+	rt := rangeTime(q.StartTimestampMs, q.EndTimestampMs, q.Hints.StepMs)
+	for seriesSet.Next() {
+		s := seriesSet.At()
+		labels := s.Labels()
+		promLabels := make([]*prompb.Label, 0, len(labels))
+		for i, v := range labels {
+			promLabels[i].Name = v.Name
+			promLabels[i].Value = v.Value
+		}
+		se := &prompb.TimeSeries{}
+		se.Labels = promLabels
+		var samples []prompb.Sample
+		iter := s.Iterator()
+		for i := range rt {
+			var sample prompb.Sample
+			for iter.Next() {
+				t, _, _, _ := iter.At()
+				if t < rt[i] {
+					sample.Value++
+				} else {
+					samples = append(samples, sample)
+					break
+				}
+			}
+		}
+		se.Samples = samples
+		//series = append(series, metric)
+	}
+	return series, nil
+}
 
-	// 	}
-	// 	series = append(series, metric)
-	// }
-	return nil, nil
+func rangeTime(start, end int64, step int64) []int64 {
+	r := end - start
+	stepTime := r / step / 1000
+	var rt []int64
+	for i := int64(0); i < step; i++ {
+		start = start + stepTime
+		rt = append(rt, start)
+	}
+	return rt
 }
 
 func exponentialBlockRanges(minSize int64, steps, stepSize int) []int64 {
