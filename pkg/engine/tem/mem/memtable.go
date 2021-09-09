@@ -295,7 +295,7 @@ func (mt *MemTable) Search(lset []*prompb.LabelMatcher, expr temql.Expr) (postin
 	for _, v := range lset {
 		postingList, ok := mt.indexs.Get(v.Name)
 		if !ok {
-			continue
+			return posting.EmptyPostings, nil
 		}
 		its = append(its, selectSingle(postingList, byteutil.Str2bytes(v.Value)))
 	}

@@ -152,60 +152,46 @@ func (s *Server) Read(req *prompb.ReadRequest) *prompb.ReadResponse {
 func (s *Server) query(q *prompb.Query) ([]*prompb.TimeSeries, error) {
 	start := q.StartTimestampMs / 1000
 	end := q.EndTimestampMs / 1000
-	//stept := q.Hints.StepMs / 1000
+	stept := q.Hints.StepMs / 1000
 	log.Println(start, time.Unix(start, 0).Format("2006-01-02 15:04:05"), end, time.Unix(end, 0).Format("2006-01-02 15:04:05"))
 	searcher, err := s.eg.Searcher(start, end)
 	if err != nil {
 		return nil, err
 	}
-	//defer searcher.Close()
+	defer searcher.Close()
 	//var series []Series
-	//series := &prompb.TimeSeries{}
 	var series []*prompb.TimeSeries
-	//seriesSet := searcher.Search(q.Matchers, nil, start, end)
-
+	rt := rangeTime(start, end, stept)
 	seriesSet := searcher.Search(q.Matchers, nil, start, end)
 	for seriesSet.Next() {
 		se := seriesSet.At()
-		//metric := Series{Metric: se.Labels()}
+		labels := se.Labels()
 		iter := se.Iterator()
+		promLabels := make([]*prompb.Label, len(labels))
+		for i, v := range labels {
+			promLabels[i] = &prompb.Label{}
+			promLabels[i].Name = v.Name
+			promLabels[i].Value = v.Value
+		}
+		tss := &prompb.TimeSeries{}
+		tss.Labels = promLabels
+		var samples []prompb.Sample
+		i := 0
+
 		for iter.Next() {
 
-			t, v, pos, b := iter.At()
-			log.Println(time.Unix(t, 0).Format("2006-01-02 15:04:05"), v, pos, string(b))
+			t, _, _, _ := iter.At()
+			if t < rt[i] {
+
+			}
+			//log.Println(time.Unix(t, 0).Format("2006-01-02 15:04:05"), v, pos, string(b))
 			//metric.Logs = append(metric.Logs, Log{t, v, highlight(pos, byteutil.Byte2Str(b))})
 
 		}
-		//	series = append(series, metric)
+		tss.Samples = samples
+		series = append(series, tss)
 	}
-	//rt := rangeTime(start, end, stept)
-	//log.Println("rt", rt)
-	// for seriesSet.Next() {
-	// 	se := seriesSet.At()
-	// 	labels := se.Labels()
-	// 	iter := se.Iterator()
-	// 	promLabels := make([]*prompb.Label, len(labels))
-	// 	for i, v := range labels {
-	// 		promLabels[i] = &prompb.Label{}
-	// 		promLabels[i].Name = v.Name
-	// 		promLabels[i].Value = v.Value
-	// 	}
-	// 	tss := &prompb.TimeSeries{}
-	// 	tss.Labels = promLabels
-	// 	var samples []prompb.Sample
 
-	// 	//var sample prompb.Sample
-	// 	//var i int
-
-	// 	for iter.Next() {
-	// 		t, v, pos, b := iter.At()
-	// 		log.Println(time.Unix(t, 0).Format("2006-01-02 15:04:05"), v, pos, string(b))
-
-	// 	}
-	// 	log.Println("add samples")
-	// 	tss.Samples = samples
-	// 	series = append(series, tss)
-	// }
 	return series, nil
 }
 
