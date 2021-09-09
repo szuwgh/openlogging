@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"log"
-	"time"
 
 	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
 	"github.com/sophon-lab/temsearch/pkg/temql"
@@ -153,7 +152,7 @@ func (s *Server) query(q *prompb.Query) ([]*prompb.TimeSeries, error) {
 	start := q.StartTimestampMs / 1000
 	end := q.EndTimestampMs / 1000
 	stept := q.Hints.StepMs / 1000
-	log.Println(start, time.Unix(start, 0).Format("2006-01-02 15:04:05"), end, time.Unix(end, 0).Format("2006-01-02 15:04:05"))
+	//log.Println(start, time.Unix(start, 0).Format("2006-01-02 15:04:05"), end, time.Unix(end, 0).Format("2006-01-02 15:04:05"))
 	searcher, err := s.eg.Searcher(start, end)
 	if err != nil {
 		return nil, err
@@ -177,16 +176,28 @@ func (s *Server) query(q *prompb.Query) ([]*prompb.TimeSeries, error) {
 		tss.Labels = promLabels
 		var samples []prompb.Sample
 		i := 0
-
+		var count float64 = 0
+	loop:
 		for iter.Next() {
-
 			t, _, _, _ := iter.At()
-			if t < rt[i] {
-
+			for {
+				if t <= rt[i] {
+					count++
+					break
+				} else {
+					if count > 0 {
+						s := prompb.Sample{}
+						s.Timestamp = rt[i] * 1000
+						s.Value = count
+						samples = append(samples, s)
+						count = 0
+					}
+					i++
+					if i >= len(rt) {
+						break loop
+					}
+				}
 			}
-			//log.Println(time.Unix(t, 0).Format("2006-01-02 15:04:05"), v, pos, string(b))
-			//metric.Logs = append(metric.Logs, Log{t, v, highlight(pos, byteutil.Byte2Str(b))})
-
 		}
 		tss.Samples = samples
 		series = append(series, tss)

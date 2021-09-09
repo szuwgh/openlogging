@@ -88,7 +88,7 @@ func (h *Handler) read(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	log.Println(req.String())
+	//log.Println(req.String())
 	resp := h.s.Read(&req)
 	data, err := proto.Marshal(resp)
 	if err != nil {
