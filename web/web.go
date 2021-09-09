@@ -58,7 +58,6 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	temql := r.Form.Get("temql")
 	mint, maxt := util.Str2Int64(r.Form.Get("mint")), util.Str2Int64(r.Form.Get("maxt"))
 	count := util.Str2Int64(r.Form.Get("count"))
-	log.Println("count", count)
 	b, err := h.s.Search(temql, mint, maxt, count)
 	if err != nil {
 		w.Write(toErrResult(500, err.Error()))
@@ -90,7 +89,23 @@ func (h *Handler) read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println(req.String())
-	//h.s.Read(&req)
+	resp := h.s.Read(&req)
+	data, err := proto.Marshal(resp)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/x-protobuf")
+	w.Header().Set("Content-Encoding", "snappy")
+
+	compressed = snappy.Encode(nil, data)
+	if _, err := w.Write(compressed); err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func parseTime(s string) (time.Time, error) {

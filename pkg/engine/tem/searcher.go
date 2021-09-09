@@ -41,8 +41,8 @@ func (s *searcher) search(bs []Searcher, lset []*prompb.LabelMatcher, expr temql
 		return bs[0].Search(lset, expr, mint, maxt)
 	}
 	l := len(bs) / 2
-	a := s.search(bs[:l], lset, expr, mint, maxt)
-	b := s.search(bs[l:], lset, expr, mint, maxt)
+	a := s.search(bs[l:], lset, expr, mint, maxt)
+	b := s.search(bs[:l], lset, expr, mint, maxt)
 	return newMergedSeriesSet(a, b)
 }
 
