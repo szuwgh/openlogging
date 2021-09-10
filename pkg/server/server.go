@@ -10,7 +10,7 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/analysis"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
+	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
 )
 
 type Config struct {

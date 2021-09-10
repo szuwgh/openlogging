@@ -19,7 +19,7 @@ import (
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/fileutil"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
+	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
 )
 
 const (

@@ -16,8 +16,17 @@ type stateFn func(*lexer) stateFn
 // Item represents a token or text string returned from the scanner.
 type Item struct {
 	Typ ItemType // The type of this Item.
-	Pos int      // The starting position, in bytes, of this Item in the input string.
+	Pos Pos      // The starting position, in bytes, of this Item in the input string.
 	Val string   // The value of this Item.
+}
+
+// Item implements the Node interface.
+// This makes it possible to call mergeRanges on them.
+func (i *Item) PositionRange() PositionRange {
+	return PositionRange{
+		Start: i.Pos,
+		End:   i.Pos + Pos(len(i.Val)),
+	}
 }
 
 ////////////// 词法定义 //////////////
@@ -47,10 +56,10 @@ var ItemTypeStr = map[ItemType]string{
 type lexer struct {
 	input       string
 	state       stateFn // The next lexing function to enter.
-	pos         int
+	pos         Pos
 	len         int
-	width       int
-	start       int // Start position of this Item.
+	width       Pos
+	start       Pos // Start position of this Item.
 	itemp       *Item
 	braceOpen   bool // Whether a { is opened.
 	parenDepth  int  // Whether a ( is opened.
@@ -71,7 +80,7 @@ func (l *lexer) next() rune {
 		return eof
 	}
 	r, w := utf8.DecodeRuneInString(l.input[l.pos:])
-	l.width = w
+	l.width = Pos(w)
 	l.pos += l.width
 	return r
 }

@@ -19,8 +19,8 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
+	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
 	//temqlLabels "github.com/sophon-lab/temsearch/pkg/lib/prompb"
 )
 
@@ -30,11 +30,11 @@ const (
 )
 
 type LogSummary struct {
-	DocID     uint64
-	Series    *MemSeries
-	Tokens    tokenizer.Tokens
-	Msg       []byte
-	Lset      labels.Labels
+	DocID  uint64
+	Series *MemSeries
+	Tokens tokenizer.Tokens
+	Msg    []byte
+	//	Lset      labels.Labels
 	TimeStamp int64
 }
 
@@ -225,7 +225,7 @@ func (mt *MemTable) Index(context *Context, logSum LogSummary) {
 		}
 		context.Term = bytes.TrimSpace([]byte(t.Term)) //词
 		context.Position = t.Position
-		mt.addTerm(context, s.ref, logSum.Lset, postingList)
+		mt.addTerm(context, s.ref, logSum.Series.Lset(), postingList)
 	}
 	//atomic.AddUint64(&mt.size, uint64(log.Size()))
 }

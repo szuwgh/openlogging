@@ -9,8 +9,8 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/iterator"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
+	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
 )
 
 type dir int

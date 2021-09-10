@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
+	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
 )
 
 type blockHandle struct {

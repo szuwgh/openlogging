@@ -1,7 +1,10 @@
 %{
 package temql
-import "github.com/sophon-lab/temsearch/pkg/lib/prompb"
-import "fmt"
+import (
+        "github.com/sophon-lab/temsearch/pkg/lib/prompb"
+        "fmt"
+        "github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
+)
 %}
 
 
@@ -10,9 +13,13 @@ import "fmt"
     node Node
     matchers  []*prompb.LabelMatcher
     matcher   *prompb.LabelMatcher
+    label     labels.Label
+    labels    labels.Labels
 }
 
 %token <item>
+START_METRIC
+START_EXPRESSION
 LEFT_PAREN
 RIGHT_PAREN
 LEFT_BRACE
@@ -29,6 +36,9 @@ EOF
 
 %type <item> match_op
 
+%type <labels> label_set label_set_list metric
+%type <label> label_set_item
+
 %type <node>  expr term_expr term_identifier label_matchers vector_selector
 
 %type <matchers> label_match_list
@@ -44,16 +54,55 @@ EOF
 %%
 
 start           :
-                expr
-                    { yylex.(*parser).generatedParserResult = $1 }
+                START_METRIC metric
+                    { yylex.(*parser).generatedParserResult = $2 }
+                | START_EXPRESSION expr
+                    { yylex.(*parser).generatedParserResult = $2 }
                 ;
 
 expr            :
-                vector_selector
+                  vector_selector
                 ;
 
 
 match_op        : EQL  ;
+
+
+metric          : 
+                label_set
+                        {$$ = $1}
+                ;
+
+
+label_set       : LEFT_BRACE label_set_list RIGHT_BRACE
+                        { $$ = labels.New($2...) }
+                | LEFT_BRACE label_set_list COMMA RIGHT_BRACE
+                        { $$ = labels.New($2...) }
+                | LEFT_BRACE RIGHT_BRACE
+                        { $$ = labels.New() }
+                | /* empty */
+                        { $$ = labels.New() }
+                ;
+
+label_set_list  : label_set_list COMMA label_set_item
+                        { $$ = append($1, $3) }
+                | label_set_item
+                        { $$ = []labels.Label{$1} }
+                | label_set_list error
+                        { yylex.(*parser).unexpected("label set", "\",\" or \"}\"", ); $$ = $1 }
+
+                ;
+
+label_set_item  : IDENTIFIER EQL STRING
+                        { $$ = labels.Label{Name: $1.Val, Value: yylex.(*parser).unquoteString($3.Val) } }
+                | IDENTIFIER EQL error
+                        { yylex.(*parser).unexpected("label set", "string"); $$ = labels.Label{}}
+                | IDENTIFIER error
+                        { yylex.(*parser).unexpected("label set", "\"=\""); $$ = labels.Label{}}
+                | error
+                        { yylex.(*parser).unexpected("label set", "identifier or \"}\""); $$ = labels.Label{} }
+                ;
+
 
 
 term_identifier :  LEFT_PAREN term_expr RIGHT_PAREN

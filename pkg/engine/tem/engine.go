@@ -2,7 +2,6 @@ package tem
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -14,7 +13,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/golang/snappy"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
+	"github.com/sophon-lab/temsearch/pkg/lib/logproto"
 
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
@@ -329,54 +331,75 @@ func TraceAll() {
 	}
 }
 
-func (e *Engine) Index(b []byte) error {
-	return e.index(b)
+func (e *Engine) Index(compressed []byte) error {
+	return e.index(compressed)
 }
 
-func (e *Engine) index(b []byte) error {
-	defer func() {
-		if err := recover(); err != nil {
-			TraceAll()
-		}
-	}()
-	var logs logmsg.LogMsgArray
-	err := json.Unmarshal(b, &logs)
+func (e *Engine) index(compressed []byte) error {
+	// defer func() {
+	// 	if err := recover(); err != nil {
+	// 		TraceAll()
+	// 	}
+	// }()
+	// var logs logmsg.LogMsgArray
+	// err := json.Unmarshal(b, &logs)
+	// if err != nil {
+	// 	return err
+	// }
+
+	reqBuf, err := snappy.Decode(nil, compressed)
 	if err != nil {
+		log.Println("msg", "Decode error", "err", err.Error())
 		return err
 	}
+
+	var req logproto.PushRequest
+	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		log.Println("msg", "Unmarshal error", "err", err.Error())
+		return err
+	}
+	log.Println(req)
+	return nil
 	e.memMu.Lock()
 	defer e.memMu.Unlock()
-	nowt := time.Now().Unix()
-	err = e.wal.log(b)
+	//nowt := time.Now().Unix()
+	err = e.wal.log(compressed)
 	if err != nil {
 		return err
 	}
-	return e.addToMemDB(nowt, logs)
+	return e.addToMemDB(req)
 
 }
 
 func (e *Engine) recoverMemDB(b []byte) error {
-	var logs logmsg.LogMsgArray
-	err := json.Unmarshal(b, &logs)
+	reqBuf, err := snappy.Decode(nil, b)
 	if err != nil {
+		log.Println("msg", "Decode error", "err", err.Error())
 		return err
 	}
-	nowt := time.Now().Unix()
-	return e.addToMemDB(nowt, logs)
+
+	var req logproto.PushRequest
+	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		log.Println("msg", "Unmarshal error", "err", err.Error())
+		return err
+	}
+	//nowt := time.Now().Unix()
+	return e.addToMemDB(req)
 }
 
-func (e *Engine) addToMemDB(nowt int64, logs logmsg.LogMsgArray) error {
+func (e *Engine) addToMemDB(r logproto.PushRequest) error {
 	head := e.getIndexHead()
-	head.setMinTime(nowt)
-	for _, log := range logs {
-		log.TimeStamp = nowt
-		log.InterID = e.GetNextID()
-		atomic.AddUint64(&head.logSize, uint64(log.Size()))
-		//head.logsMem.WriteLog(byteutil.Str2bytes(log.Msg))
-		//head.indexMem.Index(context, e.a, log)
+
+	for i := range r.Streams {
+		for j := range r.Streams[i].Entries {
+			r.Streams[i].Entries[j].LogID = e.GetNextID()
+		}
+
+		head.setMinTime(r.Streams[i].Entries[0].Timestamp.UnixNano())
+		head.addLogs(r.Streams[i])
+		head.setMaxTime(r.Streams[i].Entries[len(r.Streams[i].Entries)-1].Timestamp.UnixNano())
 	}
-	head.addLogs(logs)
-	head.setMaxTime(nowt)
+	atomic.AddUint64(&head.logSize, uint64(r.XXX_Size()))
 	return nil
 }
 
@@ -468,7 +491,7 @@ func (e *Engine) shouldCompact() error {
 	e.frozeHead.EndID = endID
 	e.nextID = 0
 	e.memMu.Unlock()
-	logs := logmsg.LogMsgArray{&logmsg.LogMsg{InterID: endID}}
+	logs := logproto.Stream{Entries: []logproto.Entry{logproto.Entry{LogID: endID}}}
 	//notification needs to be written to disk
 	log.Println("add end logs")
 	e.frozeHead.addLogs(logs)

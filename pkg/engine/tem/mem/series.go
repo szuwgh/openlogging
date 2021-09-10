@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
+	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
 )
 
 type MemSeries struct {
@@ -18,6 +18,10 @@ type MemSeries struct {
 
 	lastLogID     uint64 //上一次文档号
 	lastTimeStamp int64  //上一次时间
+}
+
+func (m *MemSeries) Lset() labels.Labels {
+	return m.lset
 }
 
 func (m *MemSeries) MinTime() int64 {

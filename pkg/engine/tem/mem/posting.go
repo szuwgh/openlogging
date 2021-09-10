@@ -8,7 +8,7 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/chunks"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/index"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
+	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/disk"
 

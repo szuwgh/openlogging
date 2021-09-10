@@ -5,11 +5,12 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/sophon-lab/temsearch/pkg/temql"
+
 	"github.com/sophon-lab/temsearch/pkg/analysis"
-	"github.com/sophon-lab/temsearch/pkg/concept/logmsg"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/mem"
+	"github.com/sophon-lab/temsearch/pkg/lib/logproto"
 )
 
 type Head struct {
@@ -39,15 +40,15 @@ func NewHead(alloc byteutil.Allocator, chunkRange int64, num, bufLen int, compac
 	h.logsMem = mem.NewLogsTable(byteutil.NewForwardBytePool(alloc))
 	h.chunkRange = chunkRange
 	h.a = a
-	h.stat = newStation(num, bufLen, h.pretreat)
+	h.stat = newStation(num, bufLen, h.serieser, h.tokener)
 	h.startChan = make(chan struct{}, 1)
 	go h.process(compactChan)
 	return h
 }
 
 //add some logs
-func (h *Head) addLogs(l logmsg.LogMsgArray) error {
-	return h.stat.addLogs(l)
+func (h *Head) addLogs(r logproto.Stream) error {
+	return h.stat.addLogs(r)
 }
 
 //read a log
@@ -78,18 +79,25 @@ func (h *Head) process(compactChan chan struct{}) {
 	}
 }
 
-func (h *Head) pretreat(log *logmsg.LogMsg) mem.LogSummary {
-	lset := labels.FromMap(log.Tags)
+func (h *Head) serieser(labels string) *mem.MemSeries {
+	lset, _ := temql.ParseLabels(labels)
 	s, _ := h.indexMem.GetOrCreate(lset.Hash(), lset)
-	msg := byteutil.Str2bytes(log.Msg)
+	//lset := labels.FromMap(log.Tags)
+	return s
+}
+
+func (h *Head) tokener(entry *logproto.Entry) mem.LogSummary {
+	//lset := labels.FromMap(log.Tags)
+	//s, _ := h.indexMem.GetOrCreate(lset.Hash(), lset)
+	msg := byteutil.Str2bytes(entry.Line)
 	tokens := h.a.Analyze(msg)
 	return mem.LogSummary{
-		DocID:     log.InterID,
-		Series:    s,
+		DocID: entry.LogID,
+		//Series:    s,
 		Tokens:    tokens,
-		TimeStamp: log.TimeStamp,
-		Lset:      lset,
-		Msg:       msg,
+		TimeStamp: entry.Timestamp.UnixNano() / 1e6,
+		//Lset:      lset,
+		Msg: msg,
 	}
 }
 

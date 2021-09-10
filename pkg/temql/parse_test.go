@@ -20,3 +20,12 @@ func Test_Parse(t *testing.T) {
 		fmt.Println(*vv)
 	}
 }
+
+func Test_ParseLabel(t *testing.T) {
+	lset, err := ParseLabels(`{job="zhangsan",name="lisi"}`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(lset)
+
+}

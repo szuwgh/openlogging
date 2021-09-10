@@ -2,13 +2,15 @@ package tem
 
 import (
 	"github.com/pkg/errors"
-	"github.com/sophon-lab/temsearch/pkg/concept/logmsg"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/mem"
+	"github.com/sophon-lab/temsearch/pkg/lib/logproto"
 )
 
 var blockErr = errors.New("log channel block")
 
-type pretreatmentFunc func(*logmsg.LogMsg) mem.LogSummary
+type serieserFunc func(string) *mem.MemSeries
+
+type tokenerFunc func(*logproto.Entry) mem.LogSummary
 
 //
 type station struct {
@@ -22,19 +24,19 @@ type station struct {
 	j int
 }
 
-func newStation(num, bufLen int, fn pretreatmentFunc) *station {
+func newStation(num, bufLen int, fn1 serieserFunc, fn2 tokenerFunc) *station {
 	s := &station{}
 	s.transferChan = make(chan mem.LogSummary)
 	s.pipes = make([]*pipeline, num)
 	for i := range s.pipes {
-		s.pipes[i] = newPipeline(s, bufLen, i, fn)
+		s.pipes[i] = newPipeline(s, bufLen, i, fn1, fn2)
 	}
 	s.forwardID = 1
 	return s
 }
 
 //add some logs
-func (s *station) addLogs(l logmsg.LogMsgArray) error {
+func (s *station) addLogs(l logproto.Stream) error {
 	for i := 0; i < len(s.pipes); i++ {
 		err := s.pipes[s.j].addLogs(l)
 		s.j++
@@ -65,7 +67,7 @@ func (s *station) Pull() mem.LogSummary {
 type pipeline struct {
 	num int
 	//log message channel
-	tokenChan chan logmsg.LogMsgArray
+	tokenChan chan logproto.Stream
 
 	//complete word segmentation and enter the waiting queue
 	waitChan chan mem.LogSummary //*logmsg.LogMsg
@@ -75,20 +77,20 @@ type pipeline struct {
 	stat *station
 }
 
-func newPipeline(stat *station, bufLen, num int, fn pretreatmentFunc) *pipeline {
+func newPipeline(stat *station, bufLen, num int, fn1 serieserFunc, fn2 tokenerFunc) *pipeline {
 	p := &pipeline{}
 	p.num = num
-	p.tokenChan = make(chan logmsg.LogMsgArray, bufLen)
+	p.tokenChan = make(chan logproto.Stream, bufLen)
 	p.waitChan = make(chan mem.LogSummary, bufLen*2)
 	p.noticeChan = make(chan struct{})
 	p.stat = stat
-	go p.processTokener(fn)
+	go p.processTokener(fn1, fn2)
 	go p.transfer()
 	return p
 }
 
 //add some logs
-func (p *pipeline) addLogs(l logmsg.LogMsgArray) error {
+func (p *pipeline) addLogs(l logproto.Stream) error {
 	select {
 	case p.tokenChan <- l:
 	default:
@@ -99,12 +101,15 @@ func (p *pipeline) addLogs(l logmsg.LogMsgArray) error {
 }
 
 //dealing with word segmentation loops
-func (p *pipeline) processTokener(fn pretreatmentFunc) {
+func (p *pipeline) processTokener(fn1 serieserFunc, fn2 tokenerFunc) {
 	for {
 		logs := <-p.tokenChan
-		for i := range logs {
-			//log.Println("processTokener", logs[i].InterID)
-			p.waitChan <- fn(logs[i])
+		//logs.Labels
+		series := fn1(logs.Labels)
+		for i := range logs.Entries {
+			logSumm := fn2(&logs.Entries[i])
+			logSumm.Series = series
+			p.waitChan <- logSumm
 		}
 	}
 }

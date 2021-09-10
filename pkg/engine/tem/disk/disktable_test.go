@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/cache"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
+	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
 )
 
 func Test_seriesWriter_addSeries(t *testing.T) {

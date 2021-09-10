@@ -21,7 +21,7 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/labels"
+	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
 	mybin "github.com/sophon-lab/temsearch/pkg/engine/tem/mybinary"
 	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
 )
