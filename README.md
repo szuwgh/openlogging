@@ -9,7 +9,7 @@ temsearch is a lightweight for pod and kube-event log retrieval in the kubernets
 - Especially suitable for storing Kubernetes Pod logs
 - Able to connect to Prometheus and log alarms
 
-<img src="./docs/frame.png" style="zoom:80%;" />
+<img src="./docs/frame.png" style="zoom:60%;" />
 
 Quick-Start
 --------------
