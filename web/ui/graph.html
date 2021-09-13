@@ -60,15 +60,15 @@
     <script type="text/javascript">
 
         const lastMap = {
-            "1": 5 * 60,
-            "2": 60 * 60,
-            "3": 3 * 60 * 60,
-            "4": 24 * 60 * 60,
+            "1": 5 * 60 * 1000,
+            "2": 60 * 60 * 1000,
+            "3": 3 * 60 * 60 * 1000,
+            "4": 24 * 60 * 60 * 1000,
         }
 
         //时间戳转本地时间
         function getLocalTime(ns) {
-            const t = new Date(ns * 1000)
+            const t = new Date(ns)
             // 日期格式
             format = 'Y-m-d h:i:s'
             let year = t.getFullYear()
@@ -110,11 +110,11 @@
             var text = document.getElementById('text-expr').value;
             var startTime = document.getElementById('start-time').value;
             var endTime = document.getElementById('end-time').value;
-            var startTimeStamp = new Date(startTime).getTime() / 1000;
-            var endTimeStamp = new Date(endTime).getTime() / 1000;
+            var startTimeStamp = new Date(startTime).getTime() * 1000;
+            var endTimeStamp = new Date(endTime).getTime() * 1000;
             var last = document.getElementById('sel-last').value;
             if (isNaN(startTimeStamp) || isNaN(endTimeStamp)) {
-                endTimeStamp = Date.parse(new Date()) / 1000;
+                endTimeStamp = new Date().getTime();
                 startTimeStamp = endTimeStamp - lastMap[last];
             }
             var count = document.getElementById('sel-count').value;

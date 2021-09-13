@@ -1,6 +1,7 @@
 package tem
 
 import (
+	"log"
 	"math"
 	"sync"
 	"sync/atomic"
@@ -80,6 +81,7 @@ func (h *Head) process(compactChan chan struct{}) {
 }
 
 func (h *Head) serieser(labels string) *mem.MemSeries {
+	log.Println(labels)
 	lset, _ := temql.ParseLabels(labels)
 	s, _ := h.indexMem.GetOrCreate(lset.Hash(), lset)
 	//lset := labels.FromMap(log.Tags)

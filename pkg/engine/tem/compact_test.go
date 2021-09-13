@@ -1,8 +1,6 @@
 package tem
 
 import (
-	"fmt"
-	"log"
 	"testing"
 )
 
@@ -31,22 +29,22 @@ func Test_Compact(t *testing.T) {
 
 }
 
-func Test_CompactPlan(t *testing.T) {
-	compactor := newLeveledCompactor(exponentialBlockRanges(maxBlockDuration, 10, 3))
+// func Test_CompactPlan(t *testing.T) {
+// 	compactor := newLeveledCompactor(exponentialBlockRanges(maxBlockDuration, 10, 3))
 
-	plan, err := compactor.Plan("E:\\goproject\\temsearch\\src\\data")
-	if err != nil {
-		log.Println(err)
-		//break
-	}
-	if len(plan) == 0 {
-		//compactor.c
-	}
+// 	plan, err := compactor.Plan("E:\\goproject\\temsearch\\src\\data")
+// 	if err != nil {
+// 		log.Println(err)
+// 		//break
+// 	}
+// 	if len(plan) == 0 {
+// 		//compactor.c
+// 	}
 
-}
+// }
 
-func Test_exponentialBlockRanges(t *testing.T) {
-	t0 := 10800 * (1616636751 / 10800)
-	fmt.Println(t0)
-	fmt.Println(exponentialBlockRanges(maxBlockDuration, 10, 3))
-}
+// func Test_exponentialBlockRanges(t *testing.T) {
+// 	t0 := 10800 * (1616636751 / 10800)
+// 	fmt.Println(t0)
+// 	fmt.Println(exponentialBlockRanges(maxBlockDuration, 10, 3))
+// }

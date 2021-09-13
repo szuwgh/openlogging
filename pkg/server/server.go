@@ -40,15 +40,15 @@ func New() *Server {
 	s := &Server{}
 	var err error
 	opts := &tem.Options{}
-	opts.RetentionDuration = 12 * 60 * 60
-	opts.MaxBlockDuration = 30
+	opts.RetentionDuration = 12 * 60 * 60 * 1e3
+	opts.MaxBlockDuration = 30 * 1e3
 	opts.BlockRanges = exponentialBlockRanges(opts.MaxBlockDuration, 10, 3)
 	opts.IndexBufferNum = 1
 	opts.IndexBufferLength = 16
 	opts.DataDir = "E:\\goproject\\temsearch\\data" //config.DataDir
 	//config.MaxBlockDuration
-	opts.FlushWritecoldDuration = 25 * 1024 * 1024 //config.FlushWritecoldDuration
-	opts.DefaultCacheSnapshotMemorySize = 60       //config.DefaultCacheSnapshotMemorySize
+	opts.FlushWritecoldDuration = 60 * 1e3                 //config.FlushWritecoldDuration
+	opts.DefaultCacheSnapshotMemorySize = 25 * 1024 * 1024 //config.DefaultCacheSnapshotMemorySize
 	s.eg, err = tem.NewEngine(opts, analysis.NewAnalyzer("gojieba"))
 	if err != nil {
 		return nil
@@ -149,9 +149,9 @@ func (s *Server) Read(req *prompb.ReadRequest) *prompb.ReadResponse {
 //step = 2
 //0-2 2-4 4-6 6-8 8-10
 func (s *Server) query(q *prompb.Query) ([]*prompb.TimeSeries, error) {
-	start := q.StartTimestampMs / 1000
-	end := q.EndTimestampMs / 1000
-	stept := q.Hints.StepMs / 1000
+	start := q.StartTimestampMs
+	end := q.EndTimestampMs
+	stept := q.Hints.StepMs
 	//log.Println(start, time.Unix(start, 0).Format("2006-01-02 15:04:05"), end, time.Unix(end, 0).Format("2006-01-02 15:04:05"))
 	searcher, err := s.eg.Searcher(start, end)
 	if err != nil {
@@ -187,7 +187,7 @@ func (s *Server) query(q *prompb.Query) ([]*prompb.TimeSeries, error) {
 				} else {
 					if count > 0 {
 						s := prompb.Sample{}
-						s.Timestamp = rt[i] * 1000
+						s.Timestamp = rt[i]
 						s.Value = count
 						samples = append(samples, s)
 						count = 0

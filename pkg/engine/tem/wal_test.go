@@ -2,10 +2,14 @@ package tem
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/golang/snappy"
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
+	"github.com/sophon-lab/temsearch/pkg/lib/logproto"
 )
 
 var testMsg = `[
@@ -51,7 +55,7 @@ func Test_Wal(t *testing.T) {
 }
 
 func Test_WalReader(t *testing.T) {
-	fname := "E:\\goproject\\temsearch\\src\\data\\wal\\000001"
+	fname := "E:\\goproject\\temsearch\\data\\wal\\000001"
 	//fname := "./wal.log"
 	f, err := os.OpenFile(fname, os.O_RDONLY, 0644)
 	if err != nil {
@@ -67,7 +71,20 @@ func Test_WalReader(t *testing.T) {
 			fmt.Println(err, n)
 			break
 		}
-		fmt.Println(n, string(buf.Bytes()))
+
+		//	fmt.Println(n, buf.Bytes())
+		b := buf.Bytes()
+		reqBuf, err := snappy.Decode(nil, b)
+		if err != nil {
+			log.Println("msg", "Decode error", "err", err.Error())
+			return
+		}
+		var req logproto.PushRequest
+		if err := proto.Unmarshal(reqBuf, &req); err != nil {
+			log.Println("msg", "Unmarshal error", "err", err.Error())
+			return
+		}
+		log.Println(req)
 	}
 	f.Close()
 }

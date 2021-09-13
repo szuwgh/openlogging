@@ -96,13 +96,14 @@ func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
 	e.walDir = filepath.Join(e.dataDir, "wal")
 	e.headPool = make(chan *Head, 1)
 	e.compactChan = make(chan struct{}, 1)
+	e.compactor = newLeveledCompactor(e.opts.BlockRanges) //&leveledCompactor{}
 	e.head = e.newHead()
 	e.head.open()
 	err := e.recoverWal()
 	if err != nil {
 		return nil, err
 	}
-	e.compactor = newLeveledCompactor(e.opts.BlockRanges) //&leveledCompactor{}
+
 	err = e.reload()
 	if err != nil {
 		return nil, err
@@ -151,7 +152,7 @@ func (e *Engine) recoverWal() error {
 			buf.Reset()
 			n, err := buf.ReadFrom(walr)
 			if err != nil || n == 0 {
-				fmt.Println(err, n)
+				log.Println(err, n)
 				break
 			}
 			e.recoverMemDB(buf.Bytes())
@@ -358,13 +359,12 @@ func (e *Engine) index(compressed []byte) error {
 		log.Println("msg", "Unmarshal error", "err", err.Error())
 		return err
 	}
-	log.Println(req)
-	return nil
 	e.memMu.Lock()
 	defer e.memMu.Unlock()
-	//nowt := time.Now().Unix()
+	//nowt := time.Now().Unix()]
 	err = e.wal.log(compressed)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	return e.addToMemDB(req)
@@ -377,13 +377,11 @@ func (e *Engine) recoverMemDB(b []byte) error {
 		log.Println("msg", "Decode error", "err", err.Error())
 		return err
 	}
-
 	var req logproto.PushRequest
 	if err := proto.Unmarshal(reqBuf, &req); err != nil {
 		log.Println("msg", "Unmarshal error", "err", err.Error())
 		return err
 	}
-	//nowt := time.Now().Unix()
 	return e.addToMemDB(req)
 }
 
@@ -394,10 +392,9 @@ func (e *Engine) addToMemDB(r logproto.PushRequest) error {
 		for j := range r.Streams[i].Entries {
 			r.Streams[i].Entries[j].LogID = e.GetNextID()
 		}
-
-		head.setMinTime(r.Streams[i].Entries[0].Timestamp.UnixNano())
+		head.setMinTime(r.Streams[i].Entries[0].Timestamp.UnixNano() / 1e6)
 		head.addLogs(r.Streams[i])
-		head.setMaxTime(r.Streams[i].Entries[len(r.Streams[i].Entries)-1].Timestamp.UnixNano())
+		head.setMaxTime(r.Streams[i].Entries[len(r.Streams[i].Entries)-1].Timestamp.UnixNano() / 1e6)
 	}
 	atomic.AddUint64(&head.logSize, uint64(r.XXX_Size()))
 	return nil
@@ -564,7 +561,7 @@ func (e *Engine) ShouldCompactMem(h *Head) bool {
 	if sz > DefaultCacheSnapshotMemorySize {
 		return true
 	}
-	return h.MaxTime()-h.MinTime() > e.opts.MaxBlockDuration || time.Now().Unix()-h.MaxTime() > e.opts.FlushWritecoldDuration
+	return h.MaxTime()-h.MinTime() > e.opts.MaxBlockDuration || time.Now().UnixNano()/1e6-h.MaxTime() > e.opts.FlushWritecoldDuration
 }
 
 func (e *Engine) Searcher(mint, maxt int64) (Searcher, error) {

@@ -30,7 +30,7 @@ func main() {
 			}
 			loger.Println(time.Now().Format("2006-01-02: 15:04:05"), sentence)
 			sentence = sentence[:0]
-			time.Sleep(1 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 	}()
 	select {}
