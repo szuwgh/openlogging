@@ -178,7 +178,6 @@ vector_selector: term_identifier label_matchers
                 }
                 | term_identifier
                 {
-                     fmt.Println("parse term_identifier")
                      vs := &VectorSelector{
                                 Expr: $1,
                                 LabelMatchers: []*prompb.LabelMatcher{},

@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
+	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
 	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
 	"github.com/sophon-lab/temsearch/pkg/server"
 	"github.com/sophon-lab/temsearch/util"
@@ -121,20 +122,21 @@ func parseTime(s string) (time.Time, error) {
 }
 
 func graph(w http.ResponseWriter, r *http.Request) {
-	// b, err := Asset("web/ui/graph.html")
-	// if err != nil {
-
-	// }
-	// tmpl := template.Must(template.New("base").Parse(byteutil.Byte2Str(b)))
-	// w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	// tmpl.Execute(w, nil)
-	// b, err := Asset("web/ui/graph.html")
-	// if err != nil {
-
-	// }
-	tmpl := template.Must(template.ParseFiles("web/ui/graph.html"))
+	b, err := Asset("ui/graph.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl := template.Must(template.New("base").Parse(byteutil.Byte2Str(b)))
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	tmpl.Execute(w, nil)
+	// b, err := Asset("web/ui/graph.html")
+	// if err != nil {
+
+	// }
+	// tmpl := template.Must(template.ParseFiles("web/ui/graph.html"))
+	// w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	// tmpl.Execute(w, nil)
 }
 
 func (h *Handler) Run() {

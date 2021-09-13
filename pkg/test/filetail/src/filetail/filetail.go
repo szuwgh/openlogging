@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	file := "./log.txt"
+	file := "E:\\promtail\\log.txt"
 
 	logFile, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0766)
 	if nil != err {
