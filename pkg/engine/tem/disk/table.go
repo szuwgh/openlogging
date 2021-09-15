@@ -68,40 +68,8 @@ func encodeBlockHandle(dst []byte, b blockHandle) int {
 	return n + m
 }
 
-// func encodeValueIndex(e *encBuf, lastT int64, b valueIndex) {
-// 	e.putUvarint64(b.count)
-// 	var offset uint64
-// 	//var lastMinT int64
-// 	for i := range b.chunks {
-// 		e.putUvarint64(b.chunks[i].Offset - offset)
-// 		//e.putUvarint64(b.chunks[i].Length)
-// 		e.putVarint64(b.chunks[i].MinT - lastT)
-// 		e.putVarint64(b.chunks[i].MaxT - b.chunks[i].MinT)
-// 		offset = b.chunks[i].Offset
-// 		lastT = b.chunks[i].MaxT
-// 	}
-// }
-
 func decodeValueIndex(dst []byte, lastT int64) (valueIndex, int) {
 	return valueIndex{}, 0
-	// count, n := binary.Uvarint(dst)
-	// chunks := make([]ChunkMeta, count)
-	// var lastOffset, offset uint64
-	// var t int64
-	// for i := uint64(0); i < count; i++ {
-	// 	ch := ChunkMeta{}
-	// 	offset, n = decodeUvarint(dst, n)
-	// 	ch.Ref = lastOffset + offset
-	// 	//	ch.Length, n = decodeUvarint(dst, n)
-	// 	t, n = decodeVarint(dst, n)
-	// 	ch.MinT = lastT + t
-	// 	t, n = decodeVarint(dst, n)
-	// 	ch.MaxT = ch.MinT + t
-	// 	lastT = ch.MaxT
-	// 	lastOffset = ch.Ref
-	// 	chunks[i] = ch
-	// }
-	// return valueIndex{count: count, chunks: chunks}, n
 }
 
 func decodeUvarint(dst []byte, n int) (uint64, int) {

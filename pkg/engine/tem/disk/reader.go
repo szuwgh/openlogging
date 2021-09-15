@@ -21,8 +21,8 @@ import (
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/posting"
 
 	"github.com/sophon-lab/temsearch/pkg/engine/tem/global"
-	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
 	mybin "github.com/sophon-lab/temsearch/pkg/engine/tem/mybinary"
+	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
 	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
 )
 
@@ -97,7 +97,6 @@ func (cr *chunkReader) ReadChunk(isTerm bool, ref ...uint64) chunks.ChunkEnc {
 func (cr *chunkReader) readLabelChunk(ref uint64) *chunks.SeriesSnapShot {
 	seq := ref >> 32
 	off := int((ref << 32) >> 32)
-	//mmap := cr.mmaps[seq]
 	mmap, rel := cr.getMmapCache(seq)
 	defer func() {
 		if rel != nil {

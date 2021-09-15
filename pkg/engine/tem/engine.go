@@ -111,7 +111,6 @@ func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
 
 	e.done = make(chan struct{})
 
-	//go e.process()
 	lastWal, err := disk.LastSequenceFile(e.walDir)
 	if err != nil {
 		return nil, err

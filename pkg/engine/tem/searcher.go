@@ -386,10 +386,7 @@ type chunkSeriesIterator struct {
 	err        error
 	lastSegNum uint64
 }
-(odvefo){job="testlog"}
-(odvefo or omelepqogmpygnb){job="testlog"}
-{job="testlog"}
-{job="testlog"}
+
 func newChunkSeriesIterator(chks [][]chunks.Chunk, isTerm bool, logr LogReader, cr chunks.ChunkReader, mint, maxt int64, lastSegNum uint64) *chunkSeriesIterator {
 	var cur []chunks.Postings
 	for _, cs := range chks {

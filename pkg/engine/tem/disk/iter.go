@@ -645,10 +645,6 @@ func (t *MergeLogIterator) Write(w LogWriter) (uint64, error) {
 	return t.iters[t.i].Write(w)
 }
 
-// func (t *MergeLogIterator) Bytes() []byte {
-// 	return t.iters[t.i].Bytes()
-// }
-
 type LogIterator interface {
 	Next() bool
 	Write(LogWriter) (uint64, error) // []byte
