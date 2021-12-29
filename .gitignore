@@ -2,4 +2,4 @@
 data/
 *.log
 pkg/test/filetail/src/filetail/log.txt
-temsearch
+athena
