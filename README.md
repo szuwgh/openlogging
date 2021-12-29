@@ -1,7 +1,7 @@
-# temsearch
+# Athena
 log search engine for kubernetes
 
-temsearch is a lightweight for pod and kube-event log retrieval in the kubernets environment, and stores index and log information in a time series format.
+athena is a lightweight for pod and kube-event log retrieval in the kubernets environment, and stores index and log information in a time series format.
 ### Features:
 - Support promtail to collect logs
 - Support full-text indexing and tag-based indexing
@@ -13,17 +13,17 @@ temsearch is a lightweight for pod and kube-event log retrieval in the kubernets
 
 Quick-Start
 --------------
-1. download `temsearch`
+1. download `athena`
 ```bash
-git clone https://github.com/sophon-lab/temsearch.git
+git clone https://github.com/sophon-lab/athena.git
 ```
-2. build `temsearch`
+2. build `athena`
 ```bash
 make
 ```
 3. Run server.
 ```bash
-./temsearch start
+./athena start
 ```
 
 open in browser http://localhost:9400/graph
