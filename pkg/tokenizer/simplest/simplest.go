@@ -1,7 +1,7 @@
 package simplest
 
 // import (
-// 	"github/sophon-lab/temsearch/pkg/tokenizer"
+// 	"github/sophon-lab/athena/pkg/tokenizer"
 // )
 
 // //simplest tokenize

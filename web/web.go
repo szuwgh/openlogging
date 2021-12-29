@@ -12,10 +12,10 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
-	"github.com/sophon-lab/temsearch/pkg/engine/tem/byteutil"
-	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
-	"github.com/sophon-lab/temsearch/pkg/server"
-	"github.com/sophon-lab/temsearch/util"
+	"github.com/sophon-lab/athena/pkg/engine/athena/byteutil"
+	"github.com/sophon-lab/athena/pkg/lib/prompb"
+	"github.com/sophon-lab/athena/pkg/server"
+	"github.com/sophon-lab/athena/util"
 )
 
 var ok = []byte("ok")
@@ -39,19 +39,12 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
 		w.Write(toErrResult(500, err.Error()))
 		return
 	}
-	// var logs logmsg.LogMsgArray
-	// err = json.Unmarshal(b, &logs)
-	// if err != nil {
-	// 	w.Write(toErrResult(500, err.Error()))
-	// 	return
-	// }
 	err = h.s.Index(b)
 	if err != nil {
 		w.Write(toErrResult(500, err.Error()))
 		return
 	}
 	w.Write(ok)
-	//	fmt.Fprintf(w, "Hello Index!") //这个写入到w的是输出到客户端的
 }
 
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {

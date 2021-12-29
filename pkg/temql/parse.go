@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/labels"
-	"github.com/sophon-lab/temsearch/pkg/lib/prometheus/strutil"
-	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
+	"github.com/sophon-lab/athena/pkg/lib/prometheus/labels"
+	"github.com/sophon-lab/athena/pkg/lib/prometheus/strutil"
+	"github.com/sophon-lab/athena/pkg/lib/prompb"
 )
 
 type parser struct {

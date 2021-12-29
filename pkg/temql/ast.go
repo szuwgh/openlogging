@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/sophon-lab/temsearch/pkg/lib/prompb"
+	"github.com/sophon-lab/athena/pkg/lib/prompb"
 )
 
 type Expr interface {

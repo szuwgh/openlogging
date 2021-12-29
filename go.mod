@@ -1,4 +1,4 @@
-module github.com/sophon-lab/temsearch
+module github.com/sophon-lab/athena
 
 go 1.14
 
