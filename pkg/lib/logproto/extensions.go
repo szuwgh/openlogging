@@ -1,6 +1,6 @@
 package logproto
 
-import "github.com/sophon-lab/athena/pkg/lib/prometheus/labels"
+import "github.com/szuwgh/athena/pkg/lib/prometheus/labels"
 
 // Note, this is not very efficient and use should be minimized as it requires label construction on each comparison
 type SeriesIdentifiers []SeriesIdentifier

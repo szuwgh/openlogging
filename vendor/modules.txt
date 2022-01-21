@@ -3,8 +3,6 @@
 # github.com/cespare/xxhash v1.1.0
 ## explicit
 github.com/cespare/xxhash
-# github.com/davecgh/go-spew v1.1.1
-github.com/davecgh/go-spew/spew
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
 # github.com/gogo/protobuf v1.3.2
@@ -68,8 +66,6 @@ github.com/pelletier/go-toml
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/pmezard/go-difflib v1.0.0
-github.com/pmezard/go-difflib/difflib
 # github.com/spf13/afero v1.1.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
@@ -87,8 +83,6 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/stretchr/testify v1.4.0
 ## explicit
-github.com/stretchr/testify/assert
-github.com/stretchr/testify/require
 # github.com/subosito/gotenv v1.2.0
 github.com/subosito/gotenv
 # github.com/yanyiwu/gojieba v1.1.2
@@ -157,5 +151,6 @@ google.golang.org/grpc/status
 google.golang.org/grpc/tap
 # gopkg.in/ini.v1 v1.51.0
 gopkg.in/ini.v1
-# gopkg.in/yaml.v2 v2.2.4
+# gopkg.in/yaml.v2 v2.2.8
+## explicit
 gopkg.in/yaml.v2

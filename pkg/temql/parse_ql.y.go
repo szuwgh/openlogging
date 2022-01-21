@@ -9,8 +9,8 @@ import __yyfmt__ "fmt"
 //line ./parse_ql.y:3
 import (
 	"fmt"
-	"github.com/sophon-lab/athena/pkg/lib/prometheus/labels"
-	"github.com/sophon-lab/athena/pkg/lib/prompb"
+	"github.com/szuwgh/athena/pkg/lib/prometheus/labels"
+	"github.com/szuwgh/athena/pkg/lib/prompb"
 )
 
 //line ./parse_ql.y:11

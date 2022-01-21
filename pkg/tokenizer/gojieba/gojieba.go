@@ -3,7 +3,7 @@ package gojieba
 import (
 	"errors"
 
-	"github.com/sophon-lab/athena/pkg/tokenizer"
+	"github.com/szuwgh/athena/pkg/tokenizer"
 
 	"github.com/yanyiwu/gojieba"
 )

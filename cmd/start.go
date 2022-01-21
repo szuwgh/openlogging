@@ -4,10 +4,10 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/sophon-lab/athena/pkg/server"
-	"github.com/sophon-lab/athena/pkg/tokenizer"
-	_ "github.com/sophon-lab/athena/pkg/tokenizer/buildinit"
-	"github.com/sophon-lab/athena/web"
+	"github.com/szuwgh/athena/pkg/server"
+	"github.com/szuwgh/athena/pkg/tokenizer"
+	_ "github.com/szuwgh/athena/pkg/tokenizer/buildinit"
+	"github.com/szuwgh/athena/web"
 	"github.com/spf13/cobra"
 )
 

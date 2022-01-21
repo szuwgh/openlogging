@@ -15,7 +15,7 @@ Quick-Start
 --------------
 1. download `athena`
 ```bash
-git clone https://github.com/sophon-lab/athena.git
+git clone https://github.com/szuwgh/athena.git
 ```
 2. build `athena`
 ```bash

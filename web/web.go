@@ -12,10 +12,10 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
-	"github.com/sophon-lab/athena/pkg/engine/athena/byteutil"
-	"github.com/sophon-lab/athena/pkg/lib/prompb"
-	"github.com/sophon-lab/athena/pkg/server"
-	"github.com/sophon-lab/athena/util"
+	"github.com/szuwgh/athena/pkg/engine/athena/byteutil"
+	"github.com/szuwgh/athena/pkg/lib/prompb"
+	"github.com/szuwgh/athena/pkg/server"
+	"github.com/szuwgh/athena/util"
 )
 
 var ok = []byte("ok")

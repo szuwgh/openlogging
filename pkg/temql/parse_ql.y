@@ -1,9 +1,9 @@
 %{
 package temql
 import (
-        "github.com/sophon-lab/athena/pkg/lib/prompb"
+        "github.com/szuwgh/athena/pkg/lib/prompb"
         "fmt"
-        "github.com/sophon-lab/athena/pkg/lib/prometheus/labels"
+        "github.com/szuwgh/athena/pkg/lib/prometheus/labels"
 )
 %}
 

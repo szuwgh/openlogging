@@ -1,5 +1,5 @@
 package buildinit
 
 import (
-	_ "github.com/sophon-lab/athena/pkg/tokenizer/gojieba"
+	_ "github.com/szuwgh/athena/pkg/tokenizer/gojieba"
 )

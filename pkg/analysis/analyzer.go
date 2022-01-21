@@ -1,7 +1,7 @@
 package analysis
 
 import (
-	"github.com/sophon-lab/athena/pkg/tokenizer"
+	"github.com/szuwgh/athena/pkg/tokenizer"
 	"github.com/yanyiwu/gojieba"
 )
 

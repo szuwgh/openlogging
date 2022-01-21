@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/sophon-lab/athena/pkg/lib/prompb"
-	"github.com/sophon-lab/athena/pkg/temql"
+	"github.com/szuwgh/athena/pkg/lib/prompb"
+	"github.com/szuwgh/athena/pkg/temql"
 
-	"github.com/sophon-lab/athena/pkg/analysis"
-	"github.com/sophon-lab/athena/pkg/engine/athena"
-	"github.com/sophon-lab/athena/pkg/engine/athena/byteutil"
-	"github.com/sophon-lab/athena/pkg/lib/prometheus/labels"
+	"github.com/szuwgh/athena/pkg/analysis"
+	"github.com/szuwgh/athena/pkg/engine/athena"
+	"github.com/szuwgh/athena/pkg/engine/athena/byteutil"
+	"github.com/szuwgh/athena/pkg/lib/prometheus/labels"
 )
 
 type Config struct {
