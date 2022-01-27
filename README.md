@@ -1,7 +1,7 @@
 # Athena
 log search engine for kubernetes
 
-athena is a lightweight for pod and kube-event log retrieval in the kubernets environment, and stores index and log information in a time series format.
+athena is a lightweight for pod and kube-event log retrieval in the kubernets environment, and stores index and log information in a time series format.The application scenarios of this project include but are not limited to real-time log analysis, time series data analysis, and full-text retrieval. This project is still in development research state. Not yet ready for production use.
 ### Features:
 - Support promtail to collect logs
 - Support full-text indexing and tag-based indexing
