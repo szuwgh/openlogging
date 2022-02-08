@@ -1,4 +1,4 @@
-# tem
+# temsearch
 log search engine for kubernetes
 
 temsearch is a lightweight for pod and kube-event log retrieval in the kubernets environment, and stores index and log information in a time series format.
@@ -13,17 +13,17 @@ temsearch is a lightweight for pod and kube-event log retrieval in the kubernets
 
 Quick-Start
 --------------
-1. download `tem`
+1. download `temsearch`
 ```bash
 git clone https://github.com/szuwgh/temsearch.git
 ```
-2. build `tem`
+2. build `temsearch`
 ```bash
 make
 ```
 3. Run server.
 ```bash
-./tem start
+./temsearch start
 ```
 
 open in browser http://localhost:9400/graph
