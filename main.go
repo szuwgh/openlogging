@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/szuwgh/athena/cmd"
+import "github.com/szuwgh/temsearch/cmd"
 
 func main() {
 	cmd.Execute()

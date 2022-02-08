@@ -1,7 +1,7 @@
 package simplest
 
 // import (
-// 	"github/szuwgh/athena/pkg/tokenizer"
+// 	"github/szuwgh/tem/pkg/tokenizer"
 // )
 
 // //simplest tokenize

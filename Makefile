@@ -6,7 +6,7 @@ GOBUILD := $(GOCMD) build
 GOCLEAN := $(GOCMD) clean
 
 GO_SOURCE := main.go
-GO_BINARY := athena
+GO_BINARY := temsearch
 
 all: build_go
 

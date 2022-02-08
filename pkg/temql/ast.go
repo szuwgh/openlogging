@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/szuwgh/athena/pkg/lib/prompb"
+	"github.com/szuwgh/temsearch/pkg/lib/prompb"
 )
 
 type Expr interface {

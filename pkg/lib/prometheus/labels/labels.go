@@ -10,7 +10,7 @@ import (
 	"unsafe"
 
 	"github.com/cespare/xxhash"
-	"github.com/szuwgh/athena/pkg/engine/athena/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 )
 
 const sep = '\xff'

@@ -1,4 +1,4 @@
-module github.com/szuwgh/athena
+module github.com/szuwgh/temsearch
 
 go 1.14
 

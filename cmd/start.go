@@ -4,10 +4,10 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/szuwgh/athena/pkg/server"
-	"github.com/szuwgh/athena/pkg/tokenizer"
-	_ "github.com/szuwgh/athena/pkg/tokenizer/buildinit"
-	"github.com/szuwgh/athena/web"
+	"github.com/szuwgh/temsearch/pkg/server"
+	"github.com/szuwgh/temsearch/pkg/tokenizer"
+	_ "github.com/szuwgh/temsearch/pkg/tokenizer/buildinit"
+	"github.com/szuwgh/temsearch/web"
 	"github.com/spf13/cobra"
 )
 
