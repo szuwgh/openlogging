@@ -248,10 +248,18 @@ func (bw *baseWrite) byteLen() int {
 	return bw.dataBlock.bytesLen()
 }
 
+type indexBlock interface {
+	append(k, v []byte) error
+	finishRestarts()
+	finishTail() uint32
+	reset()
+	Get() []byte
+}
+
 //按页存储
 type keyWriter struct {
 	baseWrite
-	indexBlock    blockWriter //indexblock
+	indexBlock    indexBlock //indexblock
 	tagsBlock     blockWriter
 	nEntries      int //总的记录数
 	baseTimeStamp int64
@@ -265,8 +273,9 @@ func newKeyWriter(dir string) (*keyWriter, error) {
 		return nil, err
 	}
 	kw.w = f
+	kw.indexBlock = newBlockWriter()
 	kw.dataBlock.restartInterval = 2
-	kw.indexBlock.restartInterval = 1
+	//kw.indexBlock.restartInterval = 1
 	kw.tagsBlock.restartInterval = 1
 	return kw, nil
 }
@@ -639,6 +648,7 @@ func (pw *postingWriter) writePosting(refs ...[]uint64) (uint64, error) {
 	crc := crc32.ChecksumIEEE(pw.buf2.Get())
 	pw.buf1.PutUvarint(pw.buf2.Len())
 	pw.buf2.PutUint32(crc)
+
 	length := pw.buf1.Len() + pw.buf2.Len()
 
 	if err := pw.isCut(length); err != nil {

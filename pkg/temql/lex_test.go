@@ -13,7 +13,7 @@ func Test_Lex(t *testing.T) {
 }
 
 func Test_LexItem(t *testing.T) {
-	l := newLex(`( aa AND (BB OR cc) )`)
+	l := newLex(`67895e0ec2`)
 	var item Item
 	for {
 		l.nextItem(&item)

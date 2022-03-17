@@ -714,16 +714,16 @@ func (r *IndexReader) getDataIter(bh blockHandle) *blockIterator {
 	b, rel, err := r.readBlockCache(bh)
 	if err != nil {
 		return nil
-	}
-	return newBlockIterator(b, rel)
-}
+	} 
+	return newBlockIterator(b, rel)       
+} 
 
 func (r *IndexReader) readBlockCache(bh blockHandle) (*blockReader, cache.Releaser, error) {
 	var (
 		err error
 		ch  *cache.Handle
 	)
-	ch = r.bcache.Get(bh.offset, func() (size int, value cache.Value) {
+	ch = r.bcache.Get(bh.offset, func() (size int, value cache.Value) {   
 		var b *blockReader
 		b, err = r.indexr.readBlock(bh, true)
 		if err != nil {
@@ -755,7 +755,7 @@ func (r *IndexReader) find(tagName string, key []byte) []byte {
 	if indexBlock == nil {
 		return nil
 	}
-	indexIter := newBlockIterator(indexBlock, nil)
+	indexIter := newBlockIterator(indexBlock, nil)   
 	//查找数据在哪个data block
 	if !indexIter.seek(key) {
 		return nil
@@ -770,8 +770,8 @@ func (r *IndexReader) find(tagName string, key []byte) []byte {
 	v := dataIter.Value()
 	k := dataIter.Key()
 	dataIter.Release()
-	if bytes.Compare(k, key) != 0 {
-		return nil
+	if bytes.Compare(k, key) != 0        {   
+		return nil 
 	}
 	return v
 }

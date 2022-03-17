@@ -46,6 +46,10 @@ type blockWriter struct {
 	byteutil.EncBuf
 }
 
+func newBlockWriter() *blockWriter {
+	return &blockWriter{restartInterval: 1}
+}
+
 func (bw *blockWriter) append(key, value []byte) error {
 	shareLen := 0
 	if bw.restartInterval != 1 && bw.nEntries%bw.restartInterval == 0 {
