@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
-	"log"
+	//"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -27,12 +27,155 @@ import (
 )
 
 type baseReader struct {
-	r io.ReaderAt // io.ReaderAt //key 文件
+	r           io.ReaderAt // io.ReaderAt //key 文件
+	size        int64
+	tagsBlock   *blockReader
+	indexBlocks map[string]*blockReader
+	fieldBH     blockHandle
+	bcache      *cache.NamespaceGetter
+}
+
+func newBaseReader(dir string) (*baseReader, error) {
+	kf, err := os.OpenFile(filepath.Join(dir, "index"), os.O_RDONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	fStat, err := kf.Stat()
+	if err != nil {
+		return nil, err
+	}
+	kSize := fStat.Size()
+	if kSize < footerLen {
+		return nil, nil
+	}
+	r := &baseReader{r: kf, size: kSize}
+	footer := r.readFooter()
+
+	r.fieldBH, _ = decodeBlockHandle(footer)
+	r.tagsBlock, err = r.readBlock(r.fieldBH, true)
+	if err != nil {
+		return nil, err
+	}
+
+	r.indexBlocks = make(map[string]*blockReader)
+	tagsIterator := newBlockIterator(r.tagsBlock, nil)
+	for tagsIterator.Next() {
+		bh, _ := decodeBlockHandle(tagsIterator.Value())
+		if bh.length == 0 {
+			continue
+		}
+		indexBlock, err := r.readBlock(bh, true)
+		if err != nil {
+			continue
+		}
+		r.indexBlocks[string(tagsIterator.Key())] = indexBlock
+	}
+
+	return r, nil
+}
+
+func (br *baseReader) print(tagName string) error {
+	indexBlock, err := br.getIndexBlock(tagName)
+	if err != nil {
+		return err
+	}
+	if indexBlock == nil {
+		return nil
+	}
+	indexIter := newBlockIterator(indexBlock, nil)
+	for indexIter.Next() {
+		x, _ := decodeBlockHandle(indexIter.Value())
+		fmt.Println(string(indexIter.Key()), x)
+	}
+	return nil
+}
+
+func (br *baseReader) find(tagName string, key []byte) []byte {
+	indexBlock, err := br.getIndexBlock(tagName)
+	if err != nil {
+		return nil
+	}
+	if indexBlock == nil {
+		return nil
+	}
+	indexIter := newBlockIterator(indexBlock, nil)
+	//查找数据在哪个data block
+	if !indexIter.seek(key) {
+		return nil
+	}
+	dataBH, _ := decodeBlockHandle(indexIter.Value())
+
+	dataIter := br.getDataIter(dataBH)
+	if !dataIter.seekWithRestart(key) { //搜索
+		dataIter.Release()
+		return nil
+	}
+	v := dataIter.Value()
+	k := dataIter.Key()
+	dataIter.Release()
+	if bytes.Compare(k, key) != 0 {
+		return nil
+	}
+	return v
+}
+
+func (r *baseReader) getDataIter(bh blockHandle) *blockIterator {
+	b, rel, err := r.readBlockCache(bh)
+	if err != nil {
+		return nil
+	}
+	return newBlockIterator(b, rel)
+}
+
+func (r *baseReader) readBlockCache(bh blockHandle) (*blockReader, cache.Releaser, error) {
+	var (
+		err error
+		ch  *cache.Handle
+	)
+	if r.bcache != nil {
+		ch = r.bcache.Get(bh.offset, func() (size int, value cache.Value) {
+			var b *blockReader
+			b, err = r.readBlock(bh, true)
+			if err != nil {
+				return 0, nil
+			}
+			return cap(b.data), b
+		})
+		if ch != nil {
+			b, ok := ch.Value().(*blockReader)
+			if !ok {
+				ch.Release()
+			}
+			return b, ch, nil
+		}
+	}
+	b, err := r.readBlock(bh, true)
+	if err != nil {
+		return nil, nil, err
+	}
+	return b, b, nil
+}
+
+func (br *baseReader) getIndexBlock(tagName string) (*blockReader, error) {
+	return br.indexBlocks[tagName], nil
+}
+
+func (br *baseReader) readFooter() []byte {
+	kfooterOffset := br.size - footerLen
+	var footer [footerLen]byte
+	if _, err := br.r.ReadAt(footer[:], kfooterOffset); err != nil && err != io.EOF {
+		fmt.Println(err)
+		return nil
+	}
+	return footer[0:]
 }
 
 //读一个块
 func (tr *baseReader) readBlock(bh blockHandle, restart bool) (*blockReader, error) {
 	//后面加内存池内存池复用
+	// if _, err := tr.r.ReadAt(tr.shareBuf[0:], int64(bh.offset)); err != nil && err != io.EOF {
+	// 	return nil, err
+	// }
 	data := make([]byte, int(bh.length))
 	if _, err := tr.r.ReadAt(data, int64(bh.offset)); err != nil && err != io.EOF {
 		return nil, err
@@ -63,10 +206,16 @@ func (tr *baseReader) readBlock(bh blockHandle, restart bool) (*blockReader, err
 	return block, nil
 }
 
-func (tr *baseReader) close() error {
-	if closer, ok := tr.r.(io.Closer); ok {
+func (r *baseReader) close() error {
+	if closer, ok := r.r.(io.Closer); ok {
 		return closer.Close()
 	}
+	r.tagsBlock.Release()
+	for k, v := range r.indexBlocks {
+		v.Release()
+		delete(r.indexBlocks, k)
+	}
+	r.indexBlocks = nil
 	return nil
 }
 
@@ -341,32 +490,6 @@ func (pr *postingReader) release() {
 	pr.mcache = nil
 }
 
-// func (pr *postingReader) readLabelPosting(ref uint64) []uint64 {
-// 	seq := ref >> 32
-// 	off := int((ref << 32) >> 32)
-// 	mmap, rel := pr.getMmapCache(seq)
-// 	defer func() {
-// 		if rel != nil {
-// 			rel.Release()
-// 		}
-// 	}()
-// 	if mmap == nil {
-// 		return nil
-// 	}
-// 	debuf := mmap.decbufAt(off)
-// 	debuf.uvarint()
-// 	refLen := debuf.uvarint()
-// 	seriesRef := make([]uint64, refLen)
-// 	for i := 0; i < refLen; i++ {
-// 		if i == 0 {
-// 			seriesRef[i] = debuf.uvarint64()
-// 		} else {
-// 			seriesRef[i] = seriesRef[i-1] + debuf.uvarint64()
-// 		}
-// 	}
-// 	return seriesRef
-// }
-
 func (pr *postingReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
 	seq := ref >> 32
 	off := int((ref << 32) >> 32)
@@ -461,22 +584,17 @@ func (pr *postingReader) readPosting2(ref uint64) ([]uint64, []uint64) {
 }
 
 type IndexReader struct {
-	mu          sync.RWMutex
-	indexr      fileReader
-	fieldBH     blockHandle
-	tagsBlock   *blockReader
-	indexBlocks map[string]*blockReader
+	mu     sync.RWMutex
+	indexr *baseReader
 
 	chunkr   *chunkReader
 	seriesr  *seriesReader
 	postingr *postingReader
-
-	bcache *cache.NamespaceGetter
 }
 
 func (r *IndexReader) Iterator() IteratorLabel {
 	iter := &tableIterator{}
-	iter.labelIter = newBlockIterator(r.tagsBlock, nil)
+	iter.labelIter = newBlockIterator(r.indexr.tagsBlock, nil)
 	iter.reader = r
 	iter.chunkr = r.chunkr
 	iter.seriesr = r.seriesr
@@ -487,51 +605,18 @@ func (r *IndexReader) Iterator() IteratorLabel {
 //缺乏错误处理
 func NewIndexReader(dir string, baseTime int64, bcache, mcache *cache.NamespaceGetter) *IndexReader {
 	indexDir := filepath.Join(dir, "index")
-	kf, err := os.OpenFile(filepath.Join(indexDir, "index"), os.O_RDONLY, 0644)
-	if err != nil {
-		return nil
-	}
-	fStat, err := kf.Stat()
-	if err != nil {
-
-		return nil
-	}
-	kSize := int64(fStat.Size())
-	if kSize < footerLen {
-		return nil
-	}
-	kfooterOffset := kSize - footerLen
-	var footer [footerLen]byte
-	if _, err := kf.ReadAt(footer[:], kfooterOffset); err != nil && err != io.EOF {
-		fmt.Println(err)
-		return nil
-	}
+	var err error
 	r := &IndexReader{}
-	r.indexr = &baseReader{kf}
-	r.bcache = bcache
-	r.fieldBH, _ = decodeBlockHandle(footer[0:])
-	r.tagsBlock, err = r.indexr.readBlock(r.fieldBH, true)
-	if err != nil {
-		return nil
-	}
 
 	r.postingr = newPostingReader(filepath.Join(indexDir, dirPosting), mcache)
 	r.seriesr = newSeriesReader(filepath.Join(indexDir, dirSeries), mcache)
 	r.chunkr = newchunkReader(filepath.Join(indexDir, dirChunk), baseTime, mcache)
 
-	r.indexBlocks = make(map[string]*blockReader)
-	tagsIterator := newBlockIterator(r.tagsBlock, nil)
-	for tagsIterator.Next() {
-		bh, _ := decodeBlockHandle(tagsIterator.Value())
-		if bh.length == 0 {
-			continue
-		}
-		indexBlock, err := r.indexr.readBlock(bh, true)
-		if err != nil {
-			continue
-		}
-		r.indexBlocks[string(tagsIterator.Key())] = indexBlock
+	r.indexr, err = newBaseReader(indexDir) // &baseReader{r: kf}
+	if err != nil {
+		return nil
 	}
+	r.indexr.bcache = bcache
 	return r
 }
 
@@ -660,20 +745,6 @@ func (r *IndexReader) Search(lset []*prompb.LabelMatcher, expr temql.Expr) (post
 		return p, []series.Series{r.seriesr}
 	}
 	var series []series.Series
-	// for i, term := range terms {
-	// 	value := r.find(global.MESSAGE, byteutil.Str2bytes(term))
-	// 	if value == nil {
-	// 		return posting.EmptyPostings, nil
-	// 	}
-	// 	ref, _ := binary.Uvarint(value)
-	// 	seriesRef, termMap := r.postingr.readPosting(ref)
-	// 	its = append(its, posting.NewListPostings(seriesRef))
-	// 	series[i] = termSeriesReader{
-	// 		refMap: termMap,
-	// 		reader: r.seriesr,
-	// 	}
-	// }
-	// p := posting.Intersect(its...)
 	if len(its) > 0 {
 		return posting.Intersect(queryTerm(expr, r, &series), posting.Intersect(its...)), series
 	}
@@ -694,7 +765,6 @@ func queryTerm(e temql.Expr, r *IndexReader, series *[]series.Series) posting.Po
 		}
 	case *temql.TermExpr:
 		e := e.(*temql.TermExpr)
-		log.Println("disk e.Name", e.Name)
 		value := r.find(global.MESSAGE, byteutil.Str2bytes(e.Name))
 		if value == nil {
 			return posting.EmptyPostings
@@ -710,84 +780,41 @@ func queryTerm(e temql.Expr, r *IndexReader, series *[]series.Series) posting.Po
 	return nil
 }
 
-func (r *IndexReader) getDataIter(bh blockHandle) *blockIterator {
-	b, rel, err := r.readBlockCache(bh)
-	if err != nil {
-		return nil
-	} 
-	return newBlockIterator(b, rel)       
-} 
-
-func (r *IndexReader) readBlockCache(bh blockHandle) (*blockReader, cache.Releaser, error) {
-	var (
-		err error
-		ch  *cache.Handle
-	)
-	ch = r.bcache.Get(bh.offset, func() (size int, value cache.Value) {   
-		var b *blockReader
-		b, err = r.indexr.readBlock(bh, true)
-		if err != nil {
-			return 0, nil
-		}
-		return cap(b.data), b
-	})
-	if ch != nil {
-		b, ok := ch.Value().(*blockReader)
-		if !ok {
-			ch.Release()
-		}
-		return b, ch, nil
-	}
-	b, err := r.indexr.readBlock(bh, true)
-	if err != nil {
-		return nil, nil, err
-	}
-	return b, b, nil
-}
-
 func (r *IndexReader) find(tagName string, key []byte) []byte {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	indexBlock, err := r.getIndexBlock(tagName)
-	if err != nil {
-		return nil
-	}
-	if indexBlock == nil {
-		return nil
-	}
-	indexIter := newBlockIterator(indexBlock, nil)   
-	//查找数据在哪个data block
-	if !indexIter.seek(key) {
-		return nil
-	}
-	dataBH, _ := decodeBlockHandle(indexIter.Value())
+	return r.indexr.find(tagName, key)
+	// indexBlock, err := r.getIndexBlock(tagName)
+	// if err != nil {
+	// 	return nil
+	// }
+	// if indexBlock == nil {
+	// 	return nil
+	// }
+	// indexIter := newBlockIterator(indexBlock, nil)
+	// //查找数据在哪个data block
+	// if !indexIter.seek(key) {
+	// 	return nil
+	// }
+	// dataBH, _ := decodeBlockHandle(indexIter.Value())
 
-	dataIter := r.getDataIter(dataBH)
-	if !dataIter.seekWithRestart(key) { //搜索
-		dataIter.Release()
-		return nil
-	}
-	v := dataIter.Value()
-	k := dataIter.Key()
-	dataIter.Release()
-	if bytes.Compare(k, key) != 0        {   
-		return nil 
-	}
-	return v
-}
-
-func (r *IndexReader) getIndexBlock(tagName string) (*blockReader, error) {
-	return r.indexBlocks[tagName], nil
+	// dataIter := r.getDataIter(dataBH)
+	// if !dataIter.seekWithRestart(key) { //搜索
+	// 	dataIter.Release()
+	// 	return nil
+	// }
+	// v := dataIter.Value()
+	// k := dataIter.Key()
+	// dataIter.Release()
+	// if bytes.Compare(k, key) != 0 {
+	// 	return nil
+	// }
+	//return v
 }
 
 func (r *IndexReader) Close() error {
 	r.indexr.close()
-	r.tagsBlock.Release()
-	for k, v := range r.indexBlocks {
-		v.Release()
-		delete(r.indexBlocks, k)
-	}
-	r.indexBlocks = nil
+
 	r.chunkr.release()
 	r.postingr.release()
 	r.seriesr.release()

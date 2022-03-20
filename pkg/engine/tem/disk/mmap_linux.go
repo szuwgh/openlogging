@@ -1,4 +1,3 @@
-// +build !windows,!plan9
 package disk
 
 import (

@@ -1,10 +1,10 @@
 package disk
 
 import (
-	"testing"
-
+	"fmt"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
+	"testing"
 )
 
 func Test_seriesWriter_addSeries(t *testing.T) {
@@ -26,13 +26,7 @@ func Test_seriesWriter_addSeries(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		struct {
-			name    string
-			sw      *seriesWriter
-			args    args
-			want    uint64
-			wantErr bool
-		}{
+		{
 			name: "test1",
 			sw:   sw,
 			args: args{
@@ -41,13 +35,7 @@ func Test_seriesWriter_addSeries(t *testing.T) {
 				chunks:   []ChunkMeta{ChunkMeta{1, 1626851373, 1626854373}, ChunkMeta{2, 1626851373, 1626856373}},
 			},
 		},
-		struct {
-			name    string
-			sw      *seriesWriter
-			args    args
-			want    uint64
-			wantErr bool
-		}{
+		{
 			name: "test2",
 			sw:   sw,
 			args: args{
@@ -108,13 +96,7 @@ func Test_postingWriter_writePosting(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		struct {
-			name    string
-			pw      *postingWriter
-			args    args
-			want    uint64
-			wantErr bool
-		}{
+		{
 			name: "test1",
 			pw:   pw,
 			args: args{
@@ -166,13 +148,7 @@ func Test_chunkWriter_writeChunks(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		struct {
-			name    string
-			cw      *chunkWriter
-			args    args
-			want    uint64
-			wantErr bool
-		}{
+		{
 			name: "test",
 			cw:   cw,
 			args: args{[][]byte{[]byte("abcdefg123456"), []byte("123456789")}},
@@ -203,4 +179,45 @@ func Test_chunkWriter_writeChunks(t *testing.T) {
 			t.Log(string(v))
 		}
 	}
+}
+
+func Test_KeyWriter(t *testing.T) {
+	var buf [48]byte
+	dir := "./"
+	kw, err := newKeyWriter(dir, buf[:])
+	if err != nil {
+		t.Fatal(err)
+	}
+	kw.setTagName([]byte("name"))
+	//kw.add([]byte("aaa"), []byte("111"))
+	kw.add([]byte("aa1"), []byte("22"))
+	kw.add([]byte("aa2"), []byte("33"))
+	kw.add([]byte("aa3"), []byte("44"))
+	kw.add([]byte("aa4"), []byte("55"))
+	kw.add([]byte("aa5"), []byte("111"))
+	kw.add([]byte("aa6"), []byte("22"))
+	kw.add([]byte("aa7"), []byte("33"))
+	kw.add([]byte("aa8"), []byte("44"))
+	kw.add([]byte("aa9"), []byte("55"))
+	kw.finishTag()
+	kw.close()
+
+	ir, err := newBaseReader(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ir.print("name")
+	res := ir.find("name", []byte("aa7"))
+	fmt.Println(string(res))
+}
+
+func Test_Pos(t *testing.T) {
+	var offset uint64 = 500
+	var length uint64 = 65535
+	n := offset<<16 | length
+	fmt.Println("n:", n)
+
+	offset = n >> 16
+	length = uint64((n << 48) >> 48)
+	fmt.Println("offset:", offset, "length:", length)
 }

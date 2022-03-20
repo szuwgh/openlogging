@@ -26,8 +26,8 @@ func Test_bytePooWriteString(t *testing.T) {
 	b := "aa"
 	offset, _ = bytePool.WriteString(offset, b)
 	fmt.Println(offset)
-	bytePool.writeBytes(offset, store.IntToByte(2))
-	fmt.Println(bytePool.buffer)
+	// bytePool.writeBytes(offset, store.IntToByte(2))
+	// fmt.Println(bytePool.buffer)
 }
 
 func Test_bytePooWriteVInt(t *testing.T) {

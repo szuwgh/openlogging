@@ -8,7 +8,6 @@ import (
 
 type EncBuf struct {
 	bytes Buffer
-	//shareBuf [binary.MaxVarintLen64]byte
 }
 
 func (e *EncBuf) Reset()             { e.bytes.Reset() }
