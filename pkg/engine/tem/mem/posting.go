@@ -148,12 +148,6 @@ func newRawPosting() *RawPosting {
 	return p
 }
 
-// type postingIterator interface {
-// 	Next() bool
-// 	Key() []byte
-// 	Value() unsafe.Pointer
-// }
-
 type tagIterator interface {
 	Next() bool
 	Key() string
@@ -210,11 +204,6 @@ func (d *defalutTagIterator) Iter() disk.WriterIterator {
 	//return pList.Iterator(d.chunkr, d.seriesr)
 }
 
-// func (d *defalutTagIterator) Value() postingList {
-// 	return d.tags.group[d.keys[d.i]]
-// }
-
-//
 type defalutTagGroup struct {
 	group map[string]index.Index
 	mu    sync.RWMutex
@@ -240,14 +229,6 @@ func (d *defalutTagGroup) Release() error {
 	}
 	return nil
 }
-
-// func (d *defalutTagGroup) Size() int {
-// 	var size int
-// 	for _, v := range d.group {
-// 		size += v.Size()
-// 	}
-// 	return size
-// }
 
 func (d *defalutTagGroup) Set(k string, p index.Index) {
 	d.mu.Lock()

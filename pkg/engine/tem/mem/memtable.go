@@ -147,7 +147,6 @@ func (mt *MemTable) ReleaseBuff(recycle, alloced *int) error {
 	mt.series.gc()
 	mt.reset()
 	return nil
-	//mt.indexs.
 }
 
 func (mt *MemTable) addLabel(s *MemSeries, t int64, v uint64) error {

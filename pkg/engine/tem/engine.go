@@ -159,7 +159,7 @@ func (e *Engine) recoverWal() error {
 	}
 	return nil
 }
- 
+
 func (e *Engine) openBlock(dir string) (*Block, error) {
 	meta, err := readMetaFile(dir)
 	if err != nil {

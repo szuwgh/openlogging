@@ -121,26 +121,23 @@ func ResetPosting(p *RawPosting, memTable *MemTable) {
 }
 
 //WriteLogFreq 写入词典信息
-func WriteLogFreq(p *RawPosting, memTable *MemTable) int {
+func WriteLogFreq(p *RawPosting, memTable *MemTable) {
 	logFreqIndex := p.logFreqIndex
 	var offset uint64
-	var size, length int
+	var len0, len1, len2 int
 	//写入时间
 	//offset = logFreqIndex
-	offset, size = memTable.WriteVInt64(logFreqIndex, p.lastTimeStampDelta)
+	offset, len0 = memTable.WriteVInt64(logFreqIndex, p.lastTimeStampDelta)
 	if p.freq == 1 {
-		offset, length = memTable.WriteVUint64(offset,
+		offset, len1 = memTable.WriteVUint64(offset,
 			p.lastLogDelta<<1|1)
-		size += length
 	} else {
-		offset, length = memTable.WriteVUint64(offset, p.lastLogDelta<<1)
-		size += length
-		offset, length = memTable.WriteVInt(offset, p.freq)
-		size += length
+		offset, len1 = memTable.WriteVUint64(offset, p.lastLogDelta<<1)
+		offset, len2 = memTable.WriteVInt(offset, p.freq)
 	}
 	atomic.StoreUint64(&p.logFreqIndex, offset)
-	atomic.AddUint64(&p.logFreqLen, uint64(size))
-	return size
+	atomic.AddUint64(&p.logFreqLen, uint64(len0+len1+len2))
+	//return size
 }
 
 //writeSkip 写入跳表
@@ -148,7 +145,7 @@ func writeSkip(context *Context, memTable *MemTable) {
 	p := context.P
 	logNum := p.logNum //文档号
 	var offset, childPointer uint64
-	var size, length int
+	var len0, len1, len2, len3, len4 int
 
 	logFreqLen := p.logFreqLen
 	posLen := p.posLen
@@ -161,30 +158,23 @@ func writeSkip(context *Context, memTable *MemTable) {
 		//写入跳表数据 最后一层
 		if level == 0 {
 			//写入文档号 重启点
-			offset, size = memTable.WriteVUint64(p.skipStartIndex[level], p.lastLogID)
-			offset, length = memTable.WriteVInt(offset, int(p.lastTimeStamp-memTable.baseTimeStamp)) //memTable.BaseTimeStamp
-			size += length
-			offset, length = memTable.WriteVUint64(offset, logFreqLen)
-			size += length
-			offset, length = memTable.WriteVUint64(offset, posLen)
-			size += length
+			offset, len0 = memTable.WriteVUint64(p.skipStartIndex[level], p.lastLogID)
+			offset, len1 = memTable.WriteVInt(offset, int(p.lastTimeStamp-memTable.baseTimeStamp)) //memTable.BaseTimeStamp
+			offset, len2 = memTable.WriteVUint64(offset, logFreqLen)
+			offset, len3 = memTable.WriteVUint64(offset, posLen)
 
 			//保存相对位移
 		} else {
 			//写入时间 重启点
-			offset, size = memTable.WriteVUint64(p.skipStartIndex[level], p.lastLogID)
-			offset, length = memTable.WriteVInt(offset, int(p.lastTimeStamp-memTable.baseTimeStamp)) //memTable.BaseTimeStamp)
-			size += length
-			offset, length = memTable.WriteVUint64(offset, logFreqLen)
-			size += length
-			offset, length = memTable.WriteVUint64(offset, posLen)
-			size += length
-			offset, length = memTable.WriteVUint64(offset, childPointer)
-			size += length
+			offset, len0 = memTable.WriteVUint64(p.skipStartIndex[level], p.lastLogID)
+			offset, len1 = memTable.WriteVInt(offset, int(p.lastTimeStamp-memTable.baseTimeStamp)) //memTable.BaseTimeStamp)
+			offset, len2 = memTable.WriteVUint64(offset, logFreqLen)
+			offset, len3 = memTable.WriteVUint64(offset, posLen)
+			offset, len4 = memTable.WriteVUint64(offset, childPointer)
 		}
 
 		atomic.StoreUint64(&p.skipStartIndex[level], offset)
-		atomic.AddUint64(&p.skipLen[level], uint64(size))
+		atomic.AddUint64(&p.skipLen[level], uint64(len0+len1+len2+len3+len4))
 		childPointer = p.skipLen[level]
 
 	}
