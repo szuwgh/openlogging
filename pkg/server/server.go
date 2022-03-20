@@ -3,14 +3,15 @@ package server
 import (
 	"encoding/json"
 	"log"
-
-	"github.com/szuwgh/temsearch/pkg/lib/prompb"
-	"github.com/szuwgh/temsearch/pkg/temql"
+	"os"
+	"path/filepath"
 
 	"github.com/szuwgh/temsearch/pkg/analysis"
 	"github.com/szuwgh/temsearch/pkg/engine/tem"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
+	"github.com/szuwgh/temsearch/pkg/lib/prompb"
+	"github.com/szuwgh/temsearch/pkg/temql"
 )
 
 type Config struct {
@@ -45,7 +46,11 @@ func New() *Server {
 	opts.BlockRanges = exponentialBlockRanges(opts.MaxBlockDuration, 10, 3)
 	opts.IndexBufferNum = 1
 	opts.IndexBufferLength = 16
-	opts.DataDir = "E:\\goproject\\temsearch\\data" //config.DataDir
+	exeDir, err := GetCurPath()
+	if err != nil {
+		return nil
+	}
+	opts.DataDir = filepath.Join(exeDir, "data") //"E:\\goproject\\temsearch\\data" //config.DataDir
 	//config.MaxBlockDuration
 	opts.FlushWritecoldDuration = 60 * 1e3                 //config.FlushWritecoldDuration
 	opts.DefaultCacheSnapshotMemorySize = 25 * 1024 * 1024 //config.DefaultCacheSnapshotMemorySize
@@ -54,6 +59,14 @@ func New() *Server {
 		return nil
 	}
 	return s
+}
+
+func GetCurPath() (string, error) {
+	path, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Dir(path), nil
 }
 
 func (s *Server) Index(b []byte) error {

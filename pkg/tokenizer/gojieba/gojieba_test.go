@@ -85,3 +85,15 @@ func Test_gojieba_tokenizer(t *testing.T) {
 		fmt.Println(v)
 	}
 }
+
+func Test_tokenizer(t *testing.T) {
+	var s string
+	//var words []string
+	s = "2022年 03月 17日 星期四 17:59:21 CST 0649b1d755"
+	use_hmm := true
+	x := gojb.NewJieba()
+	defer x.Free()
+	wordinfos := x.Tokenize(s, gojb.SearchMode, use_hmm)
+	fmt.Println(s)
+	fmt.Println("Tokenize:(搜索引擎模式)", wordinfos)
+}

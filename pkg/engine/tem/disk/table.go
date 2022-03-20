@@ -68,6 +68,18 @@ func encodeBlockHandle(dst []byte, b blockHandle) int {
 	return n + m
 }
 
+func encodeBlockOffset(dst []byte, offset uint64) int {
+	n := binary.PutUvarint(dst, offset)
+	return n
+}
+
+func encodeBlockLength(dst []byte, length uint64) {
+	dst[0] = 0
+	dst[1] = 0
+	dst[2] = 0
+	binary.PutUvarint(dst, length)
+}
+
 func decodeValueIndex(dst []byte, lastT int64) (valueIndex, int) {
 	return valueIndex{}, 0
 }

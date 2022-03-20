@@ -123,7 +123,7 @@ func (i *indexIterator) Get() iterator.SingleIterator {
 	if bh.length == 0 {
 		return nil
 	}
-	return i.reader.getDataIter(bh)
+	return i.reader.indexr.getDataIter(bh)
 }
 
 //域

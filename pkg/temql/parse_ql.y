@@ -109,7 +109,7 @@ term_identifier :  LEFT_PAREN term_expr RIGHT_PAREN
                         {
                            $$ = $2
                         }
-                        |IDENTIFIER
+                        | IDENTIFIER
                         {
                            $$ = yylex.(*parser).newTermExpr($1);   
                         }

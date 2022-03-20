@@ -19,13 +19,14 @@ import (
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/fileutil"
+	_ "github.com/szuwgh/temsearch/pkg/engine/tem/fst"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
 )
 
 const (
 	KiB = 1024
 	MiB = KiB * 1024
-	GiB = MiB * 1024
+	GiB = MiB * 10240
 )
 
 const (
@@ -248,27 +249,52 @@ func (bw *baseWrite) byteLen() int {
 	return bw.dataBlock.bytesLen()
 }
 
+type indexBlock interface {
+	appendIndex(k []byte, bh blockHandle) error
+	//	append(k, v []byte) error
+	finishRestarts()
+	finishTail() uint32
+	reset()
+	Get() []byte
+}
+
 //按页存储
 type keyWriter struct {
 	baseWrite
-	indexBlock    blockWriter //indexblock
+	indexBlock    indexBlock //indexblock
 	tagsBlock     blockWriter
 	nEntries      int //总的记录数
 	baseTimeStamp int64
 	tagName       []byte //标签名
+	maxBlockSize  int
 }
 
-func newKeyWriter(dir string) (*keyWriter, error) {
+func newKeyWriter(dir string, shareBuf []byte) (*keyWriter, error) {
 	kw := &keyWriter{}
 	f, err := os.OpenFile(filepath.Join(dir, "index"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		return nil, err
 	}
 	kw.w = f
+	kw.maxBlockSize = 4 * KB //20 //4 * KB //4kb
 	kw.dataBlock.restartInterval = 2
-	kw.indexBlock.restartInterval = 1
+	kw.shareBuf = shareBuf
 	kw.tagsBlock.restartInterval = 1
+	bw := newBlockWriter(shareBuf)
+	kw.indexBlock = bw
 	return kw, nil
+}
+
+func (bw *keyWriter) add(k, v []byte) error {
+	if err := bw.append(k, v); err != nil {
+		return err
+	}
+	if bw.byteLen() >= bw.maxBlockSize {
+		if err := bw.finishBlock(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (bw *keyWriter) append(k, v []byte) error {
@@ -282,6 +308,11 @@ func (bw *keyWriter) setTagName(tagName []byte) {
 func (kw *keyWriter) finishBlock() error {
 	kw.dataBlock.finishRestarts()
 	kw.dataBlock.finishTail()
+	//encodeBlockLength(kw.shareBuf[:3], uint64(len(kw.dataBlock.Get())))
+
+	// if _, err := kw.write(kw.shareBuf[:3]); err != nil {
+	// 	return err
+	// }
 	bh, err := kw.writeBlock(kw.dataBlock.Get())
 	if err != nil {
 		return err
@@ -294,8 +325,7 @@ func (kw *keyWriter) finishBlock() error {
 }
 
 func (kw *keyWriter) writeBlockHandleToIndex(bh blockHandle) error {
-	n := encodeBlockHandle(kw.shareBuf[0:], bh)
-	if err := kw.indexBlock.append(kw.dataBlock.prevKey, kw.shareBuf[:n]); err != nil {
+	if err := kw.indexBlock.appendIndex(kw.dataBlock.prevKey, bh); err != nil {
 		return err
 	}
 	kw.dataBlock.prevKey = kw.dataBlock.prevKey[:0]
@@ -308,7 +338,6 @@ func (kw *keyWriter) finishTag() error {
 			return err
 		}
 	}
-
 	kw.indexBlock.finishRestarts()
 	kw.indexBlock.finishTail()
 	bh, err := kw.writeBlock(kw.indexBlock.Get())
@@ -639,6 +668,7 @@ func (pw *postingWriter) writePosting(refs ...[]uint64) (uint64, error) {
 	crc := crc32.ChecksumIEEE(pw.buf2.Get())
 	pw.buf1.PutUvarint(pw.buf2.Len())
 	pw.buf2.PutUint32(crc)
+
 	length := pw.buf1.Len() + pw.buf2.Len()
 
 	if err := pw.isCut(length); err != nil {
@@ -676,7 +706,6 @@ type IndexW struct {
 	seriesw  *seriesWriter
 	chunkw   *chunkWriter
 
-	maxBlockSize    int
 	valueOffset     uint64
 	lastValueOffset uint64
 
@@ -690,13 +719,13 @@ type IndexW struct {
 //初始化
 func newIndexW(dir string) (*IndexW, error) {
 	iw := &IndexW{}
-	iw.maxBlockSize = 4 * KB //4kb
+
 	iw.dir = dir
-	kw, err := newKeyWriter(dir)
+	kw, err := newKeyWriter(dir, iw.shareBuf[:])
 	if err != nil {
 		return iw, err
 	}
-	kw.shareBuf = iw.shareBuf[0:]
+
 	iw.kw = kw
 	iw.chunkw, err = newChunkWriter(filepath.Join(dir, dirChunk))
 	if err != nil {
@@ -723,15 +752,7 @@ func (tw *IndexW) SetTagName(tagName []byte) {
 
 func (tw *IndexW) AppendKey(key []byte, ref uint64) error {
 	n := binary.PutUvarint(tw.shareBuf[0:], ref)
-	if err := tw.kw.append(key, tw.shareBuf[:n]); err != nil {
-		return err
-	}
-	if tw.kw.byteLen() >= tw.maxBlockSize {
-		if err := tw.kw.finishBlock(); err != nil {
-			return err
-		}
-	}
-	return nil
+	return tw.kw.add(key, tw.shareBuf[:n])
 }
 
 type writeChunkFunc func() (uint64, error)

@@ -44,6 +44,11 @@ type blockWriter struct {
 	prevKey         []byte
 	restarts        []uint32
 	byteutil.EncBuf
+	shareBuf []byte
+}
+
+func newBlockWriter(shareBuf []byte) *blockWriter {
+	return &blockWriter{restartInterval: 1, shareBuf: shareBuf}
 }
 
 func (bw *blockWriter) append(key, value []byte) error {
@@ -65,6 +70,11 @@ func (bw *blockWriter) append(key, value []byte) error {
 	bw.prevKey = append(bw.prevKey[:0], key...)
 	bw.nEntries++
 	return nil
+}
+
+func (bw *blockWriter) appendIndex(key []byte, bh blockHandle) error {
+	n := encodeBlockHandle(bw.shareBuf[0:], bh)
+	return bw.append(key, bw.shareBuf[:n])
 }
 
 //将restarts写入文件

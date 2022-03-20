@@ -89,6 +89,7 @@ func (l *lexer) next() rune {
 func (l *lexer) nextItem(itemp *Item) {
 	l.itemp = itemp
 	l.scannedItem = false
+	//reflect.ValueOf(l.state)
 	if l.state != nil {
 		for !l.scannedItem {
 			l.state = l.state(l)
@@ -241,7 +242,7 @@ func lexStatements(l *lexer) stateFn {
 		l.eject(RIGHT_BRACE)
 		l.braceOpen = false
 	case r == '=':
-	case isAlpha(r):
+	case isAlphaNumeric(r):
 		return lexKeywordOrIdentifier
 	}
 	return nil

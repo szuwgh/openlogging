@@ -475,7 +475,7 @@ func (e *Engine) shouldCompact() error {
 	e.frozeHead.EndID = endID
 	e.nextID = 0
 	e.memMu.Unlock()
-	logs := logproto.Stream{Entries: []logproto.Entry{logproto.Entry{LogID: endID}}}
+	logs := logproto.Stream{Entries: []logproto.Entry{{LogID: endID}}}
 	//notification needs to be written to disk
 	log.Println("add end logs")
 	e.frozeHead.addLogs(logs)

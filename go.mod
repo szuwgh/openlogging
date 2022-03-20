@@ -21,4 +21,5 @@ require (
 	google.golang.org/genproto v0.0.0-20191108220845-16a3f7862a1a
 	google.golang.org/grpc v1.21.1
 	gopkg.in/yaml.v2 v2.2.8 // indirect
+// indirect
 )
