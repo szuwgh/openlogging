@@ -21,6 +21,7 @@ func appendIndex(k []byte, bh blockHandle) error {
 func finishRestarts() {
 
 }
+
 func finishTail() uint32 {
 	return 0
 }
