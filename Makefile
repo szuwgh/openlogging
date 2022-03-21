@@ -2,8 +2,10 @@
 # Full license can be found in the LICENSE file.
 
 GOCMD := go
+RUSTCMD := cargo build
 GOBUILD := $(GOCMD) build
 GOCLEAN := $(GOCMD) clean
+
 
 GO_SOURCE := main.go
 GO_BINARY := temsearch
@@ -16,5 +18,6 @@ clean:
 	$(GOCLEAN)
 	rm -f $(GO_BINARY)
 
-$(GO_BINARY): $(GO_SOURCE)
-	$(GOBUILD) -v -o $@
+build:
+	cd pkg/lib/furze && cargo build
+	$(GOBUILD) -v -o $(GO_BINARY)  

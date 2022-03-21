@@ -19,7 +19,6 @@ import (
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/fileutil"
-	_ "github.com/szuwgh/temsearch/pkg/engine/tem/fst"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
 )
 
