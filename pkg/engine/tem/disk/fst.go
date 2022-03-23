@@ -25,6 +25,7 @@ func finishRestarts() {
 func finishTail() uint32 {
 	return 0
 }
+
 func reset() {
 
 }
