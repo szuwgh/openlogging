@@ -26,16 +26,9 @@ import (
 )
 
 const (
-	//NOMOREDOCS   = 0x7fffffff
-	//skipInterval = 3
-
 	DefaultCacheSnapshotMemorySize = 25 * 1024 * 1024 // 25MB
 
 	metaFilename = "meta.json"
-
-	//MaxBlockDuration = 30 //1 * 60 * 60 //1 * 60 * 60 //2h
-
-	//flushWritecoldDuration = 60
 )
 
 type Options struct {
