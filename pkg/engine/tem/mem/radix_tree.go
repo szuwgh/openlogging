@@ -18,7 +18,5 @@ func (rax *radixTree) Insert(key []byte, byteStart int) int {
 }
 
 func (rax *radixTree) insert(key []byte, byteStart int) int {
-	//h := rax.head
-	//length := len(key)
 	return 0
 }

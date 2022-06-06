@@ -54,8 +54,7 @@ type Options struct {
 type Engine struct {
 	tOps   *disk.TableOps
 	blocks []*Block
-	//lastLogID uint64
-	//opts      *Options
+
 	a  *analysis.Analyzer
 	mu sync.RWMutex
 

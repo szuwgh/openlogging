@@ -12,7 +12,6 @@ type blockHandle struct {
 }
 
 type valueIndex struct {
-	//	index uint64
 	count  uint64
 	chunks []TimeChunk
 }

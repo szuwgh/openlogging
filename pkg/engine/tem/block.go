@@ -150,6 +150,7 @@ func (r blockIndexReader) Close() error {
 type blockLogReader struct {
 	lr LogReader
 	b  BlockControl
+	
 }
 
 func (r blockLogReader) ReadLog(v uint64) []byte {
