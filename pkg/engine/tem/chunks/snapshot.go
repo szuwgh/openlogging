@@ -8,7 +8,6 @@ import (
 type SnapBlock interface {
 	ReadByte() (byte, error)
 	Seek(uint64)
-	//	Bytes() [][]byte
 	ReadVLong() int64
 	ReadVInt() int
 	ReadVUInt64() uint64
@@ -17,11 +16,7 @@ type SnapBlock interface {
 
 type LogPosting interface {
 	Next() bool
-	// Seek advances the iterator to value v or greater and returns
-	// true if a value was found.
 	Seek(v uint64) bool
-
-	// At returns the value at the current iterator position.
 	At() uint64
 }
 
@@ -30,26 +25,18 @@ type LogID struct {
 }
 
 type TermSnapReader interface {
-	//LogFreqReader() snapBlock
-	//PosReader() snapBlock
-	//SkipReader() [global.FreqSkipListLevel]snapBlock
 	Encode() (SnapBlock, SnapBlock, [global.FreqSkipListLevel]SnapBlock, uint64)
 	Bytes() [][]byte
 }
 
 type TermSnapShot struct {
-	//LogFreqBytes snapBlock
-	//PosBytes     snapBlock
-	//SkipBytes    [global.FreqSkipListLevel]snapBlock
 	snapReader    TermSnapReader
 	baseTimeStamp int64
 	segmentNum    uint64
-	//buf           []byte
 }
 
 func NewTermSnapShot() *TermSnapShot {
 	termSna := &TermSnapShot{}
-	//termSna.buf = buf
 	return termSna
 }
 
@@ -58,10 +45,10 @@ func (s *TermSnapShot) Iterator(minT, maxT int64) Postings {
 	logFreqr, posr, skipsr, segmentNum := s.snapReader.Encode()
 	t.skipReader = make([]SnapBlock, global.FreqSkipListLevel)
 	for i := 0; i < global.FreqSkipListLevel; i++ {
-		t.skipReader[i] = skipsr[i] //s.snapReader.SkipReader()[i] //snapReader{data: s.SkipBytes[i]}
+		t.skipReader[i] = skipsr[i]
 	}
-	t.logFreqReader = logFreqr //s.snapReader.LogFreqReader() //snapReader{data: s.LogFreqBytes}
-	t.posReader = posr         //s.snapReader.PosReader() //snapReader{data: s.PosBytes}
+	t.logFreqReader = logFreqr
+	t.posReader = posr
 	t.minTimeStamp = minT
 	t.maxTimeStamp = maxT
 	t.baseTimeStamp = s.baseTimeStamp
@@ -86,31 +73,25 @@ func (s *TermSnapShot) SetSnapReader(snapReader TermSnapReader) {
 }
 
 type SeriesSnapReader interface {
-	//LogFreqReader() snapBlock
-	//PosReader() snapBlock
-	//SkipReader() [global.FreqSkipListLevel]snapBlock
 	Encode() (SnapBlock, uint64)
 	Bytes() [][]byte
 }
 
 type SeriesSnapShot struct {
-	//LogBytes      SnapBlock
 	snapReader    SeriesSnapReader
 	baseTimeStamp int64
 	segmentNum    uint64
-	//buf           []byte
 }
 
 func NewSeriesSnapShot() *SeriesSnapShot {
 	seriesSna := &SeriesSnapShot{}
-	//seriesSna.buf = buf
 	return seriesSna
 }
 
 func (s *SeriesSnapShot) Iterator(minT, maxT int64) Postings {
 	l := &labelPosting{}
 	logr, segmentNum := s.snapReader.Encode()
-	l.logReader = logr //snapReader{data: s.LogBytes}
+	l.logReader = logr
 	l.minTimeStamp = minT
 	l.maxTimeStamp = maxT
 	l.segmentNum = segmentNum
