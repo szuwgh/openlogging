@@ -15,14 +15,14 @@ import (
 
 type Head struct {
 	rwControl
-	mint          int64
-	MaxT          int64
-	indexMem      *mem.MemTable
-	logsMem       *mem.LogsTable
-	indexControl  sync.WaitGroup
-	chunkRange    int64
-	lastSegNum    uint64
-	stat          *station
+	mint         int64
+	MaxT         int64
+	indexMem     *mem.MemTable
+	logsMem      *mem.LogsTable
+	indexControl sync.WaitGroup
+	chunkRange   int64
+	lastSegNum   uint64
+	//	stat          *station
 	a             *analysis.Analyzer
 	EndID         uint64
 	startChan     chan struct{}
@@ -31,7 +31,7 @@ type Head struct {
 	logSize       uint64
 }
 
-func NewHead(alloc byteutil.Allocator, chunkRange int64, num, bufLen int, compactChan chan struct{}, a *analysis.Analyzer) *Head {
+func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer) *Head {
 	h := &Head{
 		mint: math.MinInt64,
 		MaxT: math.MinInt64,
@@ -40,9 +40,9 @@ func NewHead(alloc byteutil.Allocator, chunkRange int64, num, bufLen int, compac
 	h.logsMem = mem.NewLogsTable(byteutil.NewForwardBytePool(alloc))
 	h.chunkRange = chunkRange
 	h.a = a
-	h.stat = newStation(num, bufLen, h.serieser, h.tokener)
+	//h.stat = newStation(num, bufLen, h.serieser, h.tokener)
 	h.startChan = make(chan struct{}, 1)
-	go h.process(compactChan)
+	//go h.process(compactChan)
 	return h
 }
 
@@ -52,13 +52,13 @@ func (h *Head) addLogs(r logproto.Stream) error {
 }
 
 //read a log
-func (h *Head) readLog(id uint64) []byte {
-	return h.logsMem.ReadLog(id)
-}
+// func (h *Head) readLog(id uint64) []byte {
+// 	return h.logsMem.ReadLog(id)
+// }
 
-func (h *Head) getLog() mem.LogSummary {
-	return h.stat.Pull()
-}
+// func (h *Head) getLog() mem.LogSummary {
+// 	return h.stat.Pull()
+// }
 
 func (h *Head) process(compactChan chan struct{}) {
 	context := mem.Context{}
@@ -114,7 +114,7 @@ func (h *Head) reset() {
 	h.EndID = 0
 	h.isWaitfroze = false
 	h.logSize = 0
-	h.stat.forwardID = 1
+	//	h.stat.forwardID = 1
 }
 
 func (h *Head) ReadDone() {

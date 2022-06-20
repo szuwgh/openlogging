@@ -9,7 +9,6 @@ type chunkAlloc interface {
 type chunk struct {
 	data []byte
 	a    chunkAlloc
-	//i    uint64
 }
 
 func (c *chunk) PutByte(i uint64, b byte) uint64 {

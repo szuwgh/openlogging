@@ -201,7 +201,6 @@ func (d *defalutTagIterator) Value() []byte {
 func (d *defalutTagIterator) Iter() disk.WriterIterator {
 	pList := d.tags.group[d.keys[d.i]]
 	return &memIterator{iter: pList.Iterator(), chunkr: d.chunkr, seriesr: d.seriesr}
-	//return pList.Iterator(d.chunkr, d.seriesr)
 }
 
 type defalutTagGroup struct {

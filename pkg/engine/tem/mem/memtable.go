@@ -21,7 +21,6 @@ import (
 	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
-	//temqlLabels "github.com/szuwgh/temsearch/pkg/lib/prompb"
 )
 
 const (
@@ -30,11 +29,10 @@ const (
 )
 
 type LogSummary struct {
-	DocID  uint64
-	Series *MemSeries
-	Tokens tokenizer.Tokens
-	Msg    []byte
-	//	Lset      labels.Labels
+	DocID     uint64
+	Series    *MemSeries
+	Tokens    tokenizer.Tokens
+	Msg       []byte
 	TimeStamp int64
 }
 
@@ -86,7 +84,6 @@ func (mt *MemTable) SetBaseTimeStamp(t int64) {
 }
 
 func (mt *MemTable) reset() {
-	//mt.size = 0
 	mt.lastSeriesID = 0
 	mt.logID = 0
 }
