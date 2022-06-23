@@ -38,6 +38,7 @@ func (l *Label) Tag() string {
 
 // Labels is a sorted set of labels. Order has to be guaranteed upon
 // instantiation.
+
 type Labels []Label
 
 func (ls Labels) Len() int           { return len(ls) }

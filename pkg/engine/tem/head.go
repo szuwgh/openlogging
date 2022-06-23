@@ -11,6 +11,7 @@ import (
 	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/mem"
 	"github.com/szuwgh/temsearch/pkg/lib/logproto"
+	"github.com/szuwgh/temsearch/pkg/tokenizer"
 )
 
 type Head struct {
@@ -22,13 +23,12 @@ type Head struct {
 	indexControl sync.WaitGroup
 	chunkRange   int64
 	lastSegNum   uint64
-	//	stat          *station
-	a             *analysis.Analyzer
-	EndID         uint64
-	startChan     chan struct{}
-	headStartChan chan struct{}
-	isWaitfroze   bool
-	logSize       uint64
+	a            *analysis.Analyzer
+	EndID        uint64
+	//	startChan     chan struct{}
+	//	headStartChan chan struct{}
+	isWaitfroze bool
+	logSize     uint64
 }
 
 func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer) *Head {
@@ -40,44 +40,41 @@ func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer) *
 	h.logsMem = mem.NewLogsTable(byteutil.NewForwardBytePool(alloc))
 	h.chunkRange = chunkRange
 	h.a = a
-	//h.stat = newStation(num, bufLen, h.serieser, h.tokener)
-	h.startChan = make(chan struct{}, 1)
-	//go h.process(compactChan)
 	return h
 }
 
 //add some logs
 func (h *Head) addLogs(r logproto.Stream) error {
-	return h.stat.addLogs(r)
-}
-
-//read a log
-// func (h *Head) readLog(id uint64) []byte {
-// 	return h.logsMem.ReadLog(id)
-// }
-
-// func (h *Head) getLog() mem.LogSummary {
-// 	return h.stat.Pull()
-// }
-
-func (h *Head) process(compactChan chan struct{}) {
+	//return h.stat.addLogs(r)
 	context := mem.Context{}
-	for {
-		if h.isWaitfroze {
-			<-h.startChan
-			h.isWaitfroze = false
-		}
-		logSumm := h.getLog()
-		if logSumm.DocID == h.EndID {
-			h.headStartChan <- struct{}{}
-			compactChan <- struct{}{}
-			continue
-		}
-		h.logsMem.WriteLog(logSumm.Msg)
-		h.indexMem.Index(&context, logSumm)
+	series := h.serieser(r.Labels)
+	for _, e := range r.Entries {
+		h.logsMem.WriteLog([]byte(e.Line))
+		tokens := h.tokener(&e)
+		h.indexMem.Index(&context, e.LogID, e.Timestamp.UnixNano(), series, tokens)
 		h.indexMem.Flush()
 	}
+	return nil
 }
+
+// func (h *Head) process() {
+// 	//context := mem.Context{}
+// 	//for {
+// 	// if h.isWaitfroze {
+// 	// 	<-h.startChan
+// 	// 	h.isWaitfroze = false
+// 	// }
+// 	//logSumm := h.getLog()
+// 	// if logSumm.DocID == h.EndID {
+// 	// 	h.headStartChan <- struct{}{}
+// 	// 	compactChan <- struct{}{}
+// 	// 	continue
+// 	// }
+// 	h.logsMem.WriteLog(logSumm.Msg)
+// 	h.indexMem.Index(&context, logSumm)
+// 	h.indexMem.Flush()
+// 	//}
+// }
 
 func (h *Head) serieser(labels string) *mem.MemSeries {
 	lset, _ := temql.ParseLabels(labels)
@@ -85,15 +82,16 @@ func (h *Head) serieser(labels string) *mem.MemSeries {
 	return s
 }
 
-func (h *Head) tokener(entry *logproto.Entry) mem.LogSummary {
+func (h *Head) tokener(entry *logproto.Entry) tokenizer.Tokens {
 	msg := byteutil.Str2bytes(entry.Line)
 	tokens := h.a.Analyze(msg)
-	return mem.LogSummary{
-		DocID:     entry.LogID,
-		Tokens:    tokens,
-		TimeStamp: entry.Timestamp.UnixNano() / 1e6,
-		Msg:       msg,
-	}
+	return tokens
+	// return mem.LogSummary{
+	// 	DocID:     entry.LogID,
+	// 	Tokens:    tokens,
+	// 	TimeStamp: entry.Timestamp.UnixNano() / 1e6,
+	// 	Msg:       msg,
+	// }
 }
 
 func (h *Head) setMinTime(t int64) {

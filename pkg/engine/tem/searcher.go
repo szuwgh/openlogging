@@ -293,7 +293,6 @@ func (s *chunkSeries) Labels() labels.Labels {
 
 func (s *chunkSeries) Iterator() SeriesIterator {
 	return newChunkSeriesIterator(s.chunks, s.isTerm, s.logr, s.chunkr, s.mint, s.maxt, s.lastSegNum)
-	//return newFlashbackChunkSeriesIterator(s.chunks, s.isTerm, s.logr, s.chunkr, s.mint, s.maxt, s.lastSegNum)
 }
 
 type logResult struct {

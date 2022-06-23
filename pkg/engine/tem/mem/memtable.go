@@ -201,34 +201,26 @@ func (mt *MemTable) LogNum() uint64 {
 }
 
 //索引文档
-func (mt *MemTable) Index(context *Context, logSum LogSummary) {
-	//logID := mt.getNextLogID()
-	s := logSum.Series
-	context.LogID = logSum.DocID //mt.getNextLogID()
-	context.TimeStamp = logSum.TimeStamp
-	mt.addLabel(s, logSum.TimeStamp, logSum.DocID)
+func (mt *MemTable) Index(context *Context, docID uint64, timeStamp int64, series *MemSeries, tokens tokenizer.Tokens) {
+	s := series
+	context.LogID = docID
+	context.TimeStamp = timeStamp
+	mt.addLabel(s, timeStamp, docID)
 
-	//	tokens := a.Analyze([]byte(log.Msg))
-
-	postingList, ok := mt.indexs.Get(global.MESSAGE) //e.processMap[global.MESSAGE]
+	postingList, ok := mt.indexs.Get(global.MESSAGE)
 	if !ok {
 		return
 	}
 	//分词 全文索引
-	for _, t := range logSum.Tokens {
+	for _, t := range tokens {
 		if strings.TrimSpace(t.Term) == "" {
 			continue
 		}
 		context.Term = bytes.TrimSpace([]byte(t.Term)) //词
 		context.Position = t.Position
-		mt.addTerm(context, s.ref, logSum.Series.Lset(), postingList)
+		mt.addTerm(context, s.ref, s.Lset(), postingList)
 	}
-	//atomic.AddUint64(&mt.size, uint64(log.Size()))
 }
-
-// func (mt *MemTable) Size() uint64 {
-// 	return atomic.LoadUint64(&mt.size)
-// }
 
 func (mt *MemTable) GetOrCreate(hash uint64, lset labels.Labels) (*MemSeries, bool) {
 	if len(lset) == 0 {

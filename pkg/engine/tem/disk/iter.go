@@ -427,13 +427,9 @@ func (c *compactionMerger) Next() bool {
 	if !c.aok && !c.bok || c.Err() != nil {
 		return false
 	}
-	// While advancing child iterators the memory used for labels and chunks
-	// may be reused. When picking a series we have to store the result.
 	var lset labels.Labels
 	var chks []ChunkMeta
-
 	d := c.compare()
-	// Both sets contain the current series. Chain them into a single one.
 	if d > 0 {
 		lset, chks = c.b.At()
 		c.l = append(c.l[:0], lset...)
@@ -449,10 +445,6 @@ func (c *compactionMerger) Next() bool {
 	} else {
 		l, ca := c.a.At()
 		_, cb := c.b.At()
-		// for _, r := range rb {
-		// 	ra = ra.add(r)
-		// }
-
 		c.l = append(c.l[:0], l...)
 		c.c = append(append(c.c[:0], ca...), cb...)
 

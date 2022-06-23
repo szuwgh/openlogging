@@ -115,7 +115,7 @@ func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
 }
 
 func (e *Engine) newHead() *Head {
-	return NewHead(e.alloc, e.opts.BlockRanges[0], e.opts.IndexBufferNum, e.opts.IndexBufferLength, e.compactChan, e.a)
+	return NewHead(e.alloc, e.opts.BlockRanges[0], e.a)
 }
 
 func (e *Engine) recoverWal() error {
@@ -433,7 +433,6 @@ func (e *Engine) shouldCompact() error {
 	if !e.ShouldCompactMem(e.head) {
 		return nil
 	}
-	var endID uint64
 	e.memMu.Lock()
 	if e.wal != nil {
 		err := e.wal.close()
@@ -459,18 +458,9 @@ func (e *Engine) shouldCompact() error {
 		e.walFile = e.walFile[:0]
 	}
 	e.frozeHead = e.head
-	e.head = e.allocHead() //NewHead(e.alloc)
-	e.head.isWaitfroze = true
-	e.frozeHead.headStartChan = e.head.startChan
+	e.head = e.allocHead()
 	e.head.lastSegNum = e.frozeHead.lastSegNum + e.frozeHead.LogNum()
-	endID = e.GetNextID()
-	e.frozeHead.EndID = endID
-	e.nextID = 0
 	e.memMu.Unlock()
-	logs := logproto.Stream{Entries: []logproto.Entry{{LogID: endID}}}
-	//notification needs to be written to disk
-	log.Println("add end logs")
-	e.frozeHead.addLogs(logs)
 	for {
 		select {
 		case <-e.compactChan:
@@ -562,7 +552,6 @@ func (e *Engine) Searcher(mint, maxt int64) (Searcher, error) {
 			segNums = append(segNums, segNum)
 		}
 		segNum += f.LogNum()
-
 	}
 	if maxt >= h.MinTime() {
 		blocks = append(blocks, h)

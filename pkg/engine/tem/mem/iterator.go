@@ -41,6 +41,7 @@ func (m *memIterator) writeMsg(w disk.IndexWriter, segmentNum uint64, baseTime i
 	for _, p := range postings {
 		chunkEnc := p.ChunkEnc(true, m.chunkr)
 		chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
+
 		if err != nil {
 			return nil, nil, err
 		}
