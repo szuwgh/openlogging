@@ -28,27 +28,27 @@ func Test_IterWalk(t *testing.T) {
 }
 
 func Test_IterMerge(t *testing.T) {
-	reader1 := NewIndexReader("E:\\goproject\\temsearch\\src\\data\\01F0B3H7419TB6CEZ6TY8E2N5P", 1614909121)
-	iter1 := reader1.Iterator()
-	reader2 := NewIndexReader("E:\\goproject\\temsearch\\src\\data\\01F0B3HPBD77RPCVAEJSMCM01J", 1614909121) //src\data\01EXGBNN7ZRE8904TWP351ZWSR
-	iter2 := reader2.Iterator()
+	// reader1 := NewIndexReader("E:\\goproject\\temsearch\\src\\data\\01F0B3H7419TB6CEZ6TY8E2N5P", 1614909121)
+	// iter1 := reader1.Iterator()
+	// reader2 := NewIndexReader("E:\\goproject\\temsearch\\src\\data\\01F0B3HPBD77RPCVAEJSMCM01J", 1614909121) //src\data\01EXGBNN7ZRE8904TWP351ZWSR
+	// iter2 := reader2.Iterator()
 
-	mergeIter := NewMergeLabelIterator(iter1, iter2)
-	for mergeIter.Next() {
-		fmt.Println("label-->", string(mergeIter.Key()))
-		iters := mergeIter.Iters()
-		it := NewMergeWriterIterator(nil, nil, iters...)
-		for it.Next() {
+	// mergeIter := NewMergeLabelIterator(iter1, iter2)
+	// for mergeIter.Next() {
+	// 	fmt.Println("label-->", string(mergeIter.Key()))
+	// 	iters := mergeIter.Iters()
+	// 	it := NewMergeWriterIterator(nil, nil, iters...)
+	// 	for it.Next() {
 
-			fmt.Println("key-->", string(it.Key()))
-		}
-		// for i := range iters {
-		// 	t := iters[i]
-		// 	for t.Next() {
-		// 		fmt.Println("key-->", string(t.Key()), t.Value())
-		// 	}
-		// }
-	}
+	// 		fmt.Println("key-->", string(it.Key()))
+	// 	}
+	// 	// for i := range iters {
+	// 	// 	t := iters[i]
+	// 	// 	for t.Next() {
+	// 	// 		fmt.Println("key-->", string(t.Key()), t.Value())
+	// 	// 	}
+	// 	// }
+	// }
 }
 
 type BlockMeta struct {

@@ -2,17 +2,21 @@ server:
   http_listen_port: 9080
   grpc_listen_port: 0
 
+
 positions:
-  filename: /tmp/positions.yaml
-
-clients:
-  - url: http://ip_or_hostname_where_Loki_run:3100/loki/api/v1/push
-
+  filename: ./positions.yaml # 这个位置需要是可以被promtail写入的
+client:
+  url: http://localhost:9400/index
+# 抓取配置
 scrape_configs:
-  - job_name: push1
+  - job_name: system
     loki_push_api:
-      server:
-        http_listen_port: 3500
-        grpc_listen_port: 3600
-      labels:
-        pushserver: push1
+      use_incoming_timestamp: false
+    pipeline_stages:
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: testlog # 在 Prometheus中，job 标签对于连接指标和日志很有用
+          host: 127.0.0.1 # `host` 标签可以帮助识别日志来源
+          __path__: ../filetail/src/filetail/log.txt # 路径匹配使用了一个第三方库: https://github.com/bmatcuk/doublestar

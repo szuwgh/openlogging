@@ -60,18 +60,6 @@ func (lt *LogsTable) ReleaseBuff(recycle, alloced *int) error {
 	return nil
 }
 
-//写入文件
-// func (lt *LogsTable) RotateMem(w diskWriter) {
-// 	iter := lt.bytePool.Iterator()
-// 	for iter.NextBuffer() {
-// 		for iter.NextBytes() {
-// 			w.WriteBytes(iter.Bytes())
-// 		}
-// 	}
-// 	w.WriteIndex(lt.index)
-// 	w.Close()
-// }
-
 type ForwardLogIterator struct {
 	reader *byteutil.ForwardBytePoolReader
 	indexs []uint64

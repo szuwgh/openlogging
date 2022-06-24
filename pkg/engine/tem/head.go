@@ -1,6 +1,7 @@
 package tem
 
 import (
+	"log"
 	"math"
 	"sync"
 	"sync/atomic"
@@ -45,13 +46,14 @@ func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer) *
 
 //add some logs
 func (h *Head) addLogs(r logproto.Stream) error {
+	log.Println("add logs", r.Labels)
 	//return h.stat.addLogs(r)
 	context := mem.Context{}
 	series := h.serieser(r.Labels)
 	for _, e := range r.Entries {
 		h.logsMem.WriteLog([]byte(e.Line))
 		tokens := h.tokener(&e)
-		h.indexMem.Index(&context, e.LogID, e.Timestamp.UnixNano(), series, tokens)
+		h.indexMem.Index(&context, e.LogID, e.Timestamp.UnixNano()/1e6, series, tokens)
 		h.indexMem.Flush()
 	}
 	return nil

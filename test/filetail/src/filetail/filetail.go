@@ -33,5 +33,6 @@ func main() {
 			time.Sleep(5 * time.Second)
 		}
 	}()
+	fmt.Println("start file log with 5 second")
 	select {}
 }

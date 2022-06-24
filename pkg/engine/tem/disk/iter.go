@@ -128,19 +128,19 @@ func (i *indexIterator) Get() iterator.SingleIterator {
 
 //域
 type labelIterator struct {
-	index    iterator.IteratorIndex //去取下一个block
-	data     iterator.SingleIterator
-	chunkr   *chunkReader
-	postingr *postingReader
-	seriesr  *seriesReader
-	buf      [binary.MaxVarintLen32]byte
+	index iterator.IteratorIndex //去取下一个block
+	data  iterator.SingleIterator
+	//chunkr   *chunkReader
+	//postingr *postingReader
+	seriesr *seriesReader
+	buf     [binary.MaxVarintLen32]byte
 }
 
 func newLabelIterator(index iterator.IteratorIndex, postingr *postingReader, seriesr *seriesReader, chunkr *chunkReader) *labelIterator {
 	iter := &labelIterator{}
 	iter.index = index
-	iter.chunkr = chunkr
-	iter.postingr = postingr
+	//iter.chunkr = chunkr
+	//iter.postingr = postingr
 	iter.seriesr = seriesr
 	return iter
 }
@@ -187,7 +187,7 @@ func (f *labelIterator) Value() []byte {
 
 func (f *labelIterator) Write(w IndexWriter, segmentNum uint64, baseTime int64) ([]TimeChunk, []uint64, error) {
 	ref, _ := binary.Uvarint(f.Value())
-	seriesRef, termRef := f.postingr.readPosting2(ref)
+	seriesRef, termRef := f.seriesr.readPosting2(ref)
 	seriesPosting := make([]uint64, 0, len(seriesRef))
 	timeChunk := make([]TimeChunk, 0, len(seriesRef))
 
@@ -199,7 +199,7 @@ func (f *labelIterator) Write(w IndexWriter, segmentNum uint64, baseTime int64) 
 			}
 			chk := TimeChunk{Lset: lset}
 			for i, c := range chunkMeta {
-				chunkEnc := c.ChunkEnc(true, f.chunkr)
+				chunkEnc := c.ChunkEnc(true, f.seriesr)
 				bytes := chunkEnc.Bytes()[0]
 				num, m := binary.Uvarint(bytes)
 				n := binary.PutUvarint(f.buf[0:], num+segmentNum)
@@ -226,7 +226,7 @@ func (f *labelIterator) Write(w IndexWriter, segmentNum uint64, baseTime int64) 
 		if !exist {
 			chk := TimeChunk{Lset: lset}
 			for i, c := range chunkMeta {
-				chunkEnc := c.ChunkEnc(false, f.chunkr)
+				chunkEnc := c.ChunkEnc(false, f.seriesr)
 				bytes := chunkEnc.Bytes()[0]
 				num, m := binary.Uvarint(bytes)
 				n := binary.PutUvarint(f.buf[0:], num+segmentNum)

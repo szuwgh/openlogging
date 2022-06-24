@@ -220,15 +220,6 @@ type Series interface {
 
 // SeriesIterator iterates over the data of a time series.
 type SeriesIterator interface {
-	// Seek advances the iterator forward to the given timestamp.
-	// If there's no value exactly at t, it advances to the first value
-	// after t.
-	//Seek(t int64) bool
-	// At returns the current timestamp/value pair.
-	//Byte(v uint64) []byte
-
-	//SeriesIter() SeriesIterator
-
 	At() (t int64, v uint64, pos []int, b []byte)
 	// Next advances the iterator by one.
 	Next() bool

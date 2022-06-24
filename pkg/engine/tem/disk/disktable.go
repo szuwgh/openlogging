@@ -506,19 +506,19 @@ func (cw *chunkWriter) newWriter(fileName string) error {
 	return nil
 }
 
-func (cw *chunkWriter) putInt(v int) int {
-	return cw.buf2.PutUvarint(v)
-}
+// func (cw *chunkWriter) putInt(v int) int {
+// 	return cw.buf2.PutUvarint(v)
+// }
 
-func (cw *chunkWriter) putUvarint64(v uint64) int {
-	return cw.buf2.PutUvarint64(v)
-}
+// func (cw *chunkWriter) putUvarint64(v uint64) int {
+// 	return cw.buf2.PutUvarint64(v)
+// }
 
-func (cw *chunkWriter) putBytes(b []byte) (int, error) {
-	return cw.buf2.Write(b)
-}
+// func (cw *chunkWriter) putBytes(b []byte) (int, error) {
+// 	return cw.buf2.Write(b)
+// }
 
-func (cw *chunkWriter) writeChunks(b [][]byte) (uint64, error) {
+func (cw *seriesWriter) writeChunks(b [][]byte) (uint64, error) {
 	var err error
 	cw.buf1.Reset()
 	cw.buf2.Reset()
@@ -645,7 +645,7 @@ func newPostingWriter(dir string) (*postingWriter, error) {
 	return pw, nil
 }
 
-func (pw *postingWriter) writePosting(refs ...[]uint64) (uint64, error) {
+func (pw *seriesWriter) writePosting(refs ...[]uint64) (uint64, error) {
 	pw.buf1.Reset()
 	pw.buf2.Reset()
 	refCount := len(refs)
@@ -683,9 +683,6 @@ func (pw *postingWriter) writePosting(refs ...[]uint64) (uint64, error) {
 
 type IndexWriter interface {
 	SetTagName([]byte)
-	PutInt(int) int
-	PutUInt64(uint64) int
-	PutBytes([]byte) (int, error)
 	AppendKey([]byte, uint64) error
 	Close() error
 	FinishTag() error
@@ -700,18 +697,18 @@ type IndexWriter interface {
 type IndexW struct {
 	kw *keyWriter
 
-	postingw *postingWriter
-	seriesw  *seriesWriter
-	chunkw   *chunkWriter
+	//postingw *postingWriter
+	seriesw *seriesWriter
+	//chunkw   *chunkWriter
 
-	valueOffset     uint64
-	lastValueOffset uint64
+	valueOffset uint64
+	//lastValueOffset uint64
 
-	shareBuf      [48]byte
-	nEntries      int //总的记录数
-	fileName      string
-	seriesOffsets map[uint64][2]uint64 // offsets of series
-	dir           string
+	shareBuf [48]byte
+	//	nEntries      int //总的记录数
+	//fileName      string
+	//	seriesOffsets map[uint64][2]uint64 // offsets of series
+	dir string
 }
 
 //初始化
@@ -719,24 +716,24 @@ func newIndexW(dir string) (*IndexW, error) {
 	iw := &IndexW{}
 
 	iw.dir = dir
-	kw, err := newKeyWriter(dir, iw.shareBuf[:])
+	var err error
+	iw.kw, err = newKeyWriter(dir, iw.shareBuf[:])
 	if err != nil {
 		return iw, err
 	}
 
-	iw.kw = kw
-	iw.chunkw, err = newChunkWriter(filepath.Join(dir, dirChunk))
-	if err != nil {
-		return iw, err
-	}
+	// iw.chunkw, err = newChunkWriter(filepath.Join(dir, dirChunk))
+	// if err != nil {
+	// 	return iw, err
+	// }
 	iw.seriesw, err = newSeriesWriter(filepath.Join(dir, dirSeries))
 	if err != nil {
 		return iw, err
 	}
-	iw.postingw, err = newPostingWriter(filepath.Join(dir, dirPosting))
-	if err != nil {
-		return iw, err
-	}
+	// iw.postingw, err = newPostingWriter(filepath.Join(dir, dirPosting))
+	// if err != nil {
+	// 	return iw, err
+	// }
 	return iw, nil
 }
 
@@ -756,20 +753,20 @@ func (tw *IndexW) AppendKey(key []byte, ref uint64) error {
 type writeChunkFunc func() (uint64, error)
 
 func (tw *IndexW) WriteChunks(b [][]byte) (uint64, error) {
-	return tw.chunkw.writeChunks(b)
+	return tw.seriesw.writeChunks(b)
 }
 
-func (tw *IndexW) PutInt(v int) int {
-	return tw.chunkw.putInt(v)
-}
+// func (tw *IndexW) PutInt(v int) int {
+// 	return tw.chunkw.putInt(v)
+// }
 
-func (tw *IndexW) PutUInt64(v uint64) int {
-	return tw.chunkw.putUvarint64(v)
-}
+// func (tw *IndexW) PutUInt64(v uint64) int {
+// 	return tw.chunkw.putUvarint64(v)
+// }
 
-func (tw *IndexW) PutBytes(value []byte) (int, error) {
-	return tw.chunkw.putBytes(value)
-}
+// func (tw *IndexW) PutBytes(value []byte) (int, error) {
+// 	return tw.chunkw.putBytes(value)
+// }
 
 func (tw *IndexW) GetSeries(lset labels.Labels) (uint64, bool) {
 	return tw.seriesw.getSeries(lset)
@@ -780,7 +777,7 @@ func (tw *IndexW) AddSeries(isSeries bool, lset labels.Labels, chunks ...ChunkMe
 }
 
 func (tw *IndexW) WritePostings(ref ...[]uint64) (uint64, error) {
-	return tw.postingw.writePosting(ref...)
+	return tw.seriesw.writePosting(ref...)
 }
 
 func (tw *IndexW) SetBaseTimeStamp(timeStamp int64) {
@@ -809,83 +806,83 @@ func CloseChain(fn ...writeClose) error {
 }
 
 func (tw *IndexW) Close() error {
-	return CloseChain(tw.kw, tw.chunkw, tw.seriesw, tw.postingw)
+	return CloseChain(tw.kw, tw.seriesw)
 }
 
-type logWriter struct {
-	baseWrite
-	fileOffset  uint64
-	indexBlock  blockWriter //indexblock
-	indexLength uint64
-}
+// type logWriter struct {
+// 	baseWrite
+// 	fileOffset  uint64
+// 	indexBlock  blockWriter //indexblock
+// 	indexLength uint64
+// }
 
-func newlogWriter(fileName, ext string) *logWriter {
-	lw := &logWriter{}
-	f, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		return nil
-	}
-	lw.w = f
-	lw.dataBlock.restartInterval = 1
-	lw.indexBlock.restartInterval = 1
-	lw.shareBuf = make([]byte, footerLen)
-	return lw
-}
+// func newlogWriter(fileName, ext string) *logWriter {
+// 	lw := &logWriter{}
+// 	f, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+// 	if err != nil {
+// 		return nil
+// 	}
+// 	lw.w = f
+// 	lw.dataBlock.restartInterval = 1
+// 	lw.indexBlock.restartInterval = 1
+// 	lw.shareBuf = make([]byte, footerLen)
+// 	return lw
+// }
 
-func (lw *logWriter) writeBytes(b []byte) (int, error) {
-	n, err := lw.baseWrite.writeBytes(b)
-	if err != nil {
-		return 0, err
-	}
-	lw.fileOffset += uint64(n)
-	return n, nil
-}
+// func (lw *logWriter) writeBytes(b []byte) (int, error) {
+// 	n, err := lw.baseWrite.writeBytes(b)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	lw.fileOffset += uint64(n)
+// 	return n, nil
+// }
 
-func (lw *logWriter) finishBlock() error {
-	if lw.dataBlock.bytesLen() <= 0 {
-		return nil
-	}
-	_, err := lw.writeBlock(lw.dataBlock.Get())
-	if err != nil {
-		return err
-	}
-	//lw.indexLength += bh.length
-	lw.dataBlock.reset()
-	return nil
-}
+// func (lw *logWriter) finishBlock() error {
+// 	if lw.dataBlock.bytesLen() <= 0 {
+// 		return nil
+// 	}
+// 	_, err := lw.writeBlock(lw.dataBlock.Get())
+// 	if err != nil {
+// 		return err
+// 	}
+// 	//lw.indexLength += bh.length
+// 	lw.dataBlock.reset()
+// 	return nil
+// }
 
-func (lw *logWriter) close() error {
-	if err := lw.finishBlock(); err != nil {
-		return err
-	}
-	footer := lw.shareBuf[:footerLen]
-	//重置数据
-	for i := range footer {
-		footer[i] = 0
-	}
-	encodeBlockHandle(footer, blockHandle{lw.fileOffset, lw.indexLength})
-	copy(footer[footerLen-len(magic):], magic)
-	if _, err := lw.w.Write(footer); err != nil {
-		return err
-	}
-	lw.offset += footerLen
-	lw.dataBlock.reset()
-	return lw.w.Close()
-}
+// func (lw *logWriter) close() error {
+// 	if err := lw.finishBlock(); err != nil {
+// 		return err
+// 	}
+// 	footer := lw.shareBuf[:footerLen]
+// 	//重置数据
+// 	for i := range footer {
+// 		footer[i] = 0
+// 	}
+// 	encodeBlockHandle(footer, blockHandle{lw.fileOffset, lw.indexLength})
+// 	copy(footer[footerLen-len(magic):], magic)
+// 	if _, err := lw.w.Write(footer); err != nil {
+// 		return err
+// 	}
+// 	lw.offset += footerLen
+// 	lw.dataBlock.reset()
+// 	return lw.w.Close()
+// }
 
-func (lw *logWriter) finishTag() error {
-	return nil
-}
+// func (lw *logWriter) finishTag() error {
+// 	return nil
+// }
 
 //chunk writer
 type LogW struct {
 	cutWriter
-	maxBlockSize int
-	logId        uint64
-	index        []uint64
-	shareBuf     [48]byte
-	dir          string
-	indexLength  uint64
+	//	maxBlockSize int
+	logId    uint64
+	index    []uint64
+	shareBuf [48]byte
+	//	dir          string
+	indexLength uint64
 }
 
 func newLogWriter(dir string) *LogW {
@@ -966,11 +963,11 @@ func (w *LogW) Close() (uint64, error) {
 }
 
 //块
-type fileReader interface {
-	readBlock(bh blockHandle, restart bool) (*blockReader, error)
-	close() error
-}
+// type fileReader interface {
+// 	readBlock(bh blockHandle, restart bool) (*blockReader, error)
+// 	close() error
+// }
 
-type fileSeek interface {
-	Seek(int)
-}
+// type fileSeek interface {
+// 	Seek(int)
+// }

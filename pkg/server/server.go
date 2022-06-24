@@ -42,7 +42,7 @@ func New() *Server {
 	var err error
 	opts := &tem.Options{}
 	opts.RetentionDuration = 12 * 60 * 60 * 1e3
-	opts.MaxBlockDuration = 30 * 1e3
+	opts.MaxBlockDuration = 20 * 1e3 // 20s
 	opts.BlockRanges = exponentialBlockRanges(opts.MaxBlockDuration, 10, 3)
 	opts.IndexBufferNum = 1
 	opts.IndexBufferLength = 16

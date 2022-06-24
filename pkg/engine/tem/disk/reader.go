@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+
 	//"log"
 	"os"
 	"path/filepath"
@@ -26,7 +27,7 @@ import (
 	"github.com/szuwgh/temsearch/pkg/lib/prompb"
 )
 
-type baseReader struct {
+type keyReader struct {
 	r           io.ReaderAt // io.ReaderAt //key 文件
 	size        int64
 	tagsBlock   *blockReader
@@ -35,7 +36,7 @@ type baseReader struct {
 	bcache      *cache.NamespaceGetter
 }
 
-func newBaseReader(dir string) (*baseReader, error) {
+func newkeyReader(dir string) (*keyReader, error) {
 	kf, err := os.OpenFile(filepath.Join(dir, "index"), os.O_RDONLY, 0644)
 	if err != nil {
 		return nil, err
@@ -48,7 +49,7 @@ func newBaseReader(dir string) (*baseReader, error) {
 	if kSize < footerLen {
 		return nil, nil
 	}
-	r := &baseReader{r: kf, size: kSize}
+	r := &keyReader{r: kf, size: kSize}
 	footer := r.readFooter()
 
 	r.fieldBH, _ = decodeBlockHandle(footer)
@@ -74,7 +75,7 @@ func newBaseReader(dir string) (*baseReader, error) {
 	return r, nil
 }
 
-func (br *baseReader) print(tagName string) error {
+func (br *keyReader) print(tagName string) error {
 	indexBlock, err := br.getIndexBlock(tagName)
 	if err != nil {
 		return err
@@ -90,7 +91,7 @@ func (br *baseReader) print(tagName string) error {
 	return nil
 }
 
-func (br *baseReader) find(tagName string, key []byte) []byte {
+func (br *keyReader) find(tagName string, key []byte) []byte {
 	indexBlock, err := br.getIndexBlock(tagName)
 	if err != nil {
 		return nil
@@ -119,7 +120,7 @@ func (br *baseReader) find(tagName string, key []byte) []byte {
 	return v
 }
 
-func (r *baseReader) getDataIter(bh blockHandle) *blockIterator {
+func (r *keyReader) getDataIter(bh blockHandle) *blockIterator {
 	b, rel, err := r.readBlockCache(bh)
 	if err != nil {
 		return nil
@@ -127,7 +128,7 @@ func (r *baseReader) getDataIter(bh blockHandle) *blockIterator {
 	return newBlockIterator(b, rel)
 }
 
-func (r *baseReader) readBlockCache(bh blockHandle) (*blockReader, cache.Releaser, error) {
+func (r *keyReader) readBlockCache(bh blockHandle) (*blockReader, cache.Releaser, error) {
 	var (
 		err error
 		ch  *cache.Handle
@@ -156,11 +157,11 @@ func (r *baseReader) readBlockCache(bh blockHandle) (*blockReader, cache.Release
 	return b, b, nil
 }
 
-func (br *baseReader) getIndexBlock(tagName string) (*blockReader, error) {
+func (br *keyReader) getIndexBlock(tagName string) (*blockReader, error) {
 	return br.indexBlocks[tagName], nil
 }
 
-func (br *baseReader) readFooter() []byte {
+func (br *keyReader) readFooter() []byte {
 	kfooterOffset := br.size - footerLen
 	var footer [footerLen]byte
 	if _, err := br.r.ReadAt(footer[:], kfooterOffset); err != nil && err != io.EOF {
@@ -171,7 +172,7 @@ func (br *baseReader) readFooter() []byte {
 }
 
 //读一个块
-func (tr *baseReader) readBlock(bh blockHandle, restart bool) (*blockReader, error) {
+func (tr *keyReader) readBlock(bh blockHandle, restart bool) (*blockReader, error) {
 	//后面加内存池内存池复用
 	// if _, err := tr.r.ReadAt(tr.shareBuf[0:], int64(bh.offset)); err != nil && err != io.EOF {
 	// 	return nil, err
@@ -206,7 +207,7 @@ func (tr *baseReader) readBlock(bh blockHandle, restart bool) (*blockReader, err
 	return block, nil
 }
 
-func (r *baseReader) close() error {
+func (r *keyReader) close() error {
 	if closer, ok := r.r.(io.Closer); ok {
 		return closer.Close()
 	}
@@ -222,8 +223,8 @@ func (r *baseReader) close() error {
 type chunkReader struct {
 	//mmaps    []*mmapAccessor
 	baseTime int64
-	buf1     [binary.MaxVarintLen32]byte
-	buf2     [binary.MaxVarintLen32]byte
+	//	buf1     [binary.MaxVarintLen32]byte
+	//	buf2     [binary.MaxVarintLen32]byte
 	cutReader
 }
 
@@ -236,14 +237,14 @@ func newchunkReader(dir string, baseTime int64, mcache *cache.NamespaceGetter) *
 	return chunkr
 }
 
-func (cr *chunkReader) ReadChunk(isTerm bool, ref ...uint64) chunks.ChunkEnc {
+func (cr *seriesReader) ReadChunk(isTerm bool, ref ...uint64) chunks.ChunkEnc {
 	if isTerm {
 		return cr.readTermChunk(ref[0])
 	}
 	return cr.readLabelChunk(ref[0])
 }
 
-func (cr *chunkReader) readLabelChunk(ref uint64) *chunks.SeriesSnapShot {
+func (cr *seriesReader) readLabelChunk(ref uint64) *chunks.SeriesSnapShot {
 	seq := ref >> 32
 	off := int((ref << 32) >> 32)
 	mmap, rel := cr.getMmapCache(seq)
@@ -271,7 +272,7 @@ func (cr *chunkReader) readLabelChunk(ref uint64) *chunks.SeriesSnapShot {
 	return snap
 }
 
-func (cr *chunkReader) readTermChunk(ref uint64) *chunks.TermSnapShot {
+func (cr *seriesReader) readTermChunk(ref uint64) *chunks.TermSnapShot {
 	seq := ref >> 32
 	off := int((ref << 32) >> 32)
 	mmap, rel := cr.getMmapCache(seq)
@@ -382,6 +383,7 @@ func (r *cutReader) getMmapCache(seq uint64) (*mmapAccessor, cache.Releaser) {
 
 type seriesReader struct {
 	//mmaps []*mmapAccessor
+	baseTime int64
 	cutReader
 }
 
@@ -467,12 +469,12 @@ func (pr *seriesReader) GetByID(ref uint64) (labels.Labels, []chunks.Chunk, erro
 	return lset, chks, err
 }
 
-func (pr *seriesReader) release() {
-	// for _, v := range pr.mmaps {
-	// 	v.close()
-	// }
-	pr.mcache = nil
-}
+// func (pr *seriesReader) release() {
+// 	// for _, v := range pr.mmaps {
+// 	// 	v.close()
+// 	// }
+// 	pr.mcache = nil
+// }
 
 type postingReader struct {
 	cutReader
@@ -486,11 +488,11 @@ func newPostingReader(dir string, mcache *cache.NamespaceGetter) *postingReader 
 	return postingr
 }
 
-func (pr *postingReader) release() {
+func (pr *seriesReader) release() {
 	pr.mcache = nil
 }
 
-func (pr *postingReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
+func (pr *seriesReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
 	seq := ref >> 32
 	off := int((ref << 32) >> 32)
 	mmap, rel := pr.getMmapCache(seq)
@@ -537,7 +539,7 @@ func (pr *postingReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
 	return seriesRef, termRef
 }
 
-func (pr *postingReader) readPosting2(ref uint64) ([]uint64, []uint64) {
+func (pr *seriesReader) readPosting2(ref uint64) ([]uint64, []uint64) {
 	seq := ref >> 32
 	off := int((ref << 32) >> 32)
 	mmap, rel := pr.getMmapCache(seq)
@@ -585,20 +587,20 @@ func (pr *postingReader) readPosting2(ref uint64) ([]uint64, []uint64) {
 
 type IndexReader struct {
 	mu     sync.RWMutex
-	indexr *baseReader
+	indexr *keyReader
 
-	chunkr   *chunkReader
-	seriesr  *seriesReader
-	postingr *postingReader
+	//	chunkr   *chunkReader
+	seriesr *seriesReader
+	//	postingr *postingReader
 }
 
 func (r *IndexReader) Iterator() IteratorLabel {
 	iter := &tableIterator{}
 	iter.labelIter = newBlockIterator(r.indexr.tagsBlock, nil)
 	iter.reader = r
-	iter.chunkr = r.chunkr
+	//iter.chunkr = r.chunkr
 	iter.seriesr = r.seriesr
-	iter.postingr = r.postingr
+	//iter.postingr = r.postingr
 	return iter
 }
 
@@ -608,11 +610,11 @@ func NewIndexReader(dir string, baseTime int64, bcache, mcache *cache.NamespaceG
 	var err error
 	r := &IndexReader{}
 
-	r.postingr = newPostingReader(filepath.Join(indexDir, dirPosting), mcache)
+	//r.postingr = newPostingReader(filepath.Join(indexDir, dirPosting), mcache)
 	r.seriesr = newSeriesReader(filepath.Join(indexDir, dirSeries), mcache)
-	r.chunkr = newchunkReader(filepath.Join(indexDir, dirChunk), baseTime, mcache)
+	//r.chunkr = newchunkReader(filepath.Join(indexDir, dirChunk), baseTime, mcache)
 
-	r.indexr, err = newBaseReader(indexDir) // &baseReader{r: kf}
+	r.indexr, err = newkeyReader(indexDir) // &keyReader{r: kf}
 	if err != nil {
 		return nil
 	}
@@ -620,61 +622,62 @@ func NewIndexReader(dir string, baseTime int64, bcache, mcache *cache.NamespaceG
 	return r
 }
 
-// func (r *IndexReader) print() error {
-// 	for _, indexBlock := range r.indexBlocks {
-// 		indexIterator := newBlockIterator(indexBlock, nil)
-// 		for indexIterator.Next() {
-// 			bh, _ := decodeBlockHandle(indexIterator.Value())
-// 			if bh.length == 0 {
-// 				continue
-// 			}
-// 			dataIterator := r.getDataIter(bh) //newBlockIterator(dataBlock)
-// 			//dataIterator.printRestart()
-// 			for dataIterator.Next() {
-// 				value := dataIterator.Value()
-// 				ref, _ := binary.Uvarint(value)
-// 				seriesRef, termRef := r.postingr.readPosting(ref)
-
-// 				for _, v := range seriesRef {
-// 					fmt.Print("label_series==>", v, " ")
-// 					//log.Println(r.seriesr.readSeries(v))
-// 					lset, chunkMeta, _ := r.seriesr.GetByID(v)
-// 					fmt.Println(lset)
-// 					for _, c := range chunkMeta {
-// 						fmt.Println(c)
-// 						chunkEnc := c.ChunkEnc(false, r.chunkr)
-// 						//fmt.Println(chunkEnc.Bytes())
-// 						posting := chunkEnc.Iterator(c.MinTime(), c.MaxTime())
-// 						for posting.Next() {
-// 							fmt.Print(posting.At())
-// 							fmt.Print(" ; ")
-// 						}
-// 						fmt.Println(" ")
-// 					}
-// 				}
-// 				for k, v := range termRef {
-// 					fmt.Print("label_series id==>", k, " ")
-// 					fmt.Print("term_series==>")
-// 					lset, chunkMeta, _ := r.seriesr.GetByID(v)
-// 					fmt.Println(lset)
-// 					for _, c := range chunkMeta {
-// 						fmt.Println(c)
-// 						chunkEnc := c.ChunkEnc(true, r.chunkr)
-// 						//fmt.Println(chunkEnc.Bytes())
-// 						posting := chunkEnc.Iterator(c.MinTime(), c.MaxTime())
-// 						for posting.Next() {
-// 							fmt.Print(posting.At())
-// 							fmt.Print(" ; ")
-// 						}
-// 						fmt.Println(" ")
-// 					}
-// 				}
-// 				fmt.Println(" ")
-// 			}
-// 		}
-// 	}
-// 	return nil
-// }
+func (r *IndexReader) print() error {
+	for _, indexBlock := range r.indexr.indexBlocks {
+		indexIterator := newBlockIterator(indexBlock, nil)
+		for indexIterator.Next() {
+			bh, _ := decodeBlockHandle(indexIterator.Value())
+			if bh.length == 0 {
+				continue
+			}
+			dataIterator := r.indexr.getDataIter(bh) //newBlockIterator(dataBlock)
+			//dataIterator.printRestart()
+			for dataIterator.Next() {
+				key := dataIterator.Key()
+				value := dataIterator.Value()
+				ref, _ := binary.Uvarint(value)
+				seriesRef, termRef := r.seriesr.readPosting(ref)
+				fmt.Println("key", string(key))
+				for _, v := range seriesRef {
+					fmt.Print("label_series==>", v, " ")
+					//log.Println(r.seriesr.readSeries(v))
+					lset, chunkMeta, _ := r.seriesr.GetByID(v)
+					fmt.Println(lset)
+					for _, c := range chunkMeta {
+						fmt.Println(c)
+						chunkEnc := c.ChunkEnc(false, r.seriesr)
+						//fmt.Println(chunkEnc.Bytes())
+						posting := chunkEnc.Iterator(c.MinTime(), c.MaxTime())
+						for posting.Next() {
+							fmt.Print(posting.At())
+							fmt.Print(" ; ")
+						}
+						fmt.Println(" ")
+					}
+				}
+				for k, v := range termRef {
+					fmt.Print("label_series id==>", k, " ")
+					fmt.Print("term_series==>")
+					lset, chunkMeta, _ := r.seriesr.GetByID(v)
+					fmt.Println(lset)
+					for _, c := range chunkMeta {
+						fmt.Println(c)
+						chunkEnc := c.ChunkEnc(true, r.seriesr)
+						//fmt.Println(chunkEnc.Bytes())
+						posting := chunkEnc.Iterator(c.MinTime(), c.MaxTime())
+						for posting.Next() {
+							fmt.Print(posting.At())
+							fmt.Print(" ; ")
+						}
+						fmt.Println(" ")
+					}
+				}
+				fmt.Println(" ")
+			}
+		}
+	}
+	return nil
+}
 
 type snapByte struct {
 	data   []byte
@@ -713,7 +716,7 @@ func (s *snapByte) ReadVInt64() int64 {
 }
 
 func (r *IndexReader) ChunkReader() chunks.ChunkReader {
-	return r.chunkr
+	return r.seriesr
 }
 
 type termSeriesReader struct {
@@ -737,7 +740,7 @@ func (r *IndexReader) Search(lset []*prompb.LabelMatcher, expr temql.Expr) (post
 			return posting.EmptyPostings, nil
 		}
 		ref, _ := binary.Uvarint(value)
-		list, _ := r.postingr.readPosting(ref)
+		list, _ := r.seriesr.readPosting(ref)
 		its = append(its, posting.NewListPostings(list))
 	}
 	if expr == nil {
@@ -770,7 +773,7 @@ func queryTerm(e temql.Expr, r *IndexReader, series *[]series.Series) posting.Po
 			return posting.EmptyPostings
 		}
 		ref, _ := binary.Uvarint(value)
-		seriesRef, termMap := r.postingr.readPosting(ref)
+		seriesRef, termMap := r.seriesr.readPosting(ref)
 		*series = append(*series, &termSeriesReader{
 			refMap: termMap,
 			reader: r.seriesr,
@@ -815,8 +818,8 @@ func (r *IndexReader) find(tagName string, key []byte) []byte {
 func (r *IndexReader) Close() error {
 	r.indexr.close()
 
-	r.chunkr.release()
-	r.postingr.release()
+	//r.chunkr.release()
+	//	r.postingr.release()
 	r.seriesr.release()
 	return nil
 }

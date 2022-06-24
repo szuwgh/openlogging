@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -21,7 +20,6 @@ import (
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
 	"github.com/szuwgh/temsearch/pkg/analysis"
-	"github.com/szuwgh/temsearch/pkg/concept/logmsg"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
 )
 
@@ -67,13 +65,13 @@ type Engine struct {
 	dataDir         string
 	compactor       *leveledCompactor
 	wg              sync.WaitGroup
-	indexChan       chan logmsg.LogMsgArray
-	done            chan struct{}
-	headPool        chan *Head
-	compactChan     chan struct{}
-	walDir          string
-	wal             Wal
-	opts            *Options
+	//	indexChan       chan logmsg.LogMsgArray
+	done        chan struct{}
+	headPool    chan *Head
+	compactChan chan struct{}
+	walDir      string
+	wal         Wal
+	opts        *Options
 }
 
 func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
@@ -390,12 +388,6 @@ func (e *Engine) getHeads() (h, f *Head) {
 	return e.head, e.frozeHead
 }
 
-//
-func (e *Engine) indexCommit(h *Head, maxt int64) {
-	e.flush(h)
-	h.setMaxTime(maxt)
-}
-
 func (e *Engine) allocHead() *Head {
 	var h *Head
 	select {
@@ -461,14 +453,9 @@ func (e *Engine) shouldCompact() error {
 	e.head = e.allocHead()
 	e.head.lastSegNum = e.frozeHead.lastSegNum + e.frozeHead.LogNum()
 	e.memMu.Unlock()
-	for {
-		select {
-		case <-e.compactChan:
-			log.Println("do compact")
-			return e.doCompact()
 
-		}
-	}
+	return e.doCompact()
+
 }
 
 func (e *Engine) doCompact() error {
@@ -580,17 +567,6 @@ func (e *Engine) mcompact() error {
 	return e.compactor.Write(e.dataDir, e.frozeHead, e.frozeHead.mint, e.frozeHead.MaxT)
 }
 
-func newMeta(minT, maxT int64) *BlockMeta {
-	entropy := rand.New(rand.NewSource(time.Now().UnixNano()))
-	uid := ulid.MustNew(ulid.Now(), entropy)
-	meta := &BlockMeta{
-		ULID:    uid,
-		MinTime: minT,
-		MaxTime: maxT,
-	}
-	return meta
-}
-
 func chunkDir(dir string) string {
 	return filepath.Join(dir, "logs")
 }
@@ -601,7 +577,6 @@ func indexDir(dir string) string {
 
 func (e *Engine) flush(h *Head) {
 	h.indexMem.Flush()
-	//e.rotateMem()
 }
 
 // The MultiError type implements the error interface, and contains the

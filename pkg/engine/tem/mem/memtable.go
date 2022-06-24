@@ -46,13 +46,13 @@ type MemTable struct {
 	indexs         indexGroup
 	bytePool       byteutil.Inverted                //byteArrayPool
 	bytePoolReader *byteutil.InvertedBytePoolReader //chunks.ChunkReader //*byteutil.InvertedBytePoolReader
-	skLen          int
-	baseTimeStamp  int64
-	msgIndex       engineFunc
-	nextWriteLogID int
-	flushPosting   []*RawPosting
-	series         *stripeSeries
-	lastSeriesID   uint64
+	//	skLen          int
+	baseTimeStamp int64
+	msgIndex      engineFunc
+	//	nextWriteLogID int
+	flushPosting []*RawPosting
+	series       *stripeSeries
+	lastSeriesID uint64
 
 	logID uint64
 }
@@ -189,11 +189,6 @@ func (mt *MemTable) addTerm(context *Context, ref uint64, lset labels.Labels, pL
 		mt.flushPosting = append(mt.flushPosting, p)
 		p.IsCommit = true
 	}
-}
-
-func (mt *MemTable) getNextLogID() uint64 {
-	mt.logID++
-	return mt.logID
 }
 
 func (mt *MemTable) LogNum() uint64 {

@@ -2,9 +2,10 @@ package disk
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
-	"testing"
 )
 
 func Test_seriesWriter_addSeries(t *testing.T) {

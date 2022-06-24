@@ -25,18 +25,14 @@ type RawPosting struct {
 	lastTimeStamp      int64  //上一次时间
 	lastTimeStampDelta int64
 	IsCommit           bool
-	//meta
-	minT, maxT int64
-	//	byteStart  uint64
-	//	chunk      *temChunk
-
-	byteStart      uint64 //byte开始地方
-	logFreqIndex   uint64
-	logFreqLen     uint64
-	skipStartIndex [global.FreqSkipListLevel]uint64
-	skipLen        [global.FreqSkipListLevel]uint64
-	posIndex       uint64
-	posLen         uint64
+	minT, maxT         int64
+	byteStart          uint64 //byte开始地方
+	logFreqIndex       uint64
+	logFreqLen         uint64
+	skipStartIndex     [global.FreqSkipListLevel]uint64
+	skipLen            [global.FreqSkipListLevel]uint64
+	posIndex           uint64
+	posLen             uint64
 }
 
 func (t *RawPosting) MinTime() int64 {
@@ -63,17 +59,17 @@ func (t *RawPosting) ChunkEnc(isTerm bool, cr chunks.ChunkReader) chunks.ChunkEn
 	return cr.ReadChunk(isTerm, ref...) //c.ReadChunks(t.byteStart, t.logFreqIndex, t.logFreqLen, t.skipStartIndex)
 }
 
-func (p *RawPosting) getLogFreqIndex() int {
-	return int(p.logFreqIndex)
-}
+// func (p *RawPosting) getLogFreqIndex() int {
+// 	return int(p.logFreqIndex)
+// }
 
-func (p *RawPosting) getSkipLen() uint64 {
-	var n uint64
-	for _, v := range p.skipLen {
-		n += v
-	}
-	return n
-}
+// func (p *RawPosting) getSkipLen() uint64 {
+// 	var n uint64
+// 	for _, v := range p.skipLen {
+// 		n += v
+// 	}
+// 	return n
+// }
 
 //TermPosting term 倒排表
 type TermPosting struct {
@@ -148,12 +144,6 @@ func newRawPosting() *RawPosting {
 	return p
 }
 
-type tagIterator interface {
-	Next() bool
-	Key() string
-	Value() index.Index
-}
-
 type seriesReader interface {
 	getByID(id uint64) *MemSeries
 }
@@ -176,18 +166,12 @@ type defalutTagIterator struct {
 
 func (d *defalutTagIterator) First() bool {
 	d.i++
-	if d.i < len(d.keys) {
-		return true
-	}
-	return false
+	return d.i < len(d.keys)
 }
 
 func (d *defalutTagIterator) Next() bool {
 	d.i++
-	if d.i < len(d.keys) {
-		return true
-	}
-	return false
+	return d.i < len(d.keys)
 }
 
 func (d *defalutTagIterator) Key() []byte {
