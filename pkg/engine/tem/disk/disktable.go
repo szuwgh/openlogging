@@ -93,7 +93,6 @@ func CreateLogFrom(dir string) *LogW {
 }
 
 func (t *TableOps) CreateIndexReader(dir string, ulid ulid.ULID, baseTime int64) *IndexReader {
-
 	bcache := &cache.NamespaceGetter{Cache: t.bcache, NS: ulid.Time()}
 	mcache := &cache.NamespaceGetter{Cache: t.mcache, NS: ulid.Time()}
 	return NewIndexReader(dir, baseTime, bcache, mcache)
@@ -307,11 +306,6 @@ func (bw *keyWriter) setTagName(tagName []byte) {
 func (kw *keyWriter) finishBlock() error {
 	kw.dataBlock.finishRestarts()
 	kw.dataBlock.finishTail()
-	//encodeBlockLength(kw.shareBuf[:3], uint64(len(kw.dataBlock.Get())))
-
-	// if _, err := kw.write(kw.shareBuf[:3]); err != nil {
-	// 	return err
-	// }
 	bh, err := kw.writeBlock(kw.dataBlock.Get())
 	if err != nil {
 		return err
@@ -536,39 +530,103 @@ func (cw *seriesWriter) writeChunks(b [][]byte) (uint64, error) {
 	cw.buf2.PutUint32(crc)
 	length := cw.buf1.Len() + cw.buf2.Len()
 
-	if err = cw.isCut(length); err != nil {
-		return 0, err
-	}
+	// if err = cw.isCut(length); err != nil {
+	// 	return 0, err
+	// }
 	if err = cw.writeToF(cw.buf1.Get(), cw.buf2.Get()); err != nil {
 		return 0, err
 	}
-	seq := cw.seq << 32
-	pos := seq | cw.n
+	//seq := cw.seq << 32
+	//pos := seq | cw.n
+	pod := cw.n
 	cw.n += uint64(length)
-	return pos, nil
+	return pod, nil
+}
+
+type singleWriter struct {
+	file *os.File
+	fbuf *bufio.Writer
+	buf1 byteutil.EncBuf
+	buf2 byteutil.EncBuf
+	n    uint64
+}
+
+func (s *singleWriter) close() error {
+	if err := s.finalizeTail(); err != nil {
+		return err
+	}
+	return s.file.Close()
+}
+
+func (s *singleWriter) init() error {
+	// f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE, 0666)
+	// if err != nil {
+	// 	return err
+	// }
+	var err error
+	if err = fileutil.Preallocate(s.file, defaultSegmentSize, true); err != nil {
+		return err
+	}
+	if err = s.file.Sync(); err != nil {
+		return err
+	}
+	if s.fbuf != nil {
+		s.fbuf.Reset(s.file)
+	} else {
+		s.fbuf = bufio.NewWriterSize(s.file, 8*1024*1024)
+	}
+	return nil
+}
+
+func (s *singleWriter) finalizeTail() error {
+	if err := s.fbuf.Flush(); err != nil {
+		return err
+	}
+	if err := fileutil.Fsync(s.file); err != nil {
+		return err
+	}
+	off, err := s.file.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return err
+	}
+	if err := s.file.Truncate(off); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *singleWriter) writeToF(b ...[]byte) error {
+	for i := range b {
+		_, err := s.fbuf.Write(b[i])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type seriesWriter struct {
-	cutWriter
+	singleWriter
+
 	seriesOffsets map[string]uint64
 }
 
 func newSeriesWriter(dir string) (*seriesWriter, error) {
 
-	if err := os.MkdirAll(dir, 0777); err != nil {
-		return nil, err
-	}
-	dirFile, err := fileutil.OpenDir(dir)
+	// if err := os.MkdirAll(dir, 0777); err != nil {
+	// 	return nil, err
+	// }
+	f, err := os.OpenFile(filepath.Join(dir, "series"), os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
 	}
 	sw := &seriesWriter{
-		cutWriter: cutWriter{
-			dirFile: dirFile,
-			n:       0,
+		singleWriter: singleWriter{
+			file: f,
 		},
 		seriesOffsets: make(map[string]uint64),
 	}
+	sw.init()
 	return sw, nil
 }
 
@@ -602,15 +660,15 @@ func (sw *seriesWriter) addSeries(isSeries bool, lset labels.Labels, chunks ...C
 	sw.buf1.PutUvarint(sw.buf2.Len())
 	sw.buf2.PutUint32(crc)
 	length := sw.buf1.Len() + sw.buf2.Len()
-	if err := sw.isCut(length); err != nil {
-		return 0, err
-	}
+	// if err := sw.isCut(length); err != nil {
+	// 	return 0, err
+	// }
 	err := sw.writeToF(sw.buf1.Get(), sw.buf2.Get())
 	if err != nil {
 		return 0, err
 	}
-	seq := sw.seq << 32
-	pos := seq | sw.n
+	//seq := sw.seq << 32
+	pos := sw.n
 	if isSeries {
 		sw.seriesOffsets[lset.Serialize()] = pos
 	}
@@ -669,14 +727,14 @@ func (pw *seriesWriter) writePosting(refs ...[]uint64) (uint64, error) {
 
 	length := pw.buf1.Len() + pw.buf2.Len()
 
-	if err := pw.isCut(length); err != nil {
-		return 0, err
-	}
+	// if err := pw.isCut(length); err != nil {
+	// 	return 0, err
+	// }
 	if err := pw.writeToF(pw.buf1.Get(), pw.buf2.Get()); err != nil {
 		return 0, err
 	}
-	seq := pw.seq << 32
-	pos := seq | pw.n
+	//seq := pw.seq << 32
+	pos := pw.n
 	pw.n += uint64(length)
 	return pos, nil
 }
@@ -726,7 +784,7 @@ func newIndexW(dir string) (*IndexW, error) {
 	// if err != nil {
 	// 	return iw, err
 	// }
-	iw.seriesw, err = newSeriesWriter(filepath.Join(dir, dirSeries))
+	iw.seriesw, err = newSeriesWriter(dir)
 	if err != nil {
 		return iw, err
 	}

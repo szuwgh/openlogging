@@ -28,7 +28,7 @@ type Chunk interface {
 
 type ChunkEnc interface {
 	Bytes() [][]byte
-	Iterator(int64, int64) Postings
+	Iterator(mint, maxt int64) Postings
 }
 
 // errPostings is an empty iterator that always errors.

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+	"log"
 
 	//"log"
 	"os"
@@ -36,7 +37,7 @@ type keyReader struct {
 	bcache      *cache.NamespaceGetter
 }
 
-func newkeyReader(dir string) (*keyReader, error) {
+func newKeyReader(dir string) (*keyReader, error) {
 	kf, err := os.OpenFile(filepath.Join(dir, "index"), os.O_RDONLY, 0644)
 	if err != nil {
 		return nil, err
@@ -245,14 +246,14 @@ func (cr *seriesReader) ReadChunk(isTerm bool, ref ...uint64) chunks.ChunkEnc {
 }
 
 func (cr *seriesReader) readLabelChunk(ref uint64) *chunks.SeriesSnapShot {
-	seq := ref >> 32
-	off := int((ref << 32) >> 32)
-	mmap, rel := cr.getMmapCache(seq)
-	defer func() {
-		if rel != nil {
-			rel.Release()
-		}
-	}()
+	off := int(ref)
+	//mmap := pr.mmaps[seq]
+	mmap := cr.mmap
+	// defer func() {
+	// 	if rel != nil {
+	// 		rel.Release()
+	// 	}
+	// }()
 	if mmap == nil {
 		return nil
 	}
@@ -273,14 +274,9 @@ func (cr *seriesReader) readLabelChunk(ref uint64) *chunks.SeriesSnapShot {
 }
 
 func (cr *seriesReader) readTermChunk(ref uint64) *chunks.TermSnapShot {
-	seq := ref >> 32
-	off := int((ref << 32) >> 32)
-	mmap, rel := cr.getMmapCache(seq)
-	defer func() {
-		if rel != nil {
-			rel.Release()
-		}
-	}()
+	off := int(ref)
+	//mmap := pr.mmaps[seq]
+	mmap := cr.mmap
 	if mmap == nil {
 		return nil
 	}
@@ -381,37 +377,50 @@ func (r *cutReader) getMmapCache(seq uint64) (*mmapAccessor, cache.Releaser) {
 	return nil, nil
 }
 
-type seriesReader struct {
-	//mmaps []*mmapAccessor
-	baseTime int64
-	cutReader
+type singleReader struct {
+	mmap *mmapAccessor
 }
 
-func newSeriesReader(dir string, mcache *cache.NamespaceGetter) *seriesReader {
+type seriesReader struct {
+	//mmaps []*mmapAccessor
+	singleReader
+	baseTime int64
+
+	//cutReader
+}
+
+func newSeriesReader(dir string) (*seriesReader, error) {
 	seriesr := &seriesReader{}
-	seriesr.dir = dir
-	seriesr.mcache = mcache
-	seriesr.ns = 2
-	return seriesr
+	vf, err := os.OpenFile(filepath.Join(dir, "series"), os.O_RDONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	mmap, err := newMmapAccessor(vf)
+	if err != nil {
+		return nil, err
+	}
+	seriesr.mmap = mmap
+	return seriesr, nil
+}
+
+func (pr *seriesReader) close() error {
+	return pr.mmap.close()
 }
 
 func (pr *seriesReader) getByID(ref uint64) (labels.Labels, []ChunkMeta, error) {
-	seq := ref >> 32
-	off := int((ref << 32) >> 32)
+	//seq := ref >> 32
+	off := int(ref)
 	//mmap := pr.mmaps[seq]
-	mmap, rel := pr.getMmapCache(seq)
-	defer func() {
-		if rel != nil {
-			rel.Release()
-		}
-	}()
+	mmap := pr.mmap
 	if mmap == nil {
 		return nil, nil, errors.New("mmap is nil")
 	}
 	debuf := mmap.decbufAt(off)
 	length := debuf.uvarint()
+	log.Println("length", length)
 
 	b := debuf.bytes(length)
+	log.Println("check sum", crc32.ChecksumIEEE(b))
 	if crc32.ChecksumIEEE(b) != debuf.uint32() {
 		return nil, nil, errors.New("crc not match")
 	}
@@ -488,19 +497,19 @@ func newPostingReader(dir string, mcache *cache.NamespaceGetter) *postingReader 
 	return postingr
 }
 
-func (pr *seriesReader) release() {
-	pr.mcache = nil
-}
+// func (pr *seriesReader) release() {
+// 	pr.mcache = nil
+// }
 
 func (pr *seriesReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
-	seq := ref >> 32
-	off := int((ref << 32) >> 32)
-	mmap, rel := pr.getMmapCache(seq)
-	defer func() {
-		if rel != nil {
-			rel.Release()
-		}
-	}()
+	off := int(ref)
+	//mmap := pr.mmaps[seq]
+	mmap := pr.mmap
+	// defer func() {
+	// 	if rel != nil {
+	// 		rel.Release()
+	// 	}
+	// }()
 	if mmap == nil {
 		return nil, nil
 	}
@@ -540,14 +549,9 @@ func (pr *seriesReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
 }
 
 func (pr *seriesReader) readPosting2(ref uint64) ([]uint64, []uint64) {
-	seq := ref >> 32
-	off := int((ref << 32) >> 32)
-	mmap, rel := pr.getMmapCache(seq)
-	defer func() {
-		if rel != nil {
-			rel.Release()
-		}
-	}()
+	off := int(ref)
+	//mmap := pr.mmaps[seq]
+	mmap := pr.mmap
 	if mmap == nil {
 		return nil, nil
 	}
@@ -606,15 +610,10 @@ func (r *IndexReader) Iterator() IteratorLabel {
 
 //缺乏错误处理
 func NewIndexReader(dir string, baseTime int64, bcache, mcache *cache.NamespaceGetter) *IndexReader {
-	indexDir := filepath.Join(dir, "index")
 	var err error
 	r := &IndexReader{}
-
-	//r.postingr = newPostingReader(filepath.Join(indexDir, dirPosting), mcache)
-	r.seriesr = newSeriesReader(filepath.Join(indexDir, dirSeries), mcache)
-	//r.chunkr = newchunkReader(filepath.Join(indexDir, dirChunk), baseTime, mcache)
-
-	r.indexr, err = newkeyReader(indexDir) // &keyReader{r: kf}
+	r.seriesr, err = newSeriesReader(dir)
+	r.indexr, err = newKeyReader(dir)
 	if err != nil {
 		return nil
 	}
@@ -820,7 +819,7 @@ func (r *IndexReader) Close() error {
 
 	//r.chunkr.release()
 	//	r.postingr.release()
-	r.seriesr.release()
+	r.seriesr.close()
 	return nil
 }
 
@@ -844,7 +843,7 @@ func (r *logMmap) Release() {
 func NewLogReader(dir string, logOffset []uint64, lcache *cache.NamespaceGetter) *LogReader {
 
 	cr := &LogReader{}
-	cr.dir = filepath.Join(dir, "logs")
+	cr.dir = dir
 	cr.logOffset = logOffset
 	cr.lcache = lcache
 	cr.logCount = cr.logOffset[len(logOffset)-1]

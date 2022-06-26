@@ -156,8 +156,8 @@ func (e *Engine) openBlock(dir string) (*Block, error) {
 		return nil, err
 	}
 
-	ir := e.tOps.CreateIndexReader(dir, meta.ULID, meta.MinTime)
-	wr := e.tOps.CreateLogReader(dir, meta.ULID, meta.LogID)
+	ir := e.tOps.CreateIndexReader(indexDir(dir), meta.ULID, meta.MinTime)
+	wr := e.tOps.CreateLogReader(chunkDir(dir), meta.ULID, meta.LogID)
 	b := &Block{
 		meta:   *meta,
 		indexr: ir,

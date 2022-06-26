@@ -1,4 +1,4 @@
-package disk
+package fileutil
 
 import (
 	"os"
@@ -7,7 +7,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func mmap(f *os.File, offset int64, length int) ([]byte, error) {
+func Mmap(f *os.File, offset int64, length int) ([]byte, error) {
 	// anonymous mapping
 	if f == nil {
 		return unix.Mmap(-1, 0, length, syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_ANON|syscall.MAP_PRIVATE)
@@ -21,7 +21,7 @@ func mmap(f *os.File, offset int64, length int) ([]byte, error) {
 	return mmap, nil
 }
 
-func munmap(b []byte) (err error) {
+func Munmap(b []byte) (err error) {
 	return unix.Munmap(b)
 }
 

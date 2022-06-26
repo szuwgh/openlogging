@@ -25,11 +25,8 @@ type Head struct {
 	chunkRange   int64
 	lastSegNum   uint64
 	a            *analysis.Analyzer
-	EndID        uint64
-	//	startChan     chan struct{}
-	//	headStartChan chan struct{}
-	isWaitfroze bool
-	logSize     uint64
+	isWaitfroze  bool
+	logSize      uint64
 }
 
 func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer) *Head {
@@ -59,25 +56,6 @@ func (h *Head) addLogs(r logproto.Stream) error {
 	return nil
 }
 
-// func (h *Head) process() {
-// 	//context := mem.Context{}
-// 	//for {
-// 	// if h.isWaitfroze {
-// 	// 	<-h.startChan
-// 	// 	h.isWaitfroze = false
-// 	// }
-// 	//logSumm := h.getLog()
-// 	// if logSumm.DocID == h.EndID {
-// 	// 	h.headStartChan <- struct{}{}
-// 	// 	compactChan <- struct{}{}
-// 	// 	continue
-// 	// }
-// 	h.logsMem.WriteLog(logSumm.Msg)
-// 	h.indexMem.Index(&context, logSumm)
-// 	h.indexMem.Flush()
-// 	//}
-// }
-
 func (h *Head) serieser(labels string) *mem.MemSeries {
 	lset, _ := temql.ParseLabels(labels)
 	s, _ := h.indexMem.GetOrCreate(lset.Hash(), lset)
@@ -88,12 +66,6 @@ func (h *Head) tokener(entry *logproto.Entry) tokenizer.Tokens {
 	msg := byteutil.Str2bytes(entry.Line)
 	tokens := h.a.Analyze(msg)
 	return tokens
-	// return mem.LogSummary{
-	// 	DocID:     entry.LogID,
-	// 	Tokens:    tokens,
-	// 	TimeStamp: entry.Timestamp.UnixNano() / 1e6,
-	// 	Msg:       msg,
-	// }
 }
 
 func (h *Head) setMinTime(t int64) {
@@ -111,10 +83,7 @@ func (h *Head) setMaxTime(t int64) {
 func (h *Head) reset() {
 	h.mint = math.MinInt64
 	h.lastSegNum = 0
-	h.EndID = 0
-	h.isWaitfroze = false
 	h.logSize = 0
-	//	h.stat.forwardID = 1
 }
 
 func (h *Head) ReadDone() {
@@ -149,18 +118,6 @@ func (h *Head) LastSegNum() uint64 {
 
 func (h *Head) size() uint64 {
 	return atomic.LoadUint64(&h.logSize)
-}
-
-func (h *Head) startIndex() {
-	h.indexControl.Add(1)
-}
-
-func (h *Head) doneIndex() {
-	h.indexControl.Done()
-}
-
-func (h *Head) waitIndex() {
-	h.indexControl.Wait()
 }
 
 func (h *Head) Close() {

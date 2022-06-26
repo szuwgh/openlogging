@@ -1,4 +1,4 @@
-package disk
+package fileutil
 
 import (
 	"errors"
@@ -43,7 +43,7 @@ func openSharedFile(f *os.File) (file *os.File, err error) {
 	return os.NewFile(uintptr(h), fileName), nil
 }
 
-func mmap(f *os.File, offset int64, length int) (out []byte, err error) {
+func Mmap(f *os.File, offset int64, length int) (out []byte, err error) {
 	// TODO: Add support for anonymous mapping on windows
 	if f == nil {
 		return make([]byte, length), nil
@@ -86,7 +86,7 @@ func mmap(f *os.File, offset int64, length int) (out []byte, err error) {
 // munmap Windows implementation
 // Based on: https://github.com/edsrzf/mmap-go
 // Based on: https://github.com/boltdb/bolt/bolt_windows.go
-func munmap(b []byte) (err error) {
+func Munmap(b []byte) (err error) {
 	handleLock.Lock()
 	defer handleLock.Unlock()
 

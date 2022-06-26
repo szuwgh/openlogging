@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
 
@@ -184,6 +185,25 @@ func (f *labelIterator) Key() []byte {
 func (f *labelIterator) Value() []byte {
 	return f.data.Value()
 }
+
+// func (f *labelIterator) Chunks() ([]TimeChunk, []uint64, error) {
+// 	ref, _ := binary.Uvarint(f.Value())
+// 	seriesRef, termRef := f.seriesr.readPosting2(ref)
+// 	timeChunk := make([]TimeChunk, 0, len(seriesRef))
+// 	if termRef != nil {
+// 	} else {
+// 		for _, v := range seriesRef {
+// 			lset, chunkMeta, err := f.seriesr.getByID(v)
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			chk := TimeChunk{Lset: lset}
+// 			chk.Meta = chunkMeta
+// 			timeChunk = append(timeChunk, chk)
+// 		}
+// 	}
+// 	return timeChunk, nil
+// }
 
 func (f *labelIterator) Write(w IndexWriter, segmentNum uint64, baseTime int64) ([]TimeChunk, []uint64, error) {
 	ref, _ := binary.Uvarint(f.Value())
@@ -527,6 +547,56 @@ func NewMergeWriterIterator(segmentNum []uint64, baseTime []int64, iters ...Writ
 	}
 
 	return mergeWriterIter
+}
+
+func (m *MergeWriterIterator) Write2(labelName string, w IndexWriter) error {
+
+	var segmentNum uint64
+	//合并
+	m.set = emptyChunkSet
+	m.posting = posting.EmptyPostings
+	for _, x := range m.indexs {
+		chunks, p, err := m.writerIters[x].chunk()
+		if err != nil {
+			return err
+		}
+		if len(chunks) > 0 {
+			m.set, err = newCompactionMerger(m.set, &chunkSet{chks: chunks})
+			if err != nil {
+				return err
+			}
+		}
+		if len(p) > 0 {
+			m.posting = posting.NewMergedPostings(m.posting, posting.NewListPostings(p))
+		}
+		segmentNum += m.segmentNum[x]
+	}
+
+	var p []uint64
+	for m.posting.Next() {
+		p = append(p, m.posting.At())
+	}
+	var pRef []uint64
+	for m.set.Next() {
+		lset, chunk := m.set.At()
+		ref, err := w.AddSeries(labelName != global.MESSAGE, lset, chunk...)
+		if err != nil {
+			return err
+		}
+		pRef = append(pRef, ref)
+	}
+	var ref uint64
+	var err error
+	switch labelName {
+	case global.MESSAGE:
+		ref, err = w.WritePostings(p, pRef)
+	default:
+		ref, err = w.WritePostings(append(p, pRef...))
+	}
+	if err != nil {
+		return err
+	}
+	return w.AppendKey(m.Key(), ref)
 }
 
 func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {

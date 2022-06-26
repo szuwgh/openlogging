@@ -1,6 +1,7 @@
 package disk
 
 import (
+	"github.com/szuwgh/temsearch/pkg/engine/tem/fileutil"
 	"os"
 	"sync"
 )
@@ -24,7 +25,7 @@ func newMmapAccessor(f *os.File) (*mmapAccessor, error) {
 	if err != nil {
 		return nil, err
 	}
-	m.b, err = mmap(m.f, 0, int(stat.Size()))
+	m.b, err = fileutil.Mmap(m.f, 0, int(stat.Size()))
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +70,7 @@ func (m *mmapAccessor) close() error {
 	if m.b == nil {
 		return nil
 	}
-	err := munmap(m.b)
+	err := fileutil.Munmap(m.b)
 	if err != nil {
 		return err
 	}

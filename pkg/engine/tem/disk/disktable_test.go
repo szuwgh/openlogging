@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
 )
 
@@ -54,19 +53,24 @@ func Test_seriesWriter_addSeries(t *testing.T) {
 				t.Errorf("seriesWriter.addSeries() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got == tt.want {
-				t.Errorf("seriesWriter.addSeries() = %v, want %v", got, tt.want)
-			}
+			t.Log("ref", got)
+			// if got == tt.want {
+			// 	t.Errorf("seriesWriter.addSeries() = %v, want %v", got, tt.want)
+			// }
 			gots = append(gots, got)
 		})
 	}
 	sw.close()
-	sr := newSeriesReader(dir, &cache.NamespaceGetter{cache.NewCache(cache.NewLRU(defaultSegmentSize * 10)), 0})
+	sr, err := newSeriesReader(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for i, got := range gots {
 		lset, chunks, err := sr.getByID(got)
 		if err != nil {
 			t.Fatal(err)
 		}
+		t.Log(lset, chunks)
 		if labels.Compare(lset, tests[i].args.lset) != 0 {
 			t.Fatal("seriesWriter.addSeries() labels not equal", lset, tests[i].args.lset)
 		}
@@ -76,12 +80,12 @@ func Test_seriesWriter_addSeries(t *testing.T) {
 			}
 		}
 	}
-	sr.release()
+	sr.close()
 }
 
 func Test_postingWriter_writePosting(t *testing.T) {
 	dir := "./"
-	pw, err := newPostingWriter(dir)
+	pw, err := newSeriesWriter(dir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +95,7 @@ func Test_postingWriter_writePosting(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		pw      *postingWriter
+		pw      *seriesWriter
 		args    args
 		want    uint64
 		wantErr bool
@@ -113,14 +117,14 @@ func Test_postingWriter_writePosting(t *testing.T) {
 				t.Errorf("postingWriter.writePosting() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got == tt.want {
-				t.Errorf("postingWriter.writePosting() = %v, want %v", got, tt.want)
-			}
+			// if got == tt.want {
+			// 	t.Errorf("postingWriter.writePosting() = %v, want %v", got, tt.want)
+			// }
 			gots = append(gots, got)
 		})
 	}
 	pw.close()
-	pr := newPostingReader(dir, &cache.NamespaceGetter{cache.NewCache(cache.NewLRU(defaultSegmentSize * 10)), 1})
+	pr, _ := newSeriesReader(dir)
 	for _, got := range gots {
 		ref, refmap := pr.readPosting(got)
 		if err != nil {
@@ -133,7 +137,7 @@ func Test_postingWriter_writePosting(t *testing.T) {
 
 func Test_chunkWriter_writeChunks(t *testing.T) {
 	dir := "./"
-	cw, err := newChunkWriter(dir)
+	cw, err := newSeriesWriter(dir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +147,7 @@ func Test_chunkWriter_writeChunks(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		cw      *chunkWriter
+		cw      *seriesWriter
 		args    args
 		want    uint64
 		wantErr bool
@@ -163,14 +167,14 @@ func Test_chunkWriter_writeChunks(t *testing.T) {
 				t.Errorf("chunkWriter.writeChunks() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got == tt.want {
-				t.Errorf("chunkWriter.writeChunks() = %v, want %v", got, tt.want)
-			}
+			// if got == tt.want {
+			// 	t.Errorf("chunkWriter.writeChunks() = %v, want %v", got, tt.want)
+			// }
 			gots = append(gots, got)
 		})
 	}
 	cw.close()
-	cr := newchunkReader(dir, 0, &cache.NamespaceGetter{cache.NewCache(cache.NewLRU(defaultSegmentSize * 10)), 2})
+	cr, _ := newSeriesReader(dir)
 	for _, got := range gots {
 		chunks := cr.ReadChunk(false, got)
 		if err != nil {
@@ -203,7 +207,7 @@ func Test_KeyWriter(t *testing.T) {
 	kw.finishTag()
 	kw.close()
 
-	ir, err := newBaseReader(dir)
+	ir, err := newKeyReader(dir)
 	if err != nil {
 		t.Fatal(err)
 	}
