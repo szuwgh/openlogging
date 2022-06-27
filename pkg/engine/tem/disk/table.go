@@ -23,7 +23,7 @@ type TimeChunk struct {
 }
 
 type ChunkMeta struct {
-	Ref        uint64 // Length
+	Ref        uint64 //Length
 	MinT, MaxT int64
 }
 

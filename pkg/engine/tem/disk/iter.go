@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
 
@@ -186,24 +185,30 @@ func (f *labelIterator) Value() []byte {
 	return f.data.Value()
 }
 
-// func (f *labelIterator) Chunks() ([]TimeChunk, []uint64, error) {
-// 	ref, _ := binary.Uvarint(f.Value())
-// 	seriesRef, termRef := f.seriesr.readPosting2(ref)
-// 	timeChunk := make([]TimeChunk, 0, len(seriesRef))
-// 	if termRef != nil {
-// 	} else {
-// 		for _, v := range seriesRef {
-// 			lset, chunkMeta, err := f.seriesr.getByID(v)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			chk := TimeChunk{Lset: lset}
-// 			chk.Meta = chunkMeta
-// 			timeChunk = append(timeChunk, chk)
-// 		}
-// 	}
-// 	return timeChunk, nil
-// }
+func (f *labelIterator) Chunks(w IndexWriter) ([]TimeChunk, []uint64, error) {
+	ref, _ := binary.Uvarint(f.Value())
+	seriesRef, termRef := f.seriesr.readPosting2(ref)
+	seriesPosting := make([]uint64, 0, len(seriesRef))
+	timeChunk := make([]TimeChunk, 0, len(seriesRef))
+	if termRef != nil {
+	} else {
+		for _, v := range seriesRef {
+			lset, chunkMeta, err := f.seriesr.getByID(v)
+			if err != nil {
+				return nil, nil, err
+			}
+			seriesRef, exist := w.GetSeries(lset)
+			if !exist {
+				chk := TimeChunk{Lset: lset}
+				chk.Meta = chunkMeta
+				timeChunk = append(timeChunk, chk)
+			} else {
+				seriesPosting = append(seriesPosting, seriesRef)
+			}
+		}
+	}
+	return timeChunk, seriesPosting, nil
+}
 
 func (f *labelIterator) Write(w IndexWriter, segmentNum uint64, baseTime int64) ([]TimeChunk, []uint64, error) {
 	ref, _ := binary.Uvarint(f.Value())
@@ -315,6 +320,7 @@ type IteratorLabel interface {
 type WriterIterator interface {
 	iterator.SingleIterator
 	Write(IndexWriter, uint64, int64) ([]TimeChunk, []uint64, error)
+	Chunks(IndexWriter) ([]TimeChunk, []uint64, error)
 	//Values() [][]byte
 }
 
@@ -556,7 +562,7 @@ func (m *MergeWriterIterator) Write2(labelName string, w IndexWriter) error {
 	m.set = emptyChunkSet
 	m.posting = posting.EmptyPostings
 	for _, x := range m.indexs {
-		chunks, p, err := m.writerIters[x].chunk()
+		chunks, p, err := m.writerIters[x].Chunks(w)
 		if err != nil {
 			return err
 		}
@@ -579,6 +585,9 @@ func (m *MergeWriterIterator) Write2(labelName string, w IndexWriter) error {
 	var pRef []uint64
 	for m.set.Next() {
 		lset, chunk := m.set.At()
+		if len(chunk) > 12 {
+
+		}
 		ref, err := w.AddSeries(labelName != global.MESSAGE, lset, chunk...)
 		if err != nil {
 			return err

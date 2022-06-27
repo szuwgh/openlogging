@@ -126,7 +126,6 @@ func WriteLogFreq(p *RawPosting, memTable *MemTable) {
 	var offset uint64
 	var len0, len1, len2 int
 	//写入时间
-	//offset = logFreqIndex
 	offset, len0 = memTable.WriteVInt64(logFreqIndex, p.lastTimeStampDelta)
 	if p.freq == 1 {
 		offset, len1 = memTable.WriteVUint64(offset,
@@ -137,7 +136,6 @@ func WriteLogFreq(p *RawPosting, memTable *MemTable) {
 	}
 	atomic.StoreUint64(&p.logFreqIndex, offset)
 	atomic.AddUint64(&p.logFreqLen, uint64(len0+len1+len2))
-	//return size
 }
 
 //writeSkip 写入跳表
