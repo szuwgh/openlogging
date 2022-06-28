@@ -180,7 +180,7 @@ func (t *TermPosting) Seek(target uint64) bool {
 }
 
 func (t *TermPosting) At() (int64, uint64, []int) {
-	return t.lastTimeStamp, t.lastLogID + t.segmentNum, t.lastPos
+	return t.lastTimeStamp, t.at(), t.lastPos
 }
 
 func (t *TermPosting) at() uint64 {

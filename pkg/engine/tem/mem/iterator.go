@@ -78,7 +78,7 @@ func (s *memIterator) writeSeries(w disk.IndexWriter, segmentNum uint64, baseTim
 	return timeChunk, seriesPosting, nil
 }
 
-func (i *memIterator) Chunks(w disk.IndexWriter) ([]disk.TimeChunk, []uint64, error) {
+func (i *memIterator) Chunks(w disk.IndexWriter, segmentNum uint64) ([]disk.TimeChunk, []uint64, error) {
 	return nil, nil, nil
 }
 

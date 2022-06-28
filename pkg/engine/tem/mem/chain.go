@@ -5,6 +5,7 @@ import (
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util"
 )
 
 const (
@@ -101,7 +102,7 @@ func LogFreqMiddleware() middleware {
 				p.maxT = context.TimeStamp //- memTable.BaseTimeStamp
 				p.lastPos = 0
 				p.freq = 1
-
+				util.Assert(context.LogID > p.lastLogID, "logid small than lastlogid")
 				p.lastLogDelta = context.LogID - p.lastLogID
 				p.lastTimeStampDelta = context.TimeStamp - p.lastTimeStamp
 				p.lastLogID = context.LogID

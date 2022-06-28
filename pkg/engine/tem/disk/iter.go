@@ -185,26 +185,45 @@ func (f *labelIterator) Value() []byte {
 	return f.data.Value()
 }
 
-func (f *labelIterator) Chunks(w IndexWriter) ([]TimeChunk, []uint64, error) {
+func (f *labelIterator) Chunks(w IndexWriter, segmentNum uint64) ([]TimeChunk, []uint64, error) {
 	ref, _ := binary.Uvarint(f.Value())
 	seriesRef, termRef := f.seriesr.readPosting2(ref)
 	seriesPosting := make([]uint64, 0, len(seriesRef))
 	timeChunk := make([]TimeChunk, 0, len(seriesRef))
 	if termRef != nil {
-	} else {
-		for _, v := range seriesRef {
+		for _, v := range termRef {
 			lset, chunkMeta, err := f.seriesr.getByID(v)
 			if err != nil {
 				return nil, nil, err
 			}
-			seriesRef, exist := w.GetSeries(lset)
-			if !exist {
-				chk := TimeChunk{Lset: lset}
-				chk.Meta = chunkMeta
-				timeChunk = append(timeChunk, chk)
-			} else {
-				seriesPosting = append(seriesPosting, seriesRef)
+			chk := TimeChunk{Lset: lset}
+			for i, c := range chunkMeta {
+				c.LastLogNum = c.LastLogNum + segmentNum
+				chunkMeta[i] = c
 			}
+			chk.Meta = chunkMeta
+			seriesRef, _ := w.GetSeries(lset)
+			seriesPosting = append(seriesPosting, seriesRef)
+			timeChunk = append(timeChunk, chk)
+		}
+		return timeChunk, seriesPosting, nil
+	}
+	for _, v := range seriesRef {
+		lset, chunkMeta, err := f.seriesr.getByID(v)
+		if err != nil {
+			return nil, nil, err
+		}
+		seriesRef, exist := w.GetSeries(lset)
+		if !exist {
+			chk := TimeChunk{Lset: lset}
+			for i, c := range chunkMeta {
+				c.LastLogNum = c.LastLogNum + segmentNum
+				chunkMeta[i] = c
+			}
+			chk.Meta = chunkMeta
+			timeChunk = append(timeChunk, chk)
+		} else {
+			seriesPosting = append(seriesPosting, seriesRef)
 		}
 	}
 	return timeChunk, seriesPosting, nil
@@ -321,7 +340,7 @@ type IteratorLabel interface {
 type WriterIterator interface {
 	iterator.SingleIterator
 	Write(IndexWriter, uint64, int64) ([]TimeChunk, []uint64, error)
-	Chunks(IndexWriter) ([]TimeChunk, []uint64, error)
+	Chunks(IndexWriter, uint64) ([]TimeChunk, []uint64, error)
 	//Values() [][]byte
 }
 
@@ -535,6 +554,7 @@ type MergeWriterIterator struct {
 	baseTime    []int64
 	set         compactionSet
 	posting     posting.Postings
+	
 }
 
 func NewMergeWriterIterator(segmentNum []uint64, baseTime []int64, iters ...WriterIterator) *MergeWriterIterator {
@@ -563,7 +583,7 @@ func (m *MergeWriterIterator) Write2(labelName string, w IndexWriter) error {
 	m.set = emptyChunkSet
 	m.posting = posting.EmptyPostings
 	for _, x := range m.indexs {
-		chunks, p, err := m.writerIters[x].Chunks(w)
+		chunks, p, err := m.writerIters[x].Chunks(w, segmentNum)
 		if err != nil {
 			return err
 		}

@@ -2,6 +2,7 @@ package mem
 
 import (
 	"encoding/binary"
+
 	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
 )
@@ -25,6 +26,9 @@ func NewLogsTable(bytePool byteutil.Forward) *LogsTable {
 }
 
 func (lt *LogsTable) ReadLog(id uint64) []byte {
+	if int(id) > len(lt.index) {
+		return nil
+	}
 	offset := lt.index[id-1]
 	lt.reader.Init(offset)
 	value := lt.reader.ReadString()

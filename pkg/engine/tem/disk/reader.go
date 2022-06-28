@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
-	"log"
 
 	//"log"
 	"os"
@@ -417,10 +416,7 @@ func (pr *seriesReader) getByID(ref uint64) (labels.Labels, []ChunkMeta, error) 
 	}
 	debuf := mmap.decbufAt(off)
 	length := debuf.uvarint()
-	log.Println("length", length)
-
 	b := debuf.bytes(length)
-	log.Println("check sum", crc32.ChecksumIEEE(b))
 	if crc32.ChecksumIEEE(b) != debuf.uint32() {
 		return nil, nil, errors.New("crc not match")
 	}

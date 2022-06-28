@@ -8,7 +8,6 @@ import (
 type SnapBlock interface {
 	ReadByte() (byte, error)
 	Seek(uint64)
-	ReadVLong() int64
 	ReadVInt() int
 	ReadVUInt64() uint64
 	ReadVInt64() int64
