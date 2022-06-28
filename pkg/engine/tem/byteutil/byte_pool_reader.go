@@ -56,14 +56,14 @@ type memSeriesSnapReader struct {
 	ref []uint64
 }
 
-func (m *memSeriesSnapReader) Encode() (chunks.SnapBlock, uint64) {
+func (m *memSeriesSnapReader) Encode() chunks.SnapBlock {
 	byteStart := m.ref[0]
 	seriesIndex := m.ref[1]
 	seriesLen := m.ref[2]
 	logFreqSnap := NewSnapBlock(byteStart,
 		seriesIndex,
 		seriesLen, m.r.Clone())
-	return logFreqSnap, 0
+	return logFreqSnap
 }
 
 func (m *memSeriesSnapReader) Bytes() [][]byte {
@@ -72,7 +72,7 @@ func (m *memSeriesSnapReader) Bytes() [][]byte {
 	seriesLen := m.ref[2]
 	var b [][]byte
 	m.r.encbuf.Reset()
-	m.r.encbuf.PutUvarint(0)
+	//m.r.encbuf.PutUvarint(0)
 	m.r.encbuf.PutUvarint64(seriesLen)
 	b = append(b, m.r.encbuf.Get())
 	m.r.initReader(byteStart, seriesIndex)
@@ -87,7 +87,7 @@ type memTermSnapReader struct {
 	ref []uint64
 }
 
-func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, [global.FreqSkipListLevel]chunks.SnapBlock, uint64) {
+func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, [global.FreqSkipListLevel]chunks.SnapBlock) {
 	byteStart := m.ref[0]
 	logFreqIndex := m.ref[1]
 	logFreqLen := m.ref[2]
@@ -110,7 +110,7 @@ func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, [globa
 		posIndex,
 		posLen,
 		m.r.Clone())
-	return logFreqSnap, posSnap, skipSnap, 0
+	return logFreqSnap, posSnap, skipSnap
 }
 
 func (m *memTermSnapReader) Bytes() [][]byte {
@@ -123,7 +123,7 @@ func (m *memTermSnapReader) Bytes() [][]byte {
 	posLen := m.ref[3+global.FreqSkipListLevel+global.FreqSkipListLevel+1]
 	var b [][]byte
 	m.r.encbuf.Reset()
-	m.r.encbuf.PutUvarint(0)
+	//m.r.encbuf.PutUvarint(0)
 	m.r.encbuf.PutUvarint64(logFreqLen)
 
 	for i := 0; i < global.FreqSkipListLevel; i++ {

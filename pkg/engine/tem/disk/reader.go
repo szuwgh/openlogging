@@ -302,12 +302,12 @@ type memSeriesSnapReader struct {
 	r decbuf
 }
 
-func (m *memSeriesSnapReader) Encode() (chunks.SnapBlock, uint64) {
+func (m *memSeriesSnapReader) Encode() chunks.SnapBlock {
 	m.r.uvarint()
-	segmentNum := m.r.uvarint64()
+	//segmentNum := m.r.uvarint64()
 	seriesLen := m.r.uvarint64()
 	seriesBytes := m.r.bytes(int(seriesLen))
-	return &snapByte{data: seriesBytes, limit: seriesLen}, segmentNum
+	return &snapByte{data: seriesBytes, limit: seriesLen}
 }
 
 func (m *memSeriesSnapReader) Bytes() [][]byte {
@@ -319,9 +319,9 @@ type memTermSnapReader struct {
 	r decbuf
 }
 
-func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, [global.FreqSkipListLevel]chunks.SnapBlock, uint64) {
+func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, [global.FreqSkipListLevel]chunks.SnapBlock) {
 	m.r.uvarint()
-	segmentNum := m.r.uvarint64()
+	//	segmentNum := m.r.uvarint64()
 	logFreqLen := m.r.uvarint64()
 	var skipLen [global.FreqSkipListLevel]uint64
 	for i := 0; i < global.FreqSkipListLevel; i++ {
@@ -334,7 +334,7 @@ func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, [globa
 		skipr[i] = &snapByte{data: m.r.bytes(int(skipLen[i])), limit: skipLen[i]}
 	}
 	posr := &snapByte{data: m.r.bytes(int(posLen)), limit: posLen}
-	return logFreqr, posr, skipr, segmentNum
+	return logFreqr, posr, skipr
 }
 
 func (m *memTermSnapReader) Bytes() [][]byte {
@@ -441,11 +441,13 @@ func (pr *seriesReader) getByID(ref uint64) (labels.Labels, []ChunkMeta, error) 
 	t0 := debuf.varint64()
 	maxt := int64(debuf.varint64()) + t0
 	ref0 := debuf.uvarint64()
+	segmentNum := debuf.uvarint64()
 
 	chunkMeta = append(chunkMeta, ChunkMeta{
-		Ref:  ref0,
-		MinT: t0,
-		MaxT: maxt,
+		Ref:        ref0,
+		MinT:       t0,
+		MaxT:       maxt,
+		LastLogNum: segmentNum,
 	})
 	t0 = maxt
 
@@ -455,15 +457,16 @@ func (pr *seriesReader) getByID(ref uint64) (labels.Labels, []ChunkMeta, error) 
 
 		ref0 += debuf.uvarint64()
 		t0 = maxt
-
+		segmentNum := debuf.uvarint64()
 		if debuf.err() != nil {
 			return nil, nil, fmt.Errorf("read meta for chunk %s", debuf.err())
 		}
 
 		chunkMeta = append(chunkMeta, ChunkMeta{
-			Ref:  ref0,
-			MinT: mint,
-			MaxT: maxt,
+			Ref:        ref0,
+			MinT:       mint,
+			MaxT:       maxt,
+			LastLogNum: segmentNum,
 		})
 	}
 	return lsets, chunkMeta, nil
@@ -646,7 +649,7 @@ func (r *IndexReader) print() error {
 						fmt.Println(c)
 						chunkEnc := c.ChunkEnc(false, r.seriesr)
 						//fmt.Println(chunkEnc.Bytes())
-						posting := chunkEnc.Iterator(c.MinTime(), c.MaxTime())
+						posting := chunkEnc.Iterator(c.MinTime(), c.MaxTime(), c.SegmentNum())
 						for posting.Next() {
 							fmt.Print(posting.At())
 							fmt.Print(" ; ")
@@ -663,7 +666,7 @@ func (r *IndexReader) print() error {
 						fmt.Println(c)
 						chunkEnc := c.ChunkEnc(true, r.seriesr)
 						//fmt.Println(chunkEnc.Bytes())
-						posting := chunkEnc.Iterator(c.MinTime(), c.MaxTime())
+						posting := chunkEnc.Iterator(c.MinTime(), c.MaxTime(), c.SegmentNum())
 						for posting.Next() {
 							fmt.Print(posting.At())
 							fmt.Print(" ; ")

@@ -225,14 +225,15 @@ func (f *labelIterator) Write(w IndexWriter, segmentNum uint64, baseTime int64) 
 			chk := TimeChunk{Lset: lset}
 			for i, c := range chunkMeta {
 				chunkEnc := c.ChunkEnc(true, f.seriesr)
-				bytes := chunkEnc.Bytes()[0]
-				num, m := binary.Uvarint(bytes)
-				n := binary.PutUvarint(f.buf[0:], num+segmentNum)
-				chunkRef, err := w.WriteChunks([][]byte{f.buf[:n], bytes[m:]})
+				//bytes := chunkEnc.Bytes()[0]
+				//num, m := binary.Uvarint(bytes)
+				//n := binary.PutUvarint(f.buf[0:], num+segmentNum)
+				chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
 				if err != nil {
 					return nil, nil, err
 				}
 				c.Ref = chunkRef
+				c.LastLogNum = c.LastLogNum + segmentNum
 				chunkMeta[i] = c
 			}
 			chk.Meta = chunkMeta
@@ -252,14 +253,15 @@ func (f *labelIterator) Write(w IndexWriter, segmentNum uint64, baseTime int64) 
 			chk := TimeChunk{Lset: lset}
 			for i, c := range chunkMeta {
 				chunkEnc := c.ChunkEnc(false, f.seriesr)
-				bytes := chunkEnc.Bytes()[0]
-				num, m := binary.Uvarint(bytes)
-				n := binary.PutUvarint(f.buf[0:], num+segmentNum)
-				chunkRef, err := w.WriteChunks([][]byte{f.buf[:n], bytes[m:]})
+				//bytes := chunkEnc.Bytes()[0]
+				//	num, m := binary.Uvarint(bytes)
+				//n := binary.PutUvarint(f.buf[0:], num+segmentNum)
+				chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
 				if err != nil {
 					return nil, nil, err
 				}
 				c.Ref = chunkRef
+				c.LastLogNum = c.LastLogNum + segmentNum
 				chunkMeta[i] = c
 			}
 			chk.Meta = chunkMeta
@@ -273,12 +275,11 @@ func (f *labelIterator) Write(w IndexWriter, segmentNum uint64, baseTime int64) 
 
 //表迭代
 type tableIterator struct {
-	labelIter  iterator.SingleIterator //每個索引的label块
-	reader     *IndexReader
-	key, value []byte
-	chunkr     *chunkReader
-	postingr   *postingReader
-	seriesr    *seriesReader
+	labelIter iterator.SingleIterator //每個索引的label块
+	reader    *IndexReader
+	chunkr    *chunkReader
+	postingr  *postingReader
+	seriesr   *seriesReader
 }
 
 func (t *tableIterator) Next() bool {

@@ -25,7 +25,7 @@ type LogID struct {
 }
 
 type TermSnapReader interface {
-	Encode() (SnapBlock, SnapBlock, [global.FreqSkipListLevel]SnapBlock, uint64)
+	Encode() (SnapBlock, SnapBlock, [global.FreqSkipListLevel]SnapBlock)
 	Bytes() [][]byte
 }
 
@@ -40,9 +40,9 @@ func NewTermSnapShot() *TermSnapShot {
 	return termSna
 }
 
-func (s *TermSnapShot) Iterator(minT, maxT int64) Postings {
+func (s *TermSnapShot) Iterator(minT, maxT int64, segmentNum uint64) Postings {
 	t := &TermPosting{}
-	logFreqr, posr, skipsr, segmentNum := s.snapReader.Encode()
+	logFreqr, posr, skipsr := s.snapReader.Encode()
 	t.skipReader = make([]SnapBlock, global.FreqSkipListLevel)
 	for i := 0; i < global.FreqSkipListLevel; i++ {
 		t.skipReader[i] = skipsr[i]
@@ -73,7 +73,7 @@ func (s *TermSnapShot) SetSnapReader(snapReader TermSnapReader) {
 }
 
 type SeriesSnapReader interface {
-	Encode() (SnapBlock, uint64)
+	Encode() SnapBlock
 	Bytes() [][]byte
 }
 
@@ -88,9 +88,9 @@ func NewSeriesSnapShot() *SeriesSnapShot {
 	return seriesSna
 }
 
-func (s *SeriesSnapShot) Iterator(minT, maxT int64) Postings {
+func (s *SeriesSnapShot) Iterator(minT, maxT int64, segmentNum uint64) Postings {
 	l := &labelPosting{}
-	logr, segmentNum := s.snapReader.Encode()
+	logr := s.snapReader.Encode()
 	l.logReader = logr
 	l.minTimeStamp = minT
 	l.maxTimeStamp = maxT

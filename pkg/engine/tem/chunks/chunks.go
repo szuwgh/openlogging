@@ -17,18 +17,19 @@ type Postings interface {
 }
 
 type ChunkReader interface {
-	ReadChunk(bool, ...uint64) ChunkEnc
+	 ReadChunk(bool, ...uint64) ChunkEnc
 }
 
 type Chunk interface {
 	MinTime() int64
 	MaxTime() int64
+	SegmentNum() uint64
 	ChunkEnc(bool, ChunkReader) ChunkEnc
 }
 
 type ChunkEnc interface {
 	Bytes() [][]byte
-	Iterator(mint, maxt int64) Postings
+	Iterator(mint, maxt int64, segmentNum uint64) Postings
 }
 
 // errPostings is an empty iterator that always errors.

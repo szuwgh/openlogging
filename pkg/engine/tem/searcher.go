@@ -327,7 +327,7 @@ func newFlashbackChunkSeriesIterator(chks [][]chunks.Chunk, isTerm bool, logr Lo
 		var p []chunks.Postings
 		for _, c := range cs {
 			chunk := c.ChunkEnc(isTerm, cr)
-			p = append(p, chunk.Iterator(mint, maxt))
+			p = append(p, chunk.Iterator(mint, maxt, c.SegmentNum()))
 		}
 		cur = append(cur, chunks.Merge(p...))
 	}
@@ -383,7 +383,7 @@ func newChunkSeriesIterator(chks [][]chunks.Chunk, isTerm bool, logr LogReader, 
 		var p []chunks.Postings
 		for _, c := range cs {
 			chunk := c.ChunkEnc(isTerm, cr)
-			p = append(p, chunk.Iterator(mint, maxt))
+			p = append(p, chunk.Iterator(mint, maxt, c.SegmentNum()))
 		}
 		cur = append(cur, chunks.Merge(p...))
 	}

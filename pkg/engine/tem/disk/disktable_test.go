@@ -32,7 +32,7 @@ func Test_seriesWriter_addSeries(t *testing.T) {
 			args: args{
 				isSeries: false,
 				lset:     labels.Labels{labels.Label{"zhangshan", "baidu"}, labels.Label{"lisi", "google"}},
-				chunks:   []ChunkMeta{ChunkMeta{1, 1626851373, 1626854373}, ChunkMeta{2, 1626851373, 1626856373}},
+				chunks:   []ChunkMeta{ChunkMeta{1, 1626851373, 1626854373, 156}, ChunkMeta{2, 1626851373, 1626856373, 156}},
 			},
 		},
 		{
@@ -41,7 +41,7 @@ func Test_seriesWriter_addSeries(t *testing.T) {
 			args: args{
 				isSeries: false,
 				lset:     labels.Labels{labels.Label{"wangwu", "ok"}, labels.Label{"wuliu", "yes"}},
-				chunks:   []ChunkMeta{ChunkMeta{1, 1626851373, 1626854373}, ChunkMeta{2, 1626851373, 1626856373}},
+				chunks:   []ChunkMeta{ChunkMeta{1, 1626851373, 1626854373, 157}, ChunkMeta{2, 1626851373, 1626856373, 158}},
 			},
 		},
 	}

@@ -43,6 +43,10 @@ func (t *RawPosting) MaxTime() int64 {
 	return t.maxT
 }
 
+func (t *RawPosting) SegmentNum() uint64 {
+	return 0
+}
+
 func (t *RawPosting) ChunkEnc(isTerm bool, cr chunks.ChunkReader) chunks.ChunkEnc {
 	ref := make([]uint64, 3+global.FreqSkipListLevel*2+2)
 	ref[0] = t.byteStart

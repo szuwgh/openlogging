@@ -259,9 +259,9 @@ type indexBlock interface {
 //按页存储
 type keyWriter struct {
 	baseWrite
-	indexBlock    indexBlock //indexblock
-	tagsBlock     blockWriter
-	nEntries      int //总的记录数
+	indexBlock indexBlock //indexblock
+	tagsBlock  blockWriter
+	//nEntries      int //总的记录数
 	baseTimeStamp int64
 	tagName       []byte //标签名
 	maxBlockSize  int
@@ -541,6 +541,7 @@ func (cw *seriesWriter) writeChunks(b [][]byte) (uint64, error) {
 	pod := cw.n
 	cw.n += uint64(length)
 	return pod, nil
+
 }
 
 type singleWriter struct {
@@ -644,6 +645,7 @@ func (sw *seriesWriter) addSeries(isSeries bool, lset labels.Labels, chunks ...C
 		sw.buf2.PutVarint64(c.MinT)
 		sw.buf2.PutVarint64(c.MaxT - c.MinT)
 		sw.buf2.PutUvarint64(c.Ref)
+		sw.buf2.PutUvarint64(c.LastLogNum)
 
 		t0 := c.MaxT
 		ref0 := c.Ref
@@ -652,6 +654,7 @@ func (sw *seriesWriter) addSeries(isSeries bool, lset labels.Labels, chunks ...C
 			sw.buf2.PutVarint64(c.MaxT - c.MinT)
 			t0 = c.MaxT
 			sw.buf2.PutUvarint64(c.Ref - ref0)
+			sw.buf2.PutUvarint64(c.LastLogNum)
 			ref0 = c.Ref
 		}
 	}
@@ -807,8 +810,6 @@ func (tw *IndexW) AppendKey(key []byte, ref uint64) error {
 	n := binary.PutUvarint(tw.shareBuf[0:], ref)
 	return tw.kw.add(key, tw.shareBuf[:n])
 }
-
-type writeChunkFunc func() (uint64, error)
 
 func (tw *IndexW) WriteChunks(b [][]byte) (uint64, error) {
 	return tw.seriesw.writeChunks(b)

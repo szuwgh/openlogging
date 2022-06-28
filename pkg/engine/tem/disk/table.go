@@ -25,6 +25,7 @@ type TimeChunk struct {
 type ChunkMeta struct {
 	Ref        uint64 //Length
 	MinT, MaxT int64
+	LastLogNum uint64
 }
 
 func isEqualChunk(ch1, ch2 ChunkMeta) bool {
@@ -50,6 +51,10 @@ func (c ChunkMeta) MinTime() int64 {
 
 func (c ChunkMeta) MaxTime() int64 {
 	return c.MaxT
+}
+
+func (c ChunkMeta) SegmentNum() uint64 {
+	return c.LastLogNum
 }
 
 func decodeBlockHandle(src []byte) (blockHandle, int) {

@@ -32,6 +32,10 @@ func (m *MemSeries) MaxTime() int64 {
 	return m.maxT
 }
 
+func (m *MemSeries) SegmentNum() uint64 {
+	return 0
+}
+
 func (m *MemSeries) ChunkEnc(isTerm bool, cr chunks.ChunkReader) chunks.ChunkEnc {
 	ref := make([]uint64, 3)
 	ref[0] = m.byteStart
