@@ -554,7 +554,6 @@ type MergeWriterIterator struct {
 	baseTime    []int64
 	set         compactionSet
 	posting     posting.Postings
-	
 }
 
 func NewMergeWriterIterator(segmentNum []uint64, baseTime []int64, iters ...WriterIterator) *MergeWriterIterator {

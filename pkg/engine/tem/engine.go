@@ -34,10 +34,6 @@ type Options struct {
 
 	BlockRanges []int64
 
-	IndexBufferNum int
-
-	IndexBufferLength int
-
 	DataDir string
 
 	MaxBlockDuration int64
@@ -47,6 +43,8 @@ type Options struct {
 	DefaultCacheSnapshotMemorySize int
 
 	SkipInterval int
+
+	SkipListLevel int
 }
 
 type Engine struct {
