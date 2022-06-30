@@ -945,25 +945,14 @@ func (w *LogW) Close() (uint64, error) {
 	return w.logId, w.close()
 }
 
-type skiplistWriter struct {
-	skipBuf []byteutil.EncBuf
-}
-
-func newSkiplistWriter(level int) *skiplistWriter {
-	return &skiplistWriter{skipBuf: make([]byteutil.EncBuf, level)}
-}
-
-func (s *skiplistWriter) addLogID(logID uint64) error {
-	return nil
-}
-
 type logFreqWriter struct {
 	freqBuf       byteutil.EncBuf
 	posBuf        byteutil.EncBuf
+	skipBuf       []byteutil.EncBuf
 	lastLogID     uint64
 	logNum        int
 	skipListLevel int
-	SkipInterval  int
+	skipInterval  int
 }
 
 func newLogFreqWriter() *logFreqWriter {
@@ -985,5 +974,13 @@ func (f *logFreqWriter) addLogID(logID uint64, pos []int) error {
 		lastp = p
 	}
 	f.logNum++
+	return nil
+}
+
+func (f *logFreqWriter) addskip(logID uint64) error {
+	var numLevels int
+	for numLevels = 0; (f.logNum%f.skipInterval == 0) && numLevels < f.skipListLevel; f.logNum /= f.skipInterval {
+		numLevels++
+	}
 	return nil
 }
