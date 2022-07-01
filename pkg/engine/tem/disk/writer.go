@@ -982,5 +982,6 @@ func (f *logFreqWriter) addskip(logID uint64) error {
 	for numLevels = 0; (f.logNum%f.skipInterval == 0) && numLevels < f.skipListLevel; f.logNum /= f.skipInterval {
 		numLevels++
 	}
+
 	return nil
 }
