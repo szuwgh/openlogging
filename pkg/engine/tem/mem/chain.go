@@ -154,24 +154,14 @@ func writeSkip(context *Context, memTable *MemTable) {
 		numLevels++
 	}
 	for level := 0; level < numLevels; level++ {
+		offset, len0 = memTable.WriteVUint64(p.skipStartIndex[level], p.lastLogID)
+		offset, len1 = memTable.WriteVInt(offset, int(p.lastTimeStamp-memTable.baseTimeStamp)) //memTable.BaseTimeStamp
+		offset, len2 = memTable.WriteVUint64(offset, logFreqLen)
+		offset, len3 = memTable.WriteVUint64(offset, posLen)
 		//写入跳表数据 最后一层
-		if level == 0 {
-			//写入文档号 重启点
-			offset, len0 = memTable.WriteVUint64(p.skipStartIndex[level], p.lastLogID)
-			offset, len1 = memTable.WriteVInt(offset, int(p.lastTimeStamp-memTable.baseTimeStamp)) //memTable.BaseTimeStamp
-			offset, len2 = memTable.WriteVUint64(offset, logFreqLen)
-			offset, len3 = memTable.WriteVUint64(offset, posLen)
-
-			//保存相对位移
-		} else {
-			//写入时间 重启点
-			offset, len0 = memTable.WriteVUint64(p.skipStartIndex[level], p.lastLogID)
-			offset, len1 = memTable.WriteVInt(offset, int(p.lastTimeStamp-memTable.baseTimeStamp)) //memTable.BaseTimeStamp)
-			offset, len2 = memTable.WriteVUint64(offset, logFreqLen)
-			offset, len3 = memTable.WriteVUint64(offset, posLen)
+		if level > 0 {
 			offset, len4 = memTable.WriteVUint64(offset, childPointer)
 		}
-
 		atomic.StoreUint64(&p.skipStartIndex[level], offset)
 		atomic.AddUint64(&p.skipLen[level], uint64(len0+len1+len2+len3+len4))
 		childPointer = p.skipLen[level]

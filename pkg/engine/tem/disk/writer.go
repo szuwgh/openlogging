@@ -950,6 +950,8 @@ type logFreqWriter struct {
 	posBuf        byteutil.EncBuf
 	skipBuf       []byteutil.EncBuf
 	lastLogID     uint64
+	lastTimeStamp int64
+	baseTimeStamp int64
 	logNum        int
 	skipListLevel int
 	skipInterval  int
@@ -959,7 +961,7 @@ func newLogFreqWriter() *logFreqWriter {
 	return &logFreqWriter{}
 }
 
-func (f *logFreqWriter) addLogID(logID uint64, pos []int) error {
+func (f *logFreqWriter) addLogID(timestamp int64, logID uint64, pos []int) error {
 	util.Assert(logID > f.lastLogID, "current logid small than last logid")
 	if len(pos) == 1 {
 		f.freqBuf.PutUvarint64((logID-f.lastLogID)<<1 | 1)
@@ -967,13 +969,17 @@ func (f *logFreqWriter) addLogID(logID uint64, pos []int) error {
 		f.freqBuf.PutUvarint64((logID - f.lastLogID) << 1)
 		f.freqBuf.PutUvarint(len(pos))
 	}
-	//if f.logNum
+	f.logNum++
+	if f.logNum%f.skipInterval == 0 {
+		f.addskip(logID)
+	}
 	lastp := 0
 	for _, p := range pos {
 		f.posBuf.PutUvarint(p - lastp)
 		lastp = p
 	}
-	f.logNum++
+	f.lastLogID = logID
+	f.lastTimeStamp = timestamp
 	return nil
 }
 
@@ -982,6 +988,17 @@ func (f *logFreqWriter) addskip(logID uint64) error {
 	for numLevels = 0; (f.logNum%f.skipInterval == 0) && numLevels < f.skipListLevel; f.logNum /= f.skipInterval {
 		numLevels++
 	}
-
+	var childPointer int
+	for level := 0; level < numLevels; level++ {
+		//写入跳表数据 最后一层
+		f.skipBuf[level].PutUvarint64(f.lastLogID)
+		f.skipBuf[level].PutUvarint(int(f.lastTimeStamp - f.baseTimeStamp))
+		f.skipBuf[level].PutUvarint(f.freqBuf.Len())
+		f.skipBuf[level].PutUvarint(f.posBuf.Len())
+		if level > 0 {
+			f.skipBuf[level].PutUvarint(childPointer)
+		}
+		childPointer = f.skipBuf[level].Len() //p.skipLen[level]
+	}
 	return nil
 }

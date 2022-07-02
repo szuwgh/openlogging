@@ -226,3 +226,7 @@ func Test_Pos(t *testing.T) {
 	length = uint64((n << 48) >> 48)
 	fmt.Println("offset:", offset, "length:", length)
 }
+
+func Test_SkipWriter() {
+
+}
