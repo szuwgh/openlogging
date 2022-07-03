@@ -1007,5 +1007,15 @@ func (f *logFreqWriter) addskip(logID uint64) error {
 }
 
 func (f *logFreqWriter) Encode() (chunks.SnapBlock, chunks.SnapBlock, []chunks.SnapBlock) {
+	logFreqr := &snapByte{data: f.freqBuf.Get(), limit: uint64(f.freqBuf.Len())}
+	skipr := make([]chunks.SnapBlock, f.skipListLevel)
+	for i := 0; i < f.skipListLevel; i++ {
+		skipr[i] = &snapByte{data: f.skipBuf[i].Get(), limit: uint64(f.skipBuf[i].Len())}
+	}
+	posr := &snapByte{data: f.posBuf.Get(), limit: uint64(f.posBuf.Len())}
+	return logFreqr, posr, skipr
+}
 
+func (f *logFreqWriter) Bytes() [][]byte {
+	return nil
 }

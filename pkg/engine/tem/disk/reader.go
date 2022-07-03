@@ -318,7 +318,7 @@ type memTermSnapReader struct {
 	r decbuf
 }
 
-func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, [global.FreqSkipListLevel]chunks.SnapBlock) {
+func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, []chunks.SnapBlock) {
 	m.r.uvarint()
 	//	segmentNum := m.r.uvarint64()
 	logFreqLen := m.r.uvarint64()
@@ -677,6 +677,10 @@ func (r *IndexReader) print() error {
 	return nil
 }
 
+func (r *IndexReader) ChunkReader() chunks.ChunkReader {
+	return r.seriesr
+}
+
 type snapByte struct {
 	data   []byte
 	offset uint64
@@ -711,10 +715,6 @@ func (s *snapByte) ReadVUInt64() uint64 {
 
 func (s *snapByte) ReadVInt64() int64 {
 	return mybin.Varint64(s)
-}
-
-func (r *IndexReader) ChunkReader() chunks.ChunkReader {
-	return r.seriesr
 }
 
 type termSeriesReader struct {

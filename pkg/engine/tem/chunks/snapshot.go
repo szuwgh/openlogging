@@ -24,7 +24,7 @@ type LogID struct {
 }
 
 type TermSnapReader interface {
-	Encode() (SnapBlock, SnapBlock, [global.FreqSkipListLevel]SnapBlock)
+	Encode() (SnapBlock, SnapBlock, []SnapBlock)
 	Bytes() [][]byte
 }
 

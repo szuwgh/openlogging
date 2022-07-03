@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
 )
 
@@ -227,6 +228,12 @@ func Test_Pos(t *testing.T) {
 	fmt.Println("offset:", offset, "length:", length)
 }
 
-func Test_SkipWriter() {
+func Test_SkipWriter(t *testing.T) {
 	w := newLogFreqWriter(6)
+
+	snap := chunks.NewTermSnapShot() //&chunks.SnapShot{}
+	//snap.SetTimeStamp(cr.baseTime)
+
+	snap.SetSnapReader(w)
+
 }
