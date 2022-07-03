@@ -244,9 +244,6 @@ func (f *labelIterator) Write(w IndexWriter, segmentNum uint64, baseTime int64) 
 			chk := TimeChunk{Lset: lset}
 			for i, c := range chunkMeta {
 				chunkEnc := c.ChunkEnc(true, f.seriesr)
-				//bytes := chunkEnc.Bytes()[0]
-				//num, m := binary.Uvarint(bytes)
-				//n := binary.PutUvarint(f.buf[0:], num+segmentNum)
 				chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
 				if err != nil {
 					return nil, nil, err
@@ -272,9 +269,6 @@ func (f *labelIterator) Write(w IndexWriter, segmentNum uint64, baseTime int64) 
 			chk := TimeChunk{Lset: lset}
 			for i, c := range chunkMeta {
 				chunkEnc := c.ChunkEnc(false, f.seriesr)
-				//bytes := chunkEnc.Bytes()[0]
-				//	num, m := binary.Uvarint(bytes)
-				//n := binary.PutUvarint(f.buf[0:], num+segmentNum)
 				chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
 				if err != nil {
 					return nil, nil, err

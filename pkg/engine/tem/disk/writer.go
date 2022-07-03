@@ -18,6 +18,7 @@ import (
 	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/fileutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/util"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
@@ -957,8 +958,10 @@ type logFreqWriter struct {
 	skipInterval  int
 }
 
-func newLogFreqWriter() *logFreqWriter {
-	return &logFreqWriter{}
+func newLogFreqWriter(level int) *logFreqWriter {
+	return &logFreqWriter{
+		skipBuf: make([]byteutil.EncBuf, level),
+	}
 }
 
 func (f *logFreqWriter) addLogID(timestamp int64, logID uint64, pos []int) error {
@@ -1001,4 +1004,8 @@ func (f *logFreqWriter) addskip(logID uint64) error {
 		childPointer = f.skipBuf[level].Len() //p.skipLen[level]
 	}
 	return nil
+}
+
+func (f *logFreqWriter) Encode() (chunks.SnapBlock, chunks.SnapBlock, []chunks.SnapBlock) {
+
 }

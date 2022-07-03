@@ -83,6 +83,7 @@ func LogFreqMiddleware() middleware {
 	return func(f engineFunc) engineFunc {
 		return func(context *Context, memTable *MemTable) {
 			p := context.P
+			//
 			if !p.IsCommit {
 				p.logNum++
 				p.maxT = context.TimeStamp //- memTable.BaseTimeStamp

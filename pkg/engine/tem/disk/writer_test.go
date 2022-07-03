@@ -228,5 +228,5 @@ func Test_Pos(t *testing.T) {
 }
 
 func Test_SkipWriter() {
-
+	w := newLogFreqWriter(6)
 }
