@@ -42,9 +42,13 @@ type Options struct {
 
 	DefaultCacheSnapshotMemorySize int
 
-	SkipInterval int
+	SkipListInterval int
 
 	SkipListLevel int
+
+	UseSkipList bool
+
+	MsgTagName string
 }
 
 type Engine struct {

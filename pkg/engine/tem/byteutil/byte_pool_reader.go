@@ -6,6 +6,7 @@ import (
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
+
 	bin "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
 )
 
@@ -87,7 +88,7 @@ type memTermSnapReader struct {
 	ref []uint64
 }
 
-func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, [global.FreqSkipListLevel]chunks.SnapBlock) {
+func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, []chunks.SnapBlock) {
 	byteStart := m.ref[0]
 	logFreqIndex := m.ref[1]
 	logFreqLen := m.ref[2]

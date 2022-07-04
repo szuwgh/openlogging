@@ -5,6 +5,7 @@ import (
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
+
 	"github.com/szuwgh/temsearch/pkg/engine/tem/util"
 )
 
@@ -151,7 +152,7 @@ func writeSkip(context *Context, memTable *MemTable) {
 	posLen := p.posLen
 	//写入跳表
 	var numLevels int
-	for numLevels = 0; (logNum%skipInterval == 0) && numLevels < global.FreqSkipListLevel; logNum /= skipInterval {
+	for numLevels = 0; (logNum%skipInterval == 0) && numLevels < memTable.skiplistLevel; logNum /= skipInterval {
 		numLevels++
 	}
 	for level := 0; level < numLevels; level++ {

@@ -1,9 +1,5 @@
 package chunks
 
-import (
-	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
-)
-
 //快照块
 type SnapBlock interface {
 	ReadByte() (byte, error)
@@ -42,8 +38,8 @@ func NewTermSnapShot() *TermSnapShot {
 func (s *TermSnapShot) Iterator(minT, maxT int64, segmentNum uint64) Postings {
 	t := &TermPosting{}
 	logFreqr, posr, skipsr := s.snapReader.Encode()
-	t.skipReader = make([]SnapBlock, global.FreqSkipListLevel)
-	for i := 0; i < global.FreqSkipListLevel; i++ {
+	t.skipReader = make([]SnapBlock, len(skipsr))
+	for i := 0; i < len(skipsr); i++ {
 		t.skipReader[i] = skipsr[i]
 	}
 	t.logFreqReader = logFreqr

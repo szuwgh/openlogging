@@ -1,9 +1,5 @@
 package chunks
 
-import (
-	glo "github.com/szuwgh/temsearch/pkg/engine/tem/global"
-)
-
 const (
 	NOMOREDOCS = 0x7fffffff
 
@@ -83,10 +79,10 @@ type TermPosting struct {
 	lastLogID     uint64
 	lastFreq      int
 	lastPos       []int
-	skipLastID    [glo.FreqSkipListLevel]uint64
+	skipLastID    []uint64
 	lastTimeStamp int64
 	timeStamp     int64
-	notfirst      [glo.FreqSkipListLevel]bool
+	notfirst      []bool
 
 	baseTimeStamp int64
 	maxTimeStamp  int64

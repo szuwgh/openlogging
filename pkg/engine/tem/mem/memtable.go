@@ -50,9 +50,11 @@ type MemTable struct {
 	baseTimeStamp int64
 	msgIndex      engineFunc
 	//	nextWriteLogID int
-	flushPosting []*RawPosting
-	series       *stripeSeries
-	lastSeriesID uint64
+	flushPosting     []*RawPosting
+	series           *stripeSeries
+	lastSeriesID     uint64
+	skiplistLevel    int
+	skipListInterval int
 
 	logID uint64
 }
