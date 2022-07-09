@@ -15,7 +15,7 @@ func (t *testBuf) ReadByte() (byte, error) {
 	return b, nil
 }
 
-func (t *testBuf) WriteByte(i uint64, b byte) uint64 {
+func (t *testBuf) PutByte(i uint64, b byte) uint64 {
 	t.data[i] = b
 	i++
 	return i
@@ -30,9 +30,9 @@ func Test_PutUvarint(t *testing.T) {
 	i, _ = PutUvarint64(tBuf, i, 11)
 	i, _ = PutUvarint64(tBuf, i, 3780)
 	t.Log(tBuf.data)
-	t.Log(Uvarint(tBuf))
-	t.Log(Uvarint(tBuf))
-	t.Log(Uvarint(tBuf))
+	t.Log(Uvarint64(tBuf))
+	t.Log(Uvarint64(tBuf))
+	t.Log(Uvarint64(tBuf))
 }
 
 func Test_Putvarint(t *testing.T) {
@@ -43,9 +43,9 @@ func Test_Putvarint(t *testing.T) {
 	i, _ = Putvarint64(tBuf, i, 11)
 	i, _ = Putvarint64(tBuf, i, 3780)
 	t.Log(tBuf.data)
-	t.Log(Varint(tBuf))
-	t.Log(Varint(tBuf))
-	t.Log(Varint(tBuf))
+	t.Log(Varint64(tBuf))
+	t.Log(Varint64(tBuf))
+	t.Log(Varint64(tBuf))
 
 	// x, n := binary.Varint(tBuf.data)
 	// x1, m := binary.Varint(tBuf.data[n:])

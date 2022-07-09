@@ -4,13 +4,8 @@ import (
 	"sync/atomic"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/util"
-)
-
-const (
-	skipInterval = 3
 )
 
 type Context struct {
@@ -66,7 +61,7 @@ func TermMiddleware() middleware {
 				offset := p.byteStart
 				//申请minTimeStamp跳表内存块
 				var skipBlockSize uint64
-				for i := 0; i < global.FreqSkipListLevel; i++ {
+				for i := 0; i < memTable.skiplistLevel; i++ {
 					skipBlockSize = byteutil.SizeClass[0] * uint64(i+1)
 					p.skipStartIndex[i] = offset + skipBlockSize //memTable.NewBlock() //跳表内存块
 				}
@@ -98,7 +93,7 @@ func LogFreqMiddleware() middleware {
 			} else { //非当前文档 写入文档数
 				p.logNum++
 				WriteLogFreq(p, memTable)
-				if p.logNum%skipInterval == 0 {
+				if p.logNum%memTable.skipListInterval == 0 {
 					writeSkip(context, memTable)
 				}
 				p.maxT = context.TimeStamp //- memTable.BaseTimeStamp
@@ -152,7 +147,7 @@ func writeSkip(context *Context, memTable *MemTable) {
 	posLen := p.posLen
 	//写入跳表
 	var numLevels int
-	for numLevels = 0; (logNum%skipInterval == 0) && numLevels < memTable.skiplistLevel; logNum /= skipInterval {
+	for numLevels = 0; (logNum%memTable.skipListInterval == 0) && numLevels < memTable.skiplistLevel; logNum /= memTable.skipListInterval {
 		numLevels++
 	}
 	for level := 0; level < numLevels; level++ {

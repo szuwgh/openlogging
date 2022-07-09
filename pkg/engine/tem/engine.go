@@ -86,7 +86,7 @@ func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
 	e.walDir = filepath.Join(e.dataDir, "wal")
 	e.headPool = make(chan *Head, 1)
 	e.compactChan = make(chan struct{}, 1)
-	e.compactor = newLeveledCompactor(e.opts.BlockRanges)
+	e.compactor = newLeveledCompactor(e.opts.BlockRanges, opt.MsgTagName)
 	e.head = e.newHead()
 	e.head.open()
 	err := e.recoverWal()
@@ -115,7 +115,7 @@ func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
 }
 
 func (e *Engine) newHead() *Head {
-	return NewHead(e.alloc, e.opts.BlockRanges[0], e.a)
+	return NewHead(e.alloc, e.opts.BlockRanges[0], e.a, e.opts.SkipListLevel, e.opts.SkipListInterval)
 }
 
 func (e *Engine) recoverWal() error {
@@ -158,7 +158,7 @@ func (e *Engine) openBlock(dir string) (*Block, error) {
 		return nil, err
 	}
 
-	ir := e.tOps.CreateIndexReader(indexDir(dir), meta.ULID, meta.MinTime)
+	ir := e.tOps.CreateIndexReader(indexDir(dir), meta.ULID, meta.SkipListLevel)
 	wr := e.tOps.CreateLogReader(chunkDir(dir), meta.ULID, meta.LogID)
 	b := &Block{
 		meta:   *meta,
@@ -566,7 +566,7 @@ func (e *Engine) mcompact() error {
 	if e.frozeHead == nil {
 		return nil
 	}
-	return e.compactor.Write(e.dataDir, e.frozeHead, e.frozeHead.mint, e.frozeHead.MaxT)
+	return e.compactor.Write(e.dataDir, e.frozeHead, e.frozeHead.mint, e.frozeHead.MaxT, e.opts.SkipListLevel, e.opts.SkipListInterval)
 }
 
 func chunkDir(dir string) string {

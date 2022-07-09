@@ -62,7 +62,7 @@ func Test_seriesWriter_addSeries(t *testing.T) {
 		})
 	}
 	sw.close()
-	sr, err := newSeriesReader(dir)
+	sr, err := newSeriesReader(dir, 6)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +125,7 @@ func Test_postingWriter_writePosting(t *testing.T) {
 		})
 	}
 	pw.close()
-	pr, _ := newSeriesReader(dir)
+	pr, _ := newSeriesReader(dir, 6)
 	for _, got := range gots {
 		ref, refmap := pr.readPosting(got)
 		if err != nil {
@@ -175,7 +175,7 @@ func Test_chunkWriter_writeChunks(t *testing.T) {
 		})
 	}
 	cw.close()
-	cr, _ := newSeriesReader(dir)
+	cr, _ := newSeriesReader(dir, 6)
 	for _, got := range gots {
 		chunks := cr.ReadChunk(false, got)
 		if err != nil {
@@ -229,11 +229,22 @@ func Test_Pos(t *testing.T) {
 }
 
 func Test_SkipWriter(t *testing.T) {
-	w := newLogFreqWriter(6)
-
-	snap := chunks.NewTermSnapShot() //&chunks.SnapShot{}
-	//snap.SetTimeStamp(cr.baseTime)
-
+	w := newLogFreqWriter(6, 3)
+	w.addLogID(1, 1, []int{1, 2, 3})
+	w.addLogID(2, 4, []int{1, 2, 3})
+	w.addLogID(4, 6, []int{1, 2, 3})
+	w.addLogID(9, 10, []int{1, 2, 3})
+	w.addLogID(10, 15, []int{1, 2, 3})
+	w.addLogID(13, 16, []int{1, 2, 3})
+	w.addLogID(15, 78, []int{1, 2, 3})
+	w.addLogID(17, 96, []int{1, 2, 3})
+	w.addLogID(19, 100, []int{1, 2, 3})
+	snap := chunks.NewTermSnapShot()
 	snap.SetSnapReader(w)
+
+	p := snap.Iterator(0, 99, 0)
+	for p.Next() {
+		fmt.Println(p.At())
+	}
 
 }

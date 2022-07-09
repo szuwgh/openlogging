@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"hash/crc32"
 	"sort"
 
@@ -59,9 +58,9 @@ func (bw *blockWriter) append(key, value []byte) error {
 		shareLen = sharedPrefixLen(bw.prevKey, key)
 	}
 
-	bw.PutUvarint(shareLen)
-	bw.PutUvarint(len(key) - shareLen)
-	bw.PutUvarint(len(value))
+	bw.PutUvarint64(uint64(shareLen))
+	bw.PutUvarint64(uint64(len(key) - shareLen))
+	bw.PutUvarint64(uint64(len(value)))
 	//与前一条记录key非共享的内容
 	if _, err := bw.Write(key[shareLen:], value); err != nil {
 		return err
@@ -161,79 +160,4 @@ func (br *blockReader) ReadByte() (byte, error) {
 
 func (br *blockReader) Release() {
 	br.data = nil
-}
-
-var errInvalidSize = fmt.Errorf("invalid size")
-
-type decbuf struct {
-	b []byte
-	e error
-}
-
-func (d *decbuf) reset(b []byte) { d.b = b }
-func (d *decbuf) err() error     { return d.e }
-func (d *decbuf) len() int       { return len(d.b) }
-func (d *decbuf) get() []byte    { return d.b }
-
-func (d *decbuf) uvarint() int      { return int(d.uvarint64()) }
-func (d *decbuf) uvarint32() uint32 { return uint32(d.uvarint64()) }
-
-func (d *decbuf) uint32() uint32 {
-	b4 := d.bytes(4)
-	return binary.LittleEndian.Uint32(b4)
-}
-
-// func (d *decbuf) be32int() int      { return int(d.be32()) }
-// func (d *decbuf) be64int64() int64  { return int64(d.be64()) }
-
-func (d *decbuf) uvarintStr() string {
-	l := d.uvarint64()
-	if d.e != nil {
-		return ""
-	}
-	if len(d.b) < int(l) {
-		d.e = errInvalidSize
-		return ""
-	}
-	s := string(d.b[:l])
-	d.b = d.b[l:]
-	return s
-}
-
-func (d *decbuf) varint64() int64 {
-	if d.e != nil {
-		return 0
-	}
-	x, n := binary.Varint(d.b)
-	if n < 1 {
-		d.e = errInvalidSize
-		return 0
-	}
-	d.b = d.b[n:]
-	return x
-}
-
-func (d *decbuf) uvarint64() uint64 {
-	if d.e != nil {
-		return 0
-	}
-	x, n := binary.Uvarint(d.b)
-	if n < 1 {
-		d.e = errInvalidSize
-		return 0
-	}
-	d.b = d.b[n:]
-	return x
-}
-
-func (d *decbuf) bytes(l int) []byte {
-	if l == 0 {
-		return nil
-	}
-	if l > d.len() {
-		return nil
-	}
-	b := d.b[:l]
-	d.b = d.b[l:]
-	return b
 }

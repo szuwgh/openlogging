@@ -94,10 +94,10 @@ func CreateLogFrom(dir string) *LogW {
 	return newLogWriter(dir)
 }
 
-func (t *TableOps) CreateIndexReader(dir string, ulid ulid.ULID, baseTime int64) *IndexReader {
+func (t *TableOps) CreateIndexReader(dir string, ulid ulid.ULID, skiplistLevel int) *IndexReader {
 	bcache := &cache.NamespaceGetter{Cache: t.bcache, NS: ulid.Time()}
 	mcache := &cache.NamespaceGetter{Cache: t.mcache, NS: ulid.Time()}
-	return NewIndexReader(dir, baseTime, bcache, mcache)
+	return NewIndexReader(dir, skiplistLevel, bcache, mcache)
 }
 
 func (t *TableOps) CreateLogReader(dir string, uid ulid.ULID, offset []uint64) *LogReader {
@@ -522,13 +522,13 @@ func (cw *seriesWriter) writeChunks(b [][]byte) (uint64, error) {
 	for _, v := range b {
 		i += len(v)
 	}
-	cw.buf2.PutUvarint(i)
+	cw.buf2.PutVarint(i)
 	if _, err = cw.buf2.Write(b...); err != nil {
 		return 0, err
 	}
 
 	crc := crc32.ChecksumIEEE(cw.buf2.Get())
-	cw.buf1.PutUvarint(cw.buf2.Len())
+	cw.buf1.PutVarint(cw.buf2.Len())
 	cw.buf2.PutUint32(crc)
 	length := cw.buf1.Len() + cw.buf2.Len()
 
@@ -636,12 +636,12 @@ func newSeriesWriter(dir string) (*seriesWriter, error) {
 func (sw *seriesWriter) addSeries(isSeries bool, lset labels.Labels, chunks ...ChunkMeta) (uint64, error) {
 	sw.buf1.Reset()
 	sw.buf2.Reset()
-	sw.buf2.PutUvarint(len(lset))
+	sw.buf2.PutVarint(len(lset))
 	for _, l := range lset {
 		sw.buf2.PutUvarintStr(l.Name)
 		sw.buf2.PutUvarintStr(l.Value)
 	}
-	sw.buf2.PutUvarint(len(chunks))
+	sw.buf2.PutVarint(len(chunks))
 	if len(chunks) > 0 {
 		c := chunks[0]
 		sw.buf2.PutVarint64(c.MinT)
@@ -662,7 +662,7 @@ func (sw *seriesWriter) addSeries(isSeries bool, lset labels.Labels, chunks ...C
 	}
 	//写入crc32校验码
 	crc := crc32.ChecksumIEEE(sw.buf2.Get())
-	sw.buf1.PutUvarint(sw.buf2.Len())
+	sw.buf1.PutVarint(sw.buf2.Len())
 	sw.buf2.PutUint32(crc)
 	length := sw.buf1.Len() + sw.buf2.Len()
 	// if err := sw.isCut(length); err != nil {
@@ -712,8 +712,8 @@ func (pw *seriesWriter) writePosting(refs ...[]uint64) (uint64, error) {
 	pw.buf1.Reset()
 	pw.buf2.Reset()
 	refCount := len(refs)
-	pw.buf2.PutUvarint(refCount)
-	pw.buf2.PutUvarint(len(refs[0]))
+	pw.buf2.PutVarint(refCount)
+	pw.buf2.PutVarint(len(refs[0]))
 	var ref0 uint64
 	var ref1 uint64
 	for i, r := range refs[0] {
@@ -727,7 +727,7 @@ func (pw *seriesWriter) writePosting(refs ...[]uint64) (uint64, error) {
 
 	//写入crc32校验码
 	crc := crc32.ChecksumIEEE(pw.buf2.Get())
-	pw.buf1.PutUvarint(pw.buf2.Len())
+	pw.buf1.PutVarint(pw.buf2.Len())
 	pw.buf2.PutUint32(crc)
 
 	length := pw.buf1.Len() + pw.buf2.Len()
@@ -958,19 +958,22 @@ type logFreqWriter struct {
 	skipInterval  int
 }
 
-func newLogFreqWriter(level int) *logFreqWriter {
+func newLogFreqWriter(level, interval int) *logFreqWriter {
 	return &logFreqWriter{
-		skipBuf: make([]byteutil.EncBuf, level),
+		skipBuf:       make([]byteutil.EncBuf, level),
+		skipListLevel: level,
+		skipInterval:  interval,
 	}
 }
 
 func (f *logFreqWriter) addLogID(timestamp int64, logID uint64, pos []int) error {
 	util.Assert(logID > f.lastLogID, "current logid small than last logid")
+	f.freqBuf.PutVarint64(timestamp - f.lastTimeStamp)
 	if len(pos) == 1 {
 		f.freqBuf.PutUvarint64((logID-f.lastLogID)<<1 | 1)
 	} else {
 		f.freqBuf.PutUvarint64((logID - f.lastLogID) << 1)
-		f.freqBuf.PutUvarint(len(pos))
+		f.freqBuf.PutVarint(len(pos))
 	}
 	f.logNum++
 	if f.logNum%f.skipInterval == 0 {
@@ -978,7 +981,7 @@ func (f *logFreqWriter) addLogID(timestamp int64, logID uint64, pos []int) error
 	}
 	lastp := 0
 	for _, p := range pos {
-		f.posBuf.PutUvarint(p - lastp)
+		f.posBuf.PutVarint(p - lastp)
 		lastp = p
 	}
 	f.lastLogID = logID
@@ -995,11 +998,11 @@ func (f *logFreqWriter) addskip(logID uint64) error {
 	for level := 0; level < numLevels; level++ {
 		//写入跳表数据 最后一层
 		f.skipBuf[level].PutUvarint64(f.lastLogID)
-		f.skipBuf[level].PutUvarint(int(f.lastTimeStamp - f.baseTimeStamp))
-		f.skipBuf[level].PutUvarint(f.freqBuf.Len())
-		f.skipBuf[level].PutUvarint(f.posBuf.Len())
+		f.skipBuf[level].PutVarint(int(f.lastTimeStamp - f.baseTimeStamp))
+		f.skipBuf[level].PutVarint(f.freqBuf.Len())
+		f.skipBuf[level].PutVarint(f.posBuf.Len())
 		if level > 0 {
-			f.skipBuf[level].PutUvarint(childPointer)
+			f.skipBuf[level].PutVarint(childPointer)
 		}
 		childPointer = f.skipBuf[level].Len() //p.skipLen[level]
 	}

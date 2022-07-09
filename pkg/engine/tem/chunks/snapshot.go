@@ -42,6 +42,8 @@ func (s *TermSnapShot) Iterator(minT, maxT int64, segmentNum uint64) Postings {
 	for i := 0; i < len(skipsr); i++ {
 		t.skipReader[i] = skipsr[i]
 	}
+	t.skipLastID = make([]uint64, len(skipsr))
+	t.notfirst = make([]bool, len(skipsr))
 	t.logFreqReader = logFreqr
 	t.posReader = posr
 	t.minTimeStamp = minT

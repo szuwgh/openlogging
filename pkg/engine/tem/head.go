@@ -29,12 +29,12 @@ type Head struct {
 	logSize      uint64
 }
 
-func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer) *Head {
+func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer, skiplistLevel, skipListInterval int) *Head {
 	h := &Head{
 		mint: math.MinInt64,
 		MaxT: math.MinInt64,
 	}
-	h.indexMem = mem.NewMemTable(byteutil.NewInvertedBytePool(alloc))
+	h.indexMem = mem.NewMemTable(byteutil.NewInvertedBytePool(alloc), skiplistLevel, skipListInterval)
 	h.logsMem = mem.NewLogsTable(byteutil.NewForwardBytePool(alloc))
 	h.chunkRange = chunkRange
 	h.a = a

@@ -14,7 +14,7 @@ var (
 )
 
 type Inverted interface {
-	InitBytes() uint64
+	InitBytes(skiplistLevel int) uint64
 	Byte(uint64, uint64) byte
 	Bytes(uint64, uint64, uint64) []byte
 	WriteString(uint64, string) (uint64, int)

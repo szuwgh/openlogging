@@ -9,7 +9,7 @@ func Test_bytePoolWrite(t *testing.T) {
 	//BYTE_BLOCK_SIZE = 10
 	alloc := NewByteBlockAllocator()
 	bytePool := NewInvertedBytePool(alloc)
-	offset := bytePool.InitBytes()
+	offset := bytePool.InitBytes(3)
 
 	b := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA, 0x01} //,
 	offset, _ = bytePool.writeBytes(offset, b)
@@ -20,9 +20,9 @@ func Test_bytePoolWrite(t *testing.T) {
 
 func Test_bytePooWriteString(t *testing.T) {
 	bytePool := NewInvertedBytePool(nil)
-	offset := bytePool.InitBytes()
-	bytePool.InitBytes()
-	bytePool.InitBytes()
+	offset := bytePool.InitBytes(3)
+	bytePool.InitBytes(3)
+	bytePool.InitBytes(3)
 	b := "aa"
 	offset, _ = bytePool.WriteString(offset, b)
 	fmt.Println(offset)
@@ -32,7 +32,7 @@ func Test_bytePooWriteString(t *testing.T) {
 
 func Test_bytePooWriteVInt(t *testing.T) {
 	bytePool := NewInvertedBytePool(nil)
-	offset := bytePool.InitBytes()
+	offset := bytePool.InitBytes(3)
 	offset, _ = bytePool.writeVInt(offset, 123)
 	fmt.Println(offset, bytePool.buffers)
 	offset, _ = bytePool.writeVInt(offset, 123)
@@ -63,7 +63,7 @@ func Test_Mod(t *testing.T) {
 
 func Test_initBytes(t *testing.T) {
 	bytePool := NewInvertedBytePool(nil)
-	bytePool.InitBytes()
+	bytePool.InitBytes(3)
 	fmt.Println(bytePool.buffer)
 }
 

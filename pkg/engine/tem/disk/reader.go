@@ -21,7 +21,6 @@ import (
 	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
 	mybin "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
 	"github.com/szuwgh/temsearch/pkg/lib/prompb"
@@ -69,6 +68,7 @@ func newKeyReader(dir string) (*keyReader, error) {
 		if err != nil {
 			continue
 		}
+		fmt.Println("tag", string(tagsIterator.Key()))
 		r.indexBlocks[string(tagsIterator.Key())] = indexBlock
 	}
 
@@ -258,12 +258,12 @@ func (cr *seriesReader) readLabelChunk(ref uint64) *chunks.SeriesSnapShot {
 	}
 	debuf := mmap.decbufAt(off)
 
-	length := debuf.uvarint()
-	b := debuf.bytes(length)
-	if crc32.ChecksumIEEE(b) != debuf.uint32() {
+	length := debuf.Uvarint()
+	b := debuf.Bytes(length)
+	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
 		return nil
 	}
-	debuf.reset(b)
+	debuf.Reset(b)
 
 	snap := chunks.NewSeriesSnapShot()
 	seriesSnap := &memSeriesSnapReader{}
@@ -281,64 +281,66 @@ func (cr *seriesReader) readTermChunk(ref uint64) *chunks.TermSnapShot {
 	}
 	debuf := mmap.decbufAt(off)
 
-	length := debuf.uvarint()
-	b := debuf.bytes(length)
-	if crc32.ChecksumIEEE(b) != debuf.uint32() {
+	length := debuf.Uvarint()
+	b := debuf.Bytes(length)
+	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
 		return nil
 	}
-	debuf.reset(b)
+	debuf.Reset(b)
 
 	//segmentNum := debuf.uvarint64()
 	snap := chunks.NewTermSnapShot() //&chunks.SnapShot{}
 	snap.SetTimeStamp(cr.baseTime)
 	termSnap := &memTermSnapReader{}
 	termSnap.r = debuf
+	termSnap.skiplistLevel = cr.skipListLevel
 	snap.SetSnapReader(termSnap)
 	return snap
 }
 
 type memSeriesSnapReader struct {
-	r decbuf
+	r byteutil.Decbuf
 }
 
 func (m *memSeriesSnapReader) Encode() chunks.SnapBlock {
-	m.r.uvarint()
+	m.r.Uvarint()
 	//segmentNum := m.r.uvarint64()
-	seriesLen := m.r.uvarint64()
-	seriesBytes := m.r.bytes(int(seriesLen))
+	seriesLen := m.r.Uvarint64()
+	seriesBytes := m.r.Bytes(int(seriesLen))
 	return &snapByte{data: seriesBytes, limit: seriesLen}
 }
 
 func (m *memSeriesSnapReader) Bytes() [][]byte {
-	l := m.r.uvarint()
-	return [][]byte{m.r.bytes(l)}
+	l := m.r.Uvarint()
+	return [][]byte{m.r.Bytes(l)}
 }
 
 type memTermSnapReader struct {
-	r decbuf
+	r             byteutil.Decbuf
+	skiplistLevel int
 }
 
 func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, []chunks.SnapBlock) {
-	m.r.uvarint()
+	m.r.Uvarint()
 	//	segmentNum := m.r.uvarint64()
-	logFreqLen := m.r.uvarint64()
-	var skipLen [global.FreqSkipListLevel]uint64
-	for i := 0; i < global.FreqSkipListLevel; i++ {
-		skipLen[i] = m.r.uvarint64()
+	logFreqLen := m.r.Uvarint64()
+	skipLen := make([]uint64, m.skiplistLevel)
+	for i := 0; i < m.skiplistLevel; i++ {
+		skipLen[i] = m.r.Uvarint64()
 	}
-	posLen := m.r.uvarint64()
-	logFreqr := &snapByte{data: m.r.bytes(int(logFreqLen)), limit: logFreqLen}
-	var skipr [global.FreqSkipListLevel]chunks.SnapBlock
-	for i := 0; i < global.FreqSkipListLevel; i++ {
-		skipr[i] = &snapByte{data: m.r.bytes(int(skipLen[i])), limit: skipLen[i]}
+	posLen := m.r.Uvarint64()
+	logFreqr := &snapByte{data: m.r.Bytes(int(logFreqLen)), limit: logFreqLen}
+	skipr := make([]chunks.SnapBlock, m.skiplistLevel)
+	for i := 0; i < m.skiplistLevel; i++ {
+		skipr[i] = &snapByte{data: m.r.Bytes(int(skipLen[i])), limit: skipLen[i]}
 	}
-	posr := &snapByte{data: m.r.bytes(int(posLen)), limit: posLen}
+	posr := &snapByte{data: m.r.Bytes(int(posLen)), limit: posLen}
 	return logFreqr, posr, skipr
 }
 
 func (m *memTermSnapReader) Bytes() [][]byte {
-	l := m.r.uvarint()
-	return [][]byte{m.r.bytes(l)}
+	l := m.r.Uvarint()
+	return [][]byte{m.r.Bytes(l)}
 }
 
 func (cr *chunkReader) release() {
@@ -381,14 +383,12 @@ type singleReader struct {
 }
 
 type seriesReader struct {
-	//mmaps []*mmapAccessor
 	singleReader
-	baseTime int64
-
-	//cutReader
+	baseTime      int64
+	skipListLevel int
 }
 
-func newSeriesReader(dir string) (*seriesReader, error) {
+func newSeriesReader(dir string, skipListlevel int) (*seriesReader, error) {
 	seriesr := &seriesReader{}
 	vf, err := os.OpenFile(filepath.Join(dir, "series"), os.O_RDONLY, 0644)
 	if err != nil {
@@ -399,6 +399,7 @@ func newSeriesReader(dir string) (*seriesReader, error) {
 		return nil, err
 	}
 	seriesr.mmap = mmap
+	seriesr.skipListLevel = skipListlevel
 	return seriesr, nil
 }
 
@@ -415,29 +416,29 @@ func (pr *seriesReader) getByID(ref uint64) (labels.Labels, []ChunkMeta, error) 
 		return nil, nil, errors.New("mmap is nil")
 	}
 	debuf := mmap.decbufAt(off)
-	length := debuf.uvarint()
-	b := debuf.bytes(length)
-	if crc32.ChecksumIEEE(b) != debuf.uint32() {
+	length := debuf.Uvarint()
+	b := debuf.Bytes(length)
+	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
 		return nil, nil, errors.New("crc not match")
 	}
-	debuf.reset(b)
-	k := debuf.uvarint()
+	debuf.Reset(b)
+	k := debuf.Uvarint()
 	var lsets labels.Labels
 	for i := 0; i < k; i++ {
-		n := debuf.uvarintStr()
-		v := debuf.uvarintStr()
+		n := debuf.UvarintStr()
+		v := debuf.UvarintStr()
 		lsets = append(lsets, labels.Label{Name: n, Value: v})
 	}
 	//chunks meta data
-	k = debuf.uvarint()
+	k = debuf.Uvarint()
 	for k == 0 {
 		return nil, nil, nil
 	}
 	var chunkMeta []ChunkMeta
-	t0 := debuf.varint64()
-	maxt := int64(debuf.varint64()) + t0
-	ref0 := debuf.uvarint64()
-	segmentNum := debuf.uvarint64()
+	t0 := debuf.Varint64()
+	maxt := int64(debuf.Varint64()) + t0
+	ref0 := debuf.Uvarint64()
+	segmentNum := debuf.Uvarint64()
 
 	chunkMeta = append(chunkMeta, ChunkMeta{
 		Ref:        ref0,
@@ -448,14 +449,14 @@ func (pr *seriesReader) getByID(ref uint64) (labels.Labels, []ChunkMeta, error) 
 	t0 = maxt
 
 	for i := 1; i < k; i++ {
-		mint := debuf.varint64() + t0
-		maxt := debuf.varint64() + mint
+		mint := debuf.Varint64() + t0
+		maxt := debuf.Varint64() + mint
 
-		ref0 += debuf.uvarint64()
+		ref0 += debuf.Uvarint64()
 		t0 = maxt
-		segmentNum := debuf.uvarint64()
-		if debuf.err() != nil {
-			return nil, nil, fmt.Errorf("read meta for chunk %s", debuf.err())
+		segmentNum := debuf.Uvarint64()
+		if debuf.Err() != nil {
+			return nil, nil, fmt.Errorf("read meta for chunk %s", debuf.Err())
 		}
 
 		chunkMeta = append(chunkMeta, ChunkMeta{
@@ -514,16 +515,16 @@ func (pr *seriesReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
 	}
 	debuf := mmap.decbufAt(off)
 
-	length := debuf.uvarint()
+	length := debuf.Uvarint()
 
-	b := debuf.bytes(length)
-	if crc32.ChecksumIEEE(b) != debuf.uint32() {
+	b := debuf.Bytes(length)
+	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
 		return nil, nil
 	}
-	debuf.reset(b)
+	debuf.Reset(b)
 
-	refCount := debuf.uvarint()
-	refLen := debuf.uvarint()
+	refCount := debuf.Uvarint()
+	refLen := debuf.Uvarint()
 	seriesRef := make([]uint64, refLen)
 	var termRef map[uint64]uint64
 	if refCount > 1 {
@@ -533,12 +534,12 @@ func (pr *seriesReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
 	var termRef1 uint64
 	for i := 0; i < refLen; i++ {
 		if i == 0 {
-			seriesRef[i] = debuf.uvarint64()
+			seriesRef[i] = debuf.Uvarint64()
 		} else {
-			seriesRef[i] = seriesRef[i-1] + debuf.uvarint64()
+			seriesRef[i] = seriesRef[i-1] + debuf.Uvarint64()
 		}
 		if refCount > 1 {
-			termRef1 = debuf.uvarint64()
+			termRef1 = debuf.Uvarint64()
 			ref := termRef0 + termRef1
 			termRef[seriesRef[i]] = ref
 			termRef0 = ref
@@ -556,15 +557,15 @@ func (pr *seriesReader) readPosting2(ref uint64) ([]uint64, []uint64) {
 	}
 	debuf := mmap.decbufAt(off)
 
-	length := debuf.uvarint()
-	b := debuf.bytes(length)
-	if crc32.ChecksumIEEE(b) != debuf.uint32() {
+	length := debuf.Uvarint()
+	b := debuf.Bytes(length)
+	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
 		return nil, nil
 	}
-	debuf.reset(b)
+	debuf.Reset(b)
 
-	refCount := debuf.uvarint()
-	refLen := debuf.uvarint()
+	refCount := debuf.Uvarint()
+	refLen := debuf.Uvarint()
 	seriesRef := make([]uint64, refLen)
 	var termRef []uint64
 	if refCount > 1 {
@@ -574,12 +575,12 @@ func (pr *seriesReader) readPosting2(ref uint64) ([]uint64, []uint64) {
 	var termRef1 uint64
 	for i := 0; i < refLen; i++ {
 		if i == 0 {
-			seriesRef[i] = debuf.uvarint64()
+			seriesRef[i] = debuf.Uvarint64()
 		} else {
-			seriesRef[i] = seriesRef[i-1] + debuf.uvarint64()
+			seriesRef[i] = seriesRef[i-1] + debuf.Uvarint64()
 		}
 		if refCount > 1 {
-			termRef1 = debuf.uvarint64()
+			termRef1 = debuf.Uvarint64()
 			ref := termRef0 + termRef1
 			termRef[i] = ref
 			termRef0 = ref
@@ -589,29 +590,25 @@ func (pr *seriesReader) readPosting2(ref uint64) ([]uint64, []uint64) {
 }
 
 type IndexReader struct {
-	mu     sync.RWMutex
-	indexr *keyReader
-
-	//	chunkr   *chunkReader
-	seriesr *seriesReader
-	//	postingr *postingReader
+	mu         sync.RWMutex
+	indexr     *keyReader
+	seriesr    *seriesReader
+	MsgTagName string
 }
 
 func (r *IndexReader) Iterator() IteratorLabel {
 	iter := &tableIterator{}
 	iter.labelIter = newBlockIterator(r.indexr.tagsBlock, nil)
 	iter.reader = r
-	//iter.chunkr = r.chunkr
 	iter.seriesr = r.seriesr
-	//iter.postingr = r.postingr
 	return iter
 }
 
 //缺乏错误处理
-func NewIndexReader(dir string, baseTime int64, bcache, mcache *cache.NamespaceGetter) *IndexReader {
+func NewIndexReader(dir string, skipListlevel int, bcache, mcache *cache.NamespaceGetter) *IndexReader {
 	var err error
 	r := &IndexReader{}
-	r.seriesr, err = newSeriesReader(dir)
+	r.seriesr, err = newSeriesReader(dir, skipListlevel)
 	r.indexr, err = newKeyReader(dir)
 	if err != nil {
 		return nil
@@ -621,7 +618,8 @@ func NewIndexReader(dir string, baseTime int64, bcache, mcache *cache.NamespaceG
 }
 
 func (r *IndexReader) print() error {
-	for _, indexBlock := range r.indexr.indexBlocks {
+	for tagName, indexBlock := range r.indexr.indexBlocks {
+		fmt.Println("tagName", tagName)
 		indexIterator := newBlockIterator(indexBlock, nil)
 		for indexIterator.Next() {
 			bh, _ := decodeBlockHandle(indexIterator.Value())
@@ -766,7 +764,7 @@ func queryTerm(e temql.Expr, r *IndexReader, series *[]series.Series) posting.Po
 		}
 	case *temql.TermExpr:
 		e := e.(*temql.TermExpr)
-		value := r.find(global.MESSAGE, byteutil.Str2bytes(e.Name))
+		value := r.find(r.MsgTagName, byteutil.Str2bytes(e.Name))
 		if value == nil {
 			return posting.EmptyPostings
 		}
@@ -785,32 +783,6 @@ func (r *IndexReader) find(tagName string, key []byte) []byte {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.indexr.find(tagName, key)
-	// indexBlock, err := r.getIndexBlock(tagName)
-	// if err != nil {
-	// 	return nil
-	// }
-	// if indexBlock == nil {
-	// 	return nil
-	// }
-	// indexIter := newBlockIterator(indexBlock, nil)
-	// //查找数据在哪个data block
-	// if !indexIter.seek(key) {
-	// 	return nil
-	// }
-	// dataBH, _ := decodeBlockHandle(indexIter.Value())
-
-	// dataIter := r.getDataIter(dataBH)
-	// if !dataIter.seekWithRestart(key) { //搜索
-	// 	dataIter.Release()
-	// 	return nil
-	// }
-	// v := dataIter.Value()
-	// k := dataIter.Key()
-	// dataIter.Release()
-	// if bytes.Compare(k, key) != 0 {
-	// 	return nil
-	// }
-	//return v
 }
 
 func (r *IndexReader) Close() error {
@@ -899,8 +871,8 @@ func (cr *LogReader) ReadLog(logID uint64) []byte {
 	}
 	offset := binary.LittleEndian.Uint64(logMmap.index[(logID-logOffset-1)*8:])
 	debuf := logMmap.mmap.decbufAt(int(offset))
-	l := debuf.uvarint()
-	b := debuf.bytes(l)
+	l := debuf.Uvarint()
+	b := debuf.Bytes(l)
 	ch.Release()
 	return b
 }
@@ -910,7 +882,6 @@ func (cr *LogReader) Iterator() LogIterator {
 }
 
 func (cr *LogReader) Close() error {
-	//cr.lcache.Cache.EvictAll()
 	cr.lcache = nil
 	return nil
 }

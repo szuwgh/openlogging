@@ -11,8 +11,6 @@ import (
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
-
-	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
 )
 
 type RawPosting struct {
@@ -29,8 +27,8 @@ type RawPosting struct {
 	byteStart          uint64 //byte开始地方
 	logFreqIndex       uint64
 	logFreqLen         uint64
-	skipStartIndex     [global.FreqSkipListLevel]uint64
-	skipLen            [global.FreqSkipListLevel]uint64
+	skipStartIndex     []uint64
+	skipLen            []uint64
 	posIndex           uint64
 	posLen             uint64
 }
@@ -48,18 +46,19 @@ func (t *RawPosting) SegmentNum() uint64 {
 }
 
 func (t *RawPosting) ChunkEnc(isTerm bool, cr chunks.ChunkReader) chunks.ChunkEnc {
-	ref := make([]uint64, 3+global.FreqSkipListLevel*2+2)
+	skipListLevel := len(t.skipStartIndex)
+	ref := make([]uint64, 3+skipListLevel*2+2)
 	ref[0] = t.byteStart
 	ref[1] = t.logFreqIndex
 	ref[2] = t.logFreqLen
-	for i := 0; i < global.FreqSkipListLevel; i++ {
+	for i := 0; i < skipListLevel; i++ {
 		ref[3+i] = t.skipStartIndex[i]
 	}
-	for i := 0; i < global.FreqSkipListLevel; i++ {
-		ref[3+global.FreqSkipListLevel+i] = t.skipLen[i]
+	for i := 0; i < skipListLevel; i++ {
+		ref[3+skipListLevel+i] = t.skipLen[i]
 	}
-	ref[3+global.FreqSkipListLevel*2] = t.posIndex
-	ref[3+global.FreqSkipListLevel*2+1] = t.posLen
+	ref[3+skipListLevel*2] = t.posIndex
+	ref[3+skipListLevel*2+1] = t.posLen
 	return cr.ReadChunk(isTerm, ref...) //c.ReadChunks(t.byteStart, t.logFreqIndex, t.logFreqLen, t.skipStartIndex)
 }
 
@@ -143,8 +142,12 @@ func (t *LabelPosting) toPosting(s seriesReader) MemSeriesList {
 	return p
 }
 
-func newRawPosting() *RawPosting {
+func newRawPosting(skiplistLevel int) *RawPosting {
 	p := &RawPosting{}
+	if skiplistLevel > 0 {
+		p.skipStartIndex = make([]uint64, skiplistLevel)
+		p.skipLen = make([]uint64, skiplistLevel)
+	}
 	return p
 }
 

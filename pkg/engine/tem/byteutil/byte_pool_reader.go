@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
 
 	bin "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
 )
@@ -18,15 +17,16 @@ type InvertedBytePoolReader struct {
 	level            int //块层数
 	baseTime         int64
 	curBytes         []byte
-	//buf              [binary.MaxVarintLen32]byte
-	encbuf *EncBuf
+	encbuf           *EncBuf
+	skiplistLevel    int
 	//这个块最后能读的索引
 }
 
-func NewInvertedBytePoolReader(bytePool Inverted, baseTime int64) *InvertedBytePoolReader {
+func NewInvertedBytePoolReader(bytePool Inverted, baseTime int64, level int) *InvertedBytePoolReader {
 	r := &InvertedBytePoolReader{}
 	r.bytePool = bytePool
 	r.baseTime = baseTime
+	r.skiplistLevel = level
 	r.encbuf = &EncBuf{}
 	return r
 }
@@ -84,30 +84,31 @@ func (m *memSeriesSnapReader) Bytes() [][]byte {
 }
 
 type memTermSnapReader struct {
-	r   *InvertedBytePoolReader
-	ref []uint64
+	r             *InvertedBytePoolReader
+	ref           []uint64
+	skiplistLevel int
 }
 
 func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, []chunks.SnapBlock) {
 	byteStart := m.ref[0]
 	logFreqIndex := m.ref[1]
 	logFreqLen := m.ref[2]
-	skipIndex := m.ref[3 : 3+global.FreqSkipListLevel]
-	skipLen := m.ref[3+global.FreqSkipListLevel : 3+global.FreqSkipListLevel+global.FreqSkipListLevel]
-	posIndex := m.ref[3+global.FreqSkipListLevel+global.FreqSkipListLevel]
-	posLen := m.ref[3+global.FreqSkipListLevel+global.FreqSkipListLevel+1]
+	skipIndex := m.ref[3 : 3+m.skiplistLevel]
+	skipLen := m.ref[3+m.skiplistLevel : 3+m.skiplistLevel+m.skiplistLevel]
+	posIndex := m.ref[3+m.skiplistLevel+m.skiplistLevel]
+	posLen := m.ref[3+m.skiplistLevel+m.skiplistLevel+1]
 	logFreqSnap := NewSnapBlock(byteStart,
 		logFreqIndex,
 		logFreqLen,
 		m.r.Clone())
-	var skipSnap [global.FreqSkipListLevel]chunks.SnapBlock
-	for i := 0; i < global.FreqSkipListLevel; i++ {
+	skipSnap := make([]chunks.SnapBlock, m.skiplistLevel)
+	for i := 0; i < m.skiplistLevel; i++ {
 		skipSnap[i] = NewSnapBlock(byteStart+SizeClass[0]*uint64(1+i),
 			skipIndex[i],
 			skipLen[i],
 			m.r.Clone())
 	}
-	posSnap := NewSnapBlock(byteStart+SizeClass[0]*(global.FreqSkipListLevel+1),
+	posSnap := NewSnapBlock(byteStart+SizeClass[0]*uint64(m.skiplistLevel+1),
 		posIndex,
 		posLen,
 		m.r.Clone())
@@ -118,16 +119,15 @@ func (m *memTermSnapReader) Bytes() [][]byte {
 	byteStart := m.ref[0]
 	logFreqIndex := m.ref[1]
 	logFreqLen := m.ref[2]
-	skipIndex := m.ref[3 : 3+global.FreqSkipListLevel]
-	skipLen := m.ref[3+global.FreqSkipListLevel : 3+global.FreqSkipListLevel+global.FreqSkipListLevel]
-	posIndex := m.ref[3+global.FreqSkipListLevel+global.FreqSkipListLevel]
-	posLen := m.ref[3+global.FreqSkipListLevel+global.FreqSkipListLevel+1]
+	skipIndex := m.ref[3 : 3+m.skiplistLevel]
+	skipLen := m.ref[3+m.skiplistLevel : 3+m.skiplistLevel+m.skiplistLevel]
+	posIndex := m.ref[3+m.skiplistLevel+m.skiplistLevel]
+	posLen := m.ref[3+m.skiplistLevel+m.skiplistLevel+1]
 	var b [][]byte
 	m.r.encbuf.Reset()
-	//m.r.encbuf.PutUvarint(0)
 	m.r.encbuf.PutUvarint64(logFreqLen)
 
-	for i := 0; i < global.FreqSkipListLevel; i++ {
+	for i := 0; i < m.skiplistLevel; i++ {
 		m.r.encbuf.PutUvarint64(skipLen[i])
 	}
 	m.r.encbuf.PutUvarint64(posLen)
@@ -136,13 +136,13 @@ func (m *memTermSnapReader) Bytes() [][]byte {
 	for m.r.Next() {
 		b = append(b, m.r.Block())
 	}
-	for i := 0; i < global.FreqSkipListLevel; i++ {
+	for i := 0; i < m.skiplistLevel; i++ {
 		m.r.initReader(byteStart+SizeClass[0]*uint64(1+i), skipIndex[i])
 		for m.r.Next() {
 			b = append(b, m.r.Block())
 		}
 	}
-	m.r.initReader(byteStart+SizeClass[0]*(global.FreqSkipListLevel+1), posIndex)
+	m.r.initReader(byteStart+SizeClass[0]*uint64(m.skiplistLevel), posIndex)
 	for m.r.Next() {
 		b = append(b, m.r.Block())
 	}
@@ -154,6 +154,7 @@ func (r *InvertedBytePoolReader) readTermChunk(ref ...uint64) chunks.ChunkEnc {
 	searchSnap.SetTimeStamp(r.baseTime)
 	termSnap := &memTermSnapReader{}
 	termSnap.ref = ref
+	termSnap.skiplistLevel = r.skiplistLevel
 	termSnap.r = r.Clone()
 	searchSnap.SetSnapReader(termSnap)
 	return searchSnap

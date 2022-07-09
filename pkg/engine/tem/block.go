@@ -15,8 +15,8 @@ import (
 	"github.com/szuwgh/temsearch/pkg/engine/tem/fileutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/series"
-	"github.com/szuwgh/temsearch/pkg/temql"
 	"github.com/szuwgh/temsearch/pkg/lib/prompb"
+	"github.com/szuwgh/temsearch/pkg/temql"
 )
 
 type IndexReader interface {
@@ -150,7 +150,6 @@ func (r blockIndexReader) Close() error {
 type blockLogReader struct {
 	lr LogReader
 	b  BlockControl
-	
 }
 
 func (r blockLogReader) ReadLog(v uint64) []byte {
@@ -176,7 +175,10 @@ type BlockMeta struct {
 	MinTime int64 `json:"minTime"`
 	MaxTime int64 `json:"maxTime"`
 
-	LogID      []uint64            `json:"log_id"`
+	LogID            []uint64 `json:"log_id"`
+	SkipListLevel    int      `json:"skiplistlevel"`
+	SkipListInterval int      `json:"SkipListInterval"`
+
 	Compaction BlockMetaCompaction `json:"compaction"`
 }
 

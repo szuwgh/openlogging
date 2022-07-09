@@ -1,6 +1,7 @@
 package disk
 
 import (
+	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/fileutil"
 	"os"
 	"sync"
@@ -36,12 +37,12 @@ func (m *mmapAccessor) seek(offset int) {
 	m.offset = offset
 }
 
-func (m *mmapAccessor) decbufAt(off int) decbuf {
+func (m *mmapAccessor) decbufAt(off int) byteutil.Decbuf {
 
 	if len(m.b) < off {
-		return decbuf{e: errInvalidSize}
+		return byteutil.WithErrDecBuf()
 	}
-	return decbuf{b: m.b[off:]}
+	return byteutil.NewDecBuf(m.b[off:])
 }
 
 func (m *mmapAccessor) ReadByte() (byte, error) {

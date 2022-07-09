@@ -18,7 +18,6 @@ import (
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
 )
@@ -55,14 +54,17 @@ type MemTable struct {
 	lastSeriesID     uint64
 	skiplistLevel    int
 	skipListInterval int
+	msgTagName       string
 
 	logID uint64
 }
 
-func NewMemTable(bytePool byteutil.Inverted) *MemTable {
+func NewMemTable(bytePool byteutil.Inverted, skiplistLevel, skipListInterval int) *MemTable {
 	mt := &MemTable{}
 	mt.bytePool = bytePool
-	mt.bytePoolReader = byteutil.NewInvertedBytePoolReader(bytePool, 0) //newByteBlockReader(bytePool)
+	mt.skiplistLevel = skiplistLevel
+	mt.skipListInterval = skipListInterval
+	mt.bytePoolReader = byteutil.NewInvertedBytePoolReader(bytePool, 0, mt.skiplistLevel) //newByteBlockReader(bytePool)
 	mt.indexs = NewDefalutTagGroup()
 	mt.series = newStripeSeries()
 	c := NewChain()
@@ -73,11 +75,11 @@ func NewMemTable(bytePool byteutil.Inverted) *MemTable {
 }
 
 func (mt *MemTable) newIndex(isTag bool) index.Index {
-	return skiplist.New(isTag) //gorax.New(isTag) // //rax.New(isTag)
+	return skiplist.New(isTag)
 }
 
 func (mt *MemTable) Init() {
-	mt.indexs.Set(global.MESSAGE, mt.newIndex(false))
+	mt.indexs.Set(mt.msgTagName, mt.newIndex(false))
 }
 
 func (mt *MemTable) SetBaseTimeStamp(t int64) {
@@ -92,7 +94,7 @@ func (mt *MemTable) reset() {
 
 //NewBlock 申请一个新的内存块
 func (mt *MemTable) NewBlock() uint64 {
-	return mt.bytePool.InitBytes()
+	return mt.bytePool.InitBytes(mt.skiplistLevel)
 }
 
 func (mt *MemTable) GetDataStructDB() indexGroup {
@@ -181,7 +183,7 @@ func (mt *MemTable) addTerm(context *Context, ref uint64, lset labels.Labels, pL
 	}
 	p, ok := posting.series[ref]
 	if !ok {
-		p = newRawPosting()
+		p = newRawPosting(mt.skiplistLevel)
 		p.lset = lset
 		posting.series[ref] = p
 	}
@@ -204,7 +206,7 @@ func (mt *MemTable) Index(context *Context, docID uint64, timeStamp int64, serie
 	context.TimeStamp = timeStamp
 	mt.addLabel(s, timeStamp, docID)
 
-	postingList, ok := mt.indexs.Get(global.MESSAGE)
+	postingList, ok := mt.indexs.Get(mt.msgTagName)
 	if !ok {
 		return
 	}
@@ -241,7 +243,7 @@ func (mt *MemTable) getOrCreateWithID(id, hash uint64, lset labels.Labels) (*Mem
 	}
 	mt.symMtx.Lock()
 	defer mt.symMtx.Unlock()
-	s.byteStart = mt.bytePool.InitBytes()
+	s.byteStart = mt.bytePool.InitBytes(mt.skiplistLevel)
 	s.seriesIndex = s.byteStart
 	for _, l := range lset {
 		postingList, ok := mt.indexs.Get(l.Name)
@@ -289,7 +291,7 @@ func (mt *MemTable) Search(lset []*prompb.LabelMatcher, expr temql.Expr) (postin
 		p := posting.Intersect(its...)
 		return p, []series.Series{mt.series}
 	}
-	postingList, ok := mt.indexs.Get(global.MESSAGE)
+	postingList, ok := mt.indexs.Get(mt.msgTagName)
 	if !ok {
 		return posting.EmptyPostings, nil
 	}

@@ -18,7 +18,8 @@ import (
 )
 
 type leveledCompactor struct {
-	ranges []int64
+	ranges     []int64
+	msgTagName string
 }
 
 type dirMeta struct {
@@ -26,9 +27,10 @@ type dirMeta struct {
 	meta *BlockMeta
 }
 
-func newLeveledCompactor(ranges []int64) *leveledCompactor {
+func newLeveledCompactor(ranges []int64, msgTagName string) *leveledCompactor {
 	compactor := &leveledCompactor{}
 	compactor.ranges = ranges
+	compactor.msgTagName = msgTagName
 	return compactor
 }
 
@@ -147,13 +149,15 @@ func compactBlockMetas(uid ulid.ULID, blocks ...*BlockMeta) *BlockMeta {
 	return res
 }
 
-func (c *leveledCompactor) Write(dest string, b BlockReader, mint, maxt int64) (err error) {
+func (c *leveledCompactor) Write(dest string, b BlockReader, mint, maxt int64, skiplistLevel int, skiplistInterval int) (err error) {
 	entropy := rand.New(rand.NewSource(time.Now().UnixNano()))
 	uid := ulid.MustNew(ulid.Now(), entropy)
 	meta := &BlockMeta{
-		ULID:    uid,
-		MinTime: mint,
-		MaxTime: maxt,
+		ULID:             uid,
+		MinTime:          mint,
+		MaxTime:          maxt,
+		SkipListLevel:    skiplistLevel,
+		SkipListInterval: skiplistInterval,
 	}
 	meta.Compaction.Level = 1
 	return c.write(dest, meta, b)
@@ -238,7 +242,7 @@ func (c *leveledCompactor) composeBlock(segmentNum []uint64, baseTime []int64,
 	for iter.Next() {
 		tagName := iter.Key()
 		indexw.SetTagName(tagName)
-		mergeIter := disk.NewMergeWriterIterator(segmentNum, baseTime, iter.Iters()...)
+		mergeIter := disk.NewMergeWriterIterator(segmentNum, baseTime, c.msgTagName, iter.Iters()...)
 		for mergeIter.Next() {
 			err := mergeIter.Write(byteutil.Byte2Str(tagName), indexw)
 			if err != nil {

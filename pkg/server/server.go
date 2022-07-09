@@ -53,6 +53,9 @@ func New() *Server {
 	opts.DataDir = filepath.Join(exeDir, "data")           //"E:\\goproject\\temsearch\\data" //config.DataDir
 	opts.FlushWritecoldDuration = 60 * 1e3                 //config.FlushWritecoldDuration
 	opts.DefaultCacheSnapshotMemorySize = 25 * 1024 * 1024 //config.DefaultCacheSnapshotMemorySize
+	opts.SkipListInterval = 3
+	opts.SkipListLevel = 6
+	opts.MsgTagName = "~msg"
 	s.eg, err = tem.NewEngine(opts, analysis.NewAnalyzer("gojieba"))
 	if err != nil {
 		return nil

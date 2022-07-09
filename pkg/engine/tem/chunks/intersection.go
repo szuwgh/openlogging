@@ -118,7 +118,7 @@ func (t *TermPosting) Seek(target uint64) bool {
 		return false
 	}
 	freqSeek, posSeek := t.freqSeek, t.posSeek
-	for i := glo.FreqSkipListLevel - 1; i >= 0; i-- {
+	for i := len(t.skipLastID) - 1; i >= 0; i-- {
 		if t.skipLastID[i] == 0 || t.notfirst[i] {
 			id := t.skipReader[i].ReadVUInt64()
 			if id == 0 {
@@ -208,6 +208,7 @@ func (t *TermPosting) nextLog2() {
 	}
 	var pos []int
 	var lastPos int
+	println("lastFreq", t.lastFreq)
 	for i := 0; i < t.lastFreq; i++ {
 		delta := t.posReader.ReadVInt()
 		lastPos += delta

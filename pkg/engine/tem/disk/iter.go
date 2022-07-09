@@ -6,8 +6,6 @@ import (
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
-
 	"github.com/szuwgh/temsearch/pkg/engine/tem/iterator"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
@@ -548,9 +546,10 @@ type MergeWriterIterator struct {
 	baseTime    []int64
 	set         compactionSet
 	posting     posting.Postings
+	msgTagName  string
 }
 
-func NewMergeWriterIterator(segmentNum []uint64, baseTime []int64, iters ...WriterIterator) *MergeWriterIterator {
+func NewMergeWriterIterator(segmentNum []uint64, baseTime []int64, msgTagName string, iters ...WriterIterator) *MergeWriterIterator {
 	iter := make([]iterator.SingleIterator, len(iters))
 	for i, x := range iters {
 		iter[i] = x
@@ -564,6 +563,7 @@ func NewMergeWriterIterator(segmentNum []uint64, baseTime []int64, iters ...Writ
 		writerIters: iters,
 		segmentNum:  segmentNum,
 		baseTime:    baseTime,
+		msgTagName:  msgTagName,
 	}
 
 	return mergeWriterIter
@@ -602,7 +602,7 @@ func (m *MergeWriterIterator) Write2(labelName string, w IndexWriter) error {
 		if len(chunk) > 12 {
 
 		}
-		ref, err := w.AddSeries(labelName != global.MESSAGE, lset, chunk...)
+		ref, err := w.AddSeries(labelName != m.msgTagName, lset, chunk...)
 		if err != nil {
 			return err
 		}
@@ -611,7 +611,7 @@ func (m *MergeWriterIterator) Write2(labelName string, w IndexWriter) error {
 	var ref uint64
 	var err error
 	switch labelName {
-	case global.MESSAGE:
+	case m.msgTagName:
 		ref, err = w.WritePostings(p, pRef)
 	default:
 		ref, err = w.WritePostings(append(p, pRef...))
@@ -652,7 +652,7 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 	var pRef []uint64
 	for m.set.Next() {
 		lset, chunk := m.set.At()
-		ref, err := w.AddSeries(labelName != global.MESSAGE, lset, chunk...)
+		ref, err := w.AddSeries(labelName != m.msgTagName, lset, chunk...)
 		if err != nil {
 			return err
 		}
@@ -661,7 +661,7 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 	var ref uint64
 	var err error
 	switch labelName {
-	case global.MESSAGE:
+	case m.msgTagName:
 		ref, err = w.WritePostings(p, pRef)
 	default:
 		ref, err = w.WritePostings(append(p, pRef...))

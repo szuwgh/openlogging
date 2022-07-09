@@ -7,13 +7,13 @@ import (
 
 func Test_bytePoolReader(t *testing.T) {
 	bytePool := NewInvertedBytePool(nil)
-	offset := bytePool.InitBytes()
+	offset := bytePool.InitBytes(3)
 	byteStart := offset
 	b := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA}
 	offset, _ = bytePool.writeBytes(offset, b)
 	fmt.Println("offset", offset)
 	fmt.Println(bytePool.buffers)
-	reader := NewInvertedBytePoolReader(bytePool, 0)
+	reader := NewInvertedBytePoolReader(bytePool, 0, 3)
 	reader.initReader(byteStart, uint64(len(b)))
 	x := reader.readBytes(20)
 	fmt.Println(x)
@@ -62,14 +62,14 @@ func Test_bytePoolReadVInt(t *testing.T) {
 	alloc := NewByteBlockAllocator()
 	bytePool := NewInvertedBytePool(alloc)
 	//bytePool.newBytes2(8)
-	offset := bytePool.InitBytes()
+	offset := bytePool.InitBytes(6)
 	byteStart := offset
 	for i := 0; i < 30; i++ {
 		offset, _ = bytePool.writeVInt(offset, 163850)
 	}
 
 	fmt.Println(bytePool.buffers)
-	reader := NewInvertedBytePoolReader(bytePool, 0)
+	reader := NewInvertedBytePoolReader(bytePool, 0, 3)
 	reader.initReader(byteStart, offset)
 	for i := 0; i < 30; i++ {
 		fmt.Println(reader.readVInt())
@@ -78,12 +78,12 @@ func Test_bytePoolReadVInt(t *testing.T) {
 
 func Test_bytePoolReadString(t *testing.T) {
 	bytePool := NewInvertedBytePool(nil)
-	offset := bytePool.InitBytes()
+	offset := bytePool.InitBytes(6)
 	byteStart := offset
 
 	offset, _ = bytePool.WriteString(offset, "aaaabbbbbbbbbbb")
 	fmt.Println(bytePool.buffer)
-	reader := NewInvertedBytePoolReader(bytePool, 0)
+	reader := NewInvertedBytePoolReader(bytePool, 0, 3)
 	reader.initReader(byteStart, offset)
 	fmt.Println(reader.readString())
 	reader.initReader(byteStart, offset)
@@ -94,7 +94,7 @@ func Test_bytePoolGetBlock(t *testing.T) {
 	//BYTE_BLOCK_SIZE = 128
 	alloc := NewByteBlockAllocator()
 	bytePool := NewInvertedBytePool(alloc)
-	offset := bytePool.InitBytes()
+	offset := bytePool.InitBytes(6)
 	byteStart := offset
 	b := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA,
 		0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA,
@@ -129,7 +129,7 @@ func Test_bytePoolGetBlock(t *testing.T) {
 		fmt.Println(bytePool.buffers[i])
 	}
 
-	reader := NewInvertedBytePoolReader(bytePool, 0)
+	reader := NewInvertedBytePoolReader(bytePool, 0, 3)
 	reader.initReader(byteStart, offset)
 
 	for reader.Next() {
@@ -142,13 +142,13 @@ func Test_bytePoolSnapBlock(t *testing.T) {
 	//	BYTE_BLOCK_SIZE = 32
 	alloc := NewByteBlockAllocator()
 	bytePool := NewInvertedBytePool(alloc)
-	offset := bytePool.InitBytes()
+	offset := bytePool.InitBytes(6)
 	byteStart := offset
 	b := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA}
 	offset, _ = bytePool.writeBytes(offset, b)
 	fmt.Println(bytePool.buffers)
 
-	reader := NewInvertedBytePoolReader(bytePool, 0)
+	reader := NewInvertedBytePoolReader(bytePool, 0, 3)
 	//reader.initReader(byteStart, len(b))
 
 	sb := NewSnapBlock(byteStart, offset, uint64(len(b)), reader)

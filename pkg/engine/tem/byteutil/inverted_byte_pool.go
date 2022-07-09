@@ -3,7 +3,6 @@ package byteutil
 import (
 	"sync"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/global"
 	bin "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
 )
 
@@ -42,9 +41,9 @@ func NewInvertedBytePool(alloc Allocator) *InvertedBytePool {
 
 //initBytes 申请新的bytes
 // 9 9 9 9 9
-func (ib *InvertedBytePool) InitBytes() uint64 {
+func (ib *InvertedBytePool) InitBytes(skiplistLevel int) uint64 {
 	var size uint64
-	var num uint64 = 2 + global.FreqSkipListLevel
+	var num uint64 = 2 + uint64(skiplistLevel)
 	//num++
 	size = num * SizeClass[0]
 	offset := ib.newBytes(size)
