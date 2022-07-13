@@ -758,20 +758,11 @@ type IndexWriter interface {
 
 //写文件
 type IndexW struct {
-	kw *keyWriter
-
-	//postingw *postingWriter
-	seriesw *seriesWriter
-	//chunkw   *chunkWriter
-
+	kw          *keyWriter
+	seriesw     *seriesWriter
 	valueOffset uint64
-	//lastValueOffset uint64
-
-	shareBuf [48]byte
-	//	nEntries      int //总的记录数
-	//fileName      string
-	//	seriesOffsets map[uint64][2]uint64 // offsets of series
-	dir string
+	shareBuf    [48]byte
+	dir         string
 }
 
 //初始化
@@ -785,18 +776,10 @@ func newIndexW(dir string) (*IndexW, error) {
 		return iw, err
 	}
 
-	// iw.chunkw, err = newChunkWriter(filepath.Join(dir, dirChunk))
-	// if err != nil {
-	// 	return iw, err
-	// }
 	iw.seriesw, err = newSeriesWriter(dir)
 	if err != nil {
 		return iw, err
 	}
-	// iw.postingw, err = newPostingWriter(filepath.Join(dir, dirPosting))
-	// if err != nil {
-	// 	return iw, err
-	// }
 	return iw, nil
 }
 

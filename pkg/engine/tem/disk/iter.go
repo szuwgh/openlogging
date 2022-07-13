@@ -131,7 +131,7 @@ type labelIterator struct {
 	//chunkr   *chunkReader
 	//postingr *postingReader
 	seriesr *seriesReader
-	buf     [binary.MaxVarintLen32]byte
+	//buf     [binary.MaxVarintLen32]byte
 }
 
 func newLabelIterator(index iterator.IteratorIndex, postingr *postingReader, seriesr *seriesReader, chunkr *chunkReader) *labelIterator {
@@ -571,6 +571,7 @@ func NewMergeWriterIterator(segmentNum []uint64, baseTime []int64, msgTagName st
 
 func (m *MergeWriterIterator) Write2(labelName string, w IndexWriter) error {
 
+	isMsgTag := labelName == m.msgTagName
 	var segmentNum uint64
 	//合并
 	m.set = emptyChunkSet
@@ -600,9 +601,13 @@ func (m *MergeWriterIterator) Write2(labelName string, w IndexWriter) error {
 	for m.set.Next() {
 		lset, chunk := m.set.At()
 		if len(chunk) > 12 {
+			// for _, _ := range chunk {
+			// 	//	chunkEnc := c.ChunkEnc(isMsgTag, f.seriesr)
+			// }
+		} else {
 
 		}
-		ref, err := w.AddSeries(labelName != m.msgTagName, lset, chunk...)
+		ref, err := w.AddSeries(!isMsgTag, lset, chunk...)
 		if err != nil {
 			return err
 		}
@@ -610,8 +615,9 @@ func (m *MergeWriterIterator) Write2(labelName string, w IndexWriter) error {
 	}
 	var ref uint64
 	var err error
-	switch labelName {
-	case m.msgTagName:
+
+	switch isMsgTag {
+	case true:
 		ref, err = w.WritePostings(p, pRef)
 	default:
 		ref, err = w.WritePostings(append(p, pRef...))
