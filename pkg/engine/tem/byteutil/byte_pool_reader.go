@@ -17,7 +17,7 @@ type InvertedBytePoolReader struct {
 	level            int //块层数
 	baseTime         int64
 	curBytes         []byte
-	encbuf           *EncBuf
+	encbuf           EncBuf
 	skiplistLevel    int
 	//这个块最后能读的索引
 }
@@ -27,7 +27,7 @@ func NewInvertedBytePoolReader(bytePool Inverted, baseTime int64, level int) *In
 	r.bytePool = bytePool
 	r.baseTime = baseTime
 	r.skiplistLevel = level
-	r.encbuf = &EncBuf{}
+	r.encbuf = EncBuf{}
 	return r
 }
 

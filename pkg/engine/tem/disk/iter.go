@@ -610,20 +610,30 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 	}
 	var pRef []uint64
 	for m.set.Next() {
-		lset, chunk := m.set.At()
-		if len(chunk) > 12 {
-			// for _, c := range chunk {
-			// 	chunkEnc := m.writerIters[c.IterIndex].ChunkByte(isMsgTag, ChunkMeta)
-			// 	//	chunkEnc := c.ChunkEnc(isMsgTag, f.seriesr)
-			// }
-		} else {
-
+		lset, chunks := m.set.At()
+		if len(chunks) > 12 { //合并成一个更大chunk
+			m.lw.reset()
+			for _, c := range chunks {
+				chunkEnc := m.writerIters[c.IterIndex].ChunkByte(isMsgTag, c.ChunkMeta)
+				posting := chunkEnc.Iterator(c.MinT, c.MaxT, c.LastLogNum)
+				for posting.Next() {
+					m.lw.addLogID(posting.At())
+				}
+			}
+			ref, err := w.WriteChunks(m.lw.Bytes())
+			if err != nil {
+				return err
+			}
+			chunks[0].Ref = ref
+			chunks[0].MaxT = chunks[len(chunks)-1].MaxT
+			chunks = chunks[:1]
 		}
-		ref, err := w.AddSeries(!isMsgTag, lset, chunk...)
+		ref, err := w.AddSeries(!isMsgTag, lset, chunks...)
 		if err != nil {
 			return err
 		}
 		pRef = append(pRef, ref)
+
 	}
 	var ref uint64
 	var err error

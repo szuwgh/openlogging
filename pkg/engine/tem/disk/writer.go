@@ -930,6 +930,7 @@ func (w *LogW) Close() (uint64, error) {
 }
 
 type logFreqWriter struct {
+	lenBuf        byteutil.EncBuf
 	freqBuf       byteutil.EncBuf
 	posBuf        byteutil.EncBuf
 	skipBuf       []byteutil.EncBuf
@@ -939,6 +940,7 @@ type logFreqWriter struct {
 	logNum        int
 	skipListLevel int
 	skipInterval  int
+	bytes         [][]byte
 }
 
 func newLogFreqWriter(level, interval int) *logFreqWriter {
@@ -1003,5 +1005,25 @@ func (f *logFreqWriter) Encode() (chunks.SnapBlock, chunks.SnapBlock, []chunks.S
 }
 
 func (f *logFreqWriter) Bytes() [][]byte {
-	return nil
+	f.lenBuf.PutUvarint64(uint64(f.freqBuf.Len()))
+	for i := range f.skipBuf {
+		f.lenBuf.PutUvarint64(uint64(f.skipBuf[i].Len()))
+	}
+	f.lenBuf.PutUvarint64(uint64(f.posBuf.Len()))
+	f.bytes = append(f.bytes, f.lenBuf.Get())
+	for i := range f.skipBuf {
+		f.bytes = append(f.bytes, f.skipBuf[i].Get())
+	}
+	f.bytes = append(f.bytes, f.posBuf.Get())
+	return f.bytes
+}
+
+func (f *logFreqWriter) reset() {
+	f.bytes = f.bytes[:0]
+	f.lenBuf.Reset()
+	f.freqBuf.Reset()
+	for i := range f.skipBuf {
+		f.skipBuf[i].Reset()
+	}
+	f.posBuf.Reset()
 }

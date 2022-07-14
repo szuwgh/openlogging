@@ -208,7 +208,6 @@ func (t *TermPosting) nextLog2() {
 	}
 	var pos []int
 	var lastPos int
-	println("lastFreq", t.lastFreq)
 	for i := 0; i < t.lastFreq; i++ {
 		delta := t.posReader.ReadVInt()
 		lastPos += delta
