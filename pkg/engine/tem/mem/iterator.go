@@ -33,29 +33,28 @@ func (i *memIterator) Key() []byte {
 	return i.iter.Key()
 }
 
-func (m *memIterator) writeMsg(w disk.IndexWriter, segmentNum uint64, baseTime int64) ([]disk.TimeChunk, []uint64, error) {
+func (m *memIterator) msg(w disk.IndexWriter, segmentNum uint64) ([]disk.TimeChunk, []uint64, error) {
 	termP := m.value().(*TermPosting)
 	postings := termP.toPosting()
 	seriesPosting := make([]uint64, 0, len(postings))
 	timeChunk := make([]disk.TimeChunk, 0, len(postings))
 	for _, p := range postings {
-		chunkEnc := p.ChunkEnc(true, m.chunkr)
-		chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
+		// chunkEnc := p.ChunkEnc(true, m.chunkr)
+		// chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
 
-		if err != nil {
-			return nil, nil, err
-		}
+		// if err != nil {
+		// 	return nil, nil, err
+		// }
 		chk := disk.TimeChunk{Lset: p.lset}
-		chk.Meta = append(chk.Meta, disk.ChunkMeta{Ref: chunkRef, MinT: p.minT, MaxT: p.maxT})
+		chk.Meta = append(chk.Meta, disk.ChunkMetaIndex{ChunkMeta: disk.ChunkMeta{Ref: 0, MinT: p.minT, MaxT: p.maxT}, IterIndex: 0})
 		timeChunk = append(timeChunk, chk)
-
 		seriesRef, _ := w.GetSeries(p.lset)
 		seriesPosting = append(seriesPosting, seriesRef)
 	}
 	return timeChunk, seriesPosting, nil
 }
 
-func (s *memIterator) writeSeries(w disk.IndexWriter, segmentNum uint64, baseTime int64) ([]disk.TimeChunk, []uint64, error) {
+func (s *memIterator) series(w disk.IndexWriter, segmentNum uint64) ([]disk.TimeChunk, []uint64, error) {
 	p := s.value().(*LabelPosting)
 	var seriesPosting []uint64
 	timeChunk := make([]disk.TimeChunk, 0, len(p.seriesID))
@@ -63,13 +62,13 @@ func (s *memIterator) writeSeries(w disk.IndexWriter, segmentNum uint64, baseTim
 	for _, series := range seriesList {
 		seriesRef, exist := w.GetSeries(series.lset)
 		if !exist {
-			chunkEnc := series.ChunkEnc(false, s.chunkr)
-			chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
-			if err != nil {
-				return nil, nil, err
-			}
+			// chunkEnc := series.ChunkEnc(false, s.chunkr)
+			// chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
+			// if err != nil {
+			// 	return nil, nil, err
+			// }
 			chk := disk.TimeChunk{Lset: series.lset}
-			chk.Meta = append(chk.Meta, disk.ChunkMeta{Ref: chunkRef, MinT: series.minT, MaxT: series.maxT})
+			chk.Meta = append(chk.Meta, disk.ChunkMetaIndex{ChunkMeta: disk.ChunkMeta{Ref: 0, MinT: series.minT, MaxT: series.maxT}, IterIndex: 0})
 			timeChunk = append(timeChunk, chk)
 		} else {
 			seriesPosting = append(seriesPosting, seriesRef)
@@ -78,14 +77,21 @@ func (s *memIterator) writeSeries(w disk.IndexWriter, segmentNum uint64, baseTim
 	return timeChunk, seriesPosting, nil
 }
 
-func (i *memIterator) Chunks(w disk.IndexWriter, segmentNum uint64) ([]disk.TimeChunk, []uint64, error) {
-	return nil, nil, nil
-}
-
-func (i *memIterator) Write(w disk.IndexWriter, segmentNum uint64, baseTime int64) ([]disk.TimeChunk, []uint64, error) {
+func (i *memIterator) ChunksPosting(w disk.IndexWriter, segmentNum uint64, iterIndex int) ([]disk.TimeChunk, []uint64, error) {
 	if i.iter.IsTag() {
-		return i.writeSeries(w, segmentNum, baseTime)
+		return i.series(w, segmentNum)
 	}
-	return i.writeMsg(w, segmentNum, baseTime)
-
+	return i.msg(w, segmentNum)
 }
+
+func (i *memIterator) ChunkByte(isTerm bool, c disk.ChunkMeta) chunks.ChunkEnc {
+	return c.ChunkEnc(isTerm, i.chunkr)
+}
+
+// func (i *memIterator) Write(w disk.IndexWriter, segmentNum uint64, baseTime int64) ([]disk.TimeChunk, []uint64, error) {
+// 	if i.iter.IsTag() {
+// 		return i.writeSeries(w, segmentNum, baseTime)
+// 	}
+// 	return i.writeMsg(w, segmentNum, baseTime)
+
+// }

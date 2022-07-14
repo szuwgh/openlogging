@@ -19,7 +19,12 @@ type valueIndex struct {
 //TimeChunk 时间段
 type TimeChunk struct {
 	Lset labels.Labels
-	Meta []ChunkMeta
+	Meta []ChunkMetaIndex
+}
+
+type ChunkMetaIndex struct {
+	ChunkMeta
+	IterIndex int
 }
 
 type ChunkMeta struct {

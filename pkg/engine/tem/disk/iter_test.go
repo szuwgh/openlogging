@@ -87,8 +87,8 @@ func Test_CompactionMerger(t *testing.T) {
 	set := labels.Label{Name: "a", Value: "b"}
 	var lset labels.Labels
 	lset = append(lset, set)
-	var metas []ChunkMeta
-	m1 := ChunkMeta{1, 2, 3, 4}
+	var metas []ChunkMetaIndex
+	m1 := ChunkMetaIndex{ChunkMeta{1, 2, 3, 4}, 0}
 	metas = append(metas, m1)
 
 	t1 := TimeChunk{Lset: lset, Meta: metas}
