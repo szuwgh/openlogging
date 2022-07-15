@@ -1,0 +1,14 @@
+{
+	"version": 1,
+	"ulid": "01G817GZKTT2Z6BA0M25JZ4Z1R",
+	"minTime": 1657898826731,
+	"maxTime": 1657898826731,
+	"log_id": [
+		0
+	],
+	"skiplistlevel": 6,
+	"SkipListInterval": 3,
+	"compaction": {
+		"level": 1
+	}
+}

@@ -46,6 +46,7 @@ func (t *RawPosting) SegmentNum() uint64 {
 	return 0
 }
 
+//这里需要做多并发设置
 func (t *RawPosting) ChunkEnc(isTerm bool, cr chunks.ChunkReader) chunks.ChunkEnc {
 	skipListLevel := len(t.skipStartIndex)
 	ref := make([]uint64, 3+skipListLevel*2+2)

@@ -608,13 +608,14 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 		p = append(p, m.posting.At())
 	}
 	var pRef []uint64
+	var metaChunks []ChunkMeta
 	for m.set.Next() {
 		lset, chunks := m.set.At()
 		if len(chunks) > 12 { //合并成一个更大chunk
 			m.lw.reset()
 			for _, c := range chunks {
 				chunkEnc := m.writerIters[c.IterIndex].ChunkByte(isMsgTag, c.Chunk)
-				posting := chunkEnc.Iterator(c.MinT, c.MaxT, c.LastLogNum)
+				posting := chunkEnc.Iterator(c.MinTime(), c.MaxTime(), c.SegmentNum())
 				for posting.Next() {
 					m.lw.addLogID(posting.At())
 				}
@@ -623,21 +624,18 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 			if err != nil {
 				return err
 			}
-			chunks[0].Ref = ref
-			chunks[0].MaxT = chunks[len(chunks)-1].MaxT
-			chunks = chunks[:1]
+			metaChunks = append(metaChunks, ChunkMeta{ref, chunks[0].MinTime(), chunks[len(chunks)-1].MaxTime(), 0})
 		} else {
-			for i, c := range chunks {
+			for _, c := range chunks {
 				chunkEnc := m.writerIters[c.IterIndex].ChunkByte(isMsgTag, c.Chunk)
 				chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
 				if err != nil {
 					return err
 				}
-				c.Ref = chunkRef
-				chunks[i] = c
+				metaChunks = append(metaChunks, ChunkMeta{chunkRef, c.MinTime(), c.MaxTime(), c.SegmentNum()})
 			}
 		}
-		ref, err := w.AddSeries(!isMsgTag, lset, chunks...)
+		ref, err := w.AddSeries(!isMsgTag, lset, metaChunks...)
 		if err != nil {
 			return err
 		}

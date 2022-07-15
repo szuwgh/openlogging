@@ -62,6 +62,11 @@ func (c ChunkMeta) SegmentNum() uint64 {
 	return c.LastLogNum
 }
 
+func (c ChunkMeta) Meta(ref uint64) ChunkMeta {
+	c.Ref = ref
+	return c
+}
+
 func decodeBlockHandle(src []byte) (blockHandle, int) {
 	offset, n := binary.Uvarint(src)
 	length, m := binary.Uvarint(src[n:])

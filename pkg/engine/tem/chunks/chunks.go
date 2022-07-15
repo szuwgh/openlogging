@@ -17,7 +17,7 @@ type Postings interface {
 }
 
 type ChunkReader interface {
-	 ReadChunk(bool, ...uint64) ChunkEnc
+	ReadChunk(bool, ...uint64) ChunkEnc
 }
 
 type Chunk interface {

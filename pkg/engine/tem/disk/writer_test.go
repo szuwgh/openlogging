@@ -17,7 +17,7 @@ func Test_seriesWriter_addSeries(t *testing.T) {
 	type args struct {
 		isSeries bool
 		lset     labels.Labels
-		chunks   []ChunkMetaIndex
+		chunks   []ChunkMeta
 	}
 	tests := []struct {
 		name    string
@@ -33,7 +33,7 @@ func Test_seriesWriter_addSeries(t *testing.T) {
 			args: args{
 				isSeries: false,
 				lset:     labels.Labels{labels.Label{"zhangshan", "baidu"}, labels.Label{"lisi", "google"}},
-				chunks:   []ChunkMetaIndex{ChunkMetaIndex{ChunkMeta{1, 1626851373, 1626854373, 156}, 0}, ChunkMetaIndex{ChunkMeta{2, 1626851373, 1626856373, 156}, 0}},
+				chunks:   []ChunkMeta{{1, 1626851373, 1626854373, 156}, {2, 1626851373, 1626856373, 156}},
 			},
 		},
 		{
@@ -42,7 +42,7 @@ func Test_seriesWriter_addSeries(t *testing.T) {
 			args: args{
 				isSeries: false,
 				lset:     labels.Labels{labels.Label{"wangwu", "ok"}, labels.Label{"wuliu", "yes"}},
-				chunks:   []ChunkMetaIndex{ChunkMetaIndex{ChunkMeta{1, 1626851373, 1626854373, 157}, 0}, ChunkMetaIndex{ChunkMeta{2, 1626851373, 1626856373, 158}, 0}},
+				chunks:   []ChunkMeta{{1, 1626851373, 1626854373, 157}, {2, 1626851373, 1626856373, 158}},
 			},
 		},
 	}
