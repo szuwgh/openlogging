@@ -59,7 +59,7 @@ type MemTable struct {
 	logID uint64
 }
 
-func NewMemTable(bytePool byteutil.Inverted, skiplistLevel, skipListInterval int) *MemTable {
+func NewMemTable(bytePool byteutil.Inverted, skiplistLevel, skipListInterval int, msgTagName string) *MemTable {
 	mt := &MemTable{}
 	mt.bytePool = bytePool
 	mt.skiplistLevel = skiplistLevel
@@ -67,10 +67,13 @@ func NewMemTable(bytePool byteutil.Inverted, skiplistLevel, skipListInterval int
 	mt.bytePoolReader = byteutil.NewInvertedBytePoolReader(bytePool, 0, mt.skiplistLevel) //newByteBlockReader(bytePool)
 	mt.indexs = NewDefalutTagGroup()
 	mt.series = newStripeSeries()
+	mt.msgTagName = msgTagName
 	c := NewChain()
 	c.Use(TermMiddleware())
 	c.Use(LogFreqMiddleware())
 	mt.msgIndex = c.Last(Position)
+
+	//mt.Init()
 	return mt
 }
 
@@ -126,10 +129,6 @@ func (mt *MemTable) WriteVInt64(i uint64, b int64) (uint64, int) {
 
 func (mt *MemTable) WriteVUint64(i uint64, b uint64) (uint64, int) {
 	return mt.bytePool.WriteVUint64(i, b)
-}
-
-func (mt *MemTable) ShowSeries() {
-
 }
 
 //回收内存
@@ -201,10 +200,10 @@ func (mt *MemTable) LogNum() uint64 {
 
 //索引文档
 func (mt *MemTable) Index(context *Context, docID uint64, timeStamp int64, series *MemSeries, tokens tokenizer.Tokens) {
-	s := series
+	//s := series
 	context.LogID = docID
 	context.TimeStamp = timeStamp
-	mt.addLabel(s, timeStamp, docID)
+	mt.addLabel(series, timeStamp, docID)
 
 	postingList, ok := mt.indexs.Get(mt.msgTagName)
 	if !ok {
@@ -217,7 +216,7 @@ func (mt *MemTable) Index(context *Context, docID uint64, timeStamp int64, serie
 		}
 		context.Term = bytes.TrimSpace([]byte(t.Term)) //词
 		context.Position = t.Position
-		mt.addTerm(context, s.ref, s.Lset(), postingList)
+		mt.addTerm(context, series.ref, series.Lset(), postingList)
 	}
 }
 

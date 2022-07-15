@@ -609,6 +609,9 @@ func NewIndexReader(dir string, skipListlevel int, bcache, mcache *cache.Namespa
 	var err error
 	r := &IndexReader{}
 	r.seriesr, err = newSeriesReader(dir, skipListlevel)
+	if err != nil {
+		return nil
+	}
 	r.indexr, err = newKeyReader(dir)
 	if err != nil {
 		return nil

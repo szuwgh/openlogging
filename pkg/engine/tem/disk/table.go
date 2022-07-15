@@ -23,7 +23,7 @@ type TimeChunk struct {
 }
 
 type ChunkMetaIndex struct {
-	ChunkMeta
+	chunks.Chunk
 	IterIndex int
 }
 
@@ -33,18 +33,18 @@ type ChunkMeta struct {
 	LastLogNum uint64
 }
 
-func isEqualChunk(ch1, ch2 ChunkMeta) bool {
-	if ch1.Ref != ch2.Ref {
-		return false
-	}
-	if ch1.MinT != ch2.MinT {
-		return false
-	}
-	if ch1.MaxT != ch2.MaxT {
-		return false
-	}
-	return true
-}
+// func isEqualChunk(ch1, ch2 ChunkMeta) bool {
+// 	if ch1.Ref != ch2.Ref {
+// 		return false
+// 	}
+// 	if ch1.MinT != ch2.MinT {
+// 		return false
+// 	}
+// 	if ch1.MaxT != ch2.MaxT {
+// 		return false
+// 	}
+// 	return true
+// }
 
 func (c ChunkMeta) ChunkEnc(isTerm bool, cr chunks.ChunkReader) chunks.ChunkEnc {
 	return cr.ReadChunk(isTerm, c.Ref)

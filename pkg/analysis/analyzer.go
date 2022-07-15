@@ -1,6 +1,8 @@
 package analysis
 
 import (
+	"fmt"
+
 	"github.com/szuwgh/temsearch/pkg/tokenizer"
 	"github.com/yanyiwu/gojieba"
 )
@@ -20,6 +22,7 @@ func NewAnalyzer(tokenizerType string) *Analyzer {
 	config["stop_words"] = gojieba.STOP_WORDS_PATH
 	a.t, err = tokenizer.RegistryInstance.NewTokenizer(tokenizerType, config)
 	if err != nil {
+		fmt.Println(err)
 		return nil
 	}
 	return a

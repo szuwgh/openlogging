@@ -46,7 +46,7 @@ func (m *memIterator) msg(w disk.IndexWriter, segmentNum uint64) ([]disk.TimeChu
 		// 	return nil, nil, err
 		// }
 		chk := disk.TimeChunk{Lset: p.lset}
-		chk.Meta = append(chk.Meta, disk.ChunkMetaIndex{ChunkMeta: disk.ChunkMeta{Ref: 0, MinT: p.minT, MaxT: p.maxT}, IterIndex: 0})
+		chk.Meta = append(chk.Meta, disk.ChunkMetaIndex{Chunk: p, IterIndex: 0})
 		timeChunk = append(timeChunk, chk)
 		seriesRef, _ := w.GetSeries(p.lset)
 		seriesPosting = append(seriesPosting, seriesRef)
@@ -68,7 +68,7 @@ func (s *memIterator) series(w disk.IndexWriter, segmentNum uint64) ([]disk.Time
 			// 	return nil, nil, err
 			// }
 			chk := disk.TimeChunk{Lset: series.lset}
-			chk.Meta = append(chk.Meta, disk.ChunkMetaIndex{ChunkMeta: disk.ChunkMeta{Ref: 0, MinT: series.minT, MaxT: series.maxT}, IterIndex: 0})
+			chk.Meta = append(chk.Meta, disk.ChunkMetaIndex{Chunk: series, IterIndex: 0})
 			timeChunk = append(timeChunk, chk)
 		} else {
 			seriesPosting = append(seriesPosting, seriesRef)
@@ -84,7 +84,7 @@ func (i *memIterator) ChunksPosting(w disk.IndexWriter, segmentNum uint64, iterI
 	return i.msg(w, segmentNum)
 }
 
-func (i *memIterator) ChunkByte(isTerm bool, c disk.ChunkMeta) chunks.ChunkEnc {
+func (i *memIterator) ChunkByte(isTerm bool, c chunks.Chunk) chunks.ChunkEnc {
 	return c.ChunkEnc(isTerm, i.chunkr)
 }
 

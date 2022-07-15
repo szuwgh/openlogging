@@ -6,7 +6,7 @@ import (
 )
 
 func Test_alloc(t *testing.T) {
-	alloc := NewByteBlockAllocator()
+	alloc := NewByteBlockStackAllocator()
 	b := alloc.Allocate()
 	b[0] = 2
 	fmt.Println(b)

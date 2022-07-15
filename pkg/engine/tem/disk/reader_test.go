@@ -11,7 +11,7 @@ func Test_IndexReaderPrint(t *testing.T) {
 	tcache := cache.NewCache(cache.NewLRU(defaultSegmentSize * 10))
 	b := &cache.NamespaceGetter{Cache: bcache, NS: 1}
 	m := &cache.NamespaceGetter{Cache: tcache, NS: 1}
-	reader1 := NewIndexReader("/opt/goproject/temsearch/src/github.com/szuwgh/temsearch/data/01G7C1KK5Z6SKJYWKN3PXE676W/index", 6, b, m)
+	reader1 := NewIndexReader("/opt/goproject/temsearch/src/github.com/szuwgh/temsearch/data/01G7ZRQ1C1Z03S6N9ZWQ0JDTST/index", 6, b, m)
 	reader1.print()
 
 }

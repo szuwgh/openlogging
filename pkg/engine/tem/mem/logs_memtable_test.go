@@ -8,7 +8,7 @@ import (
 )
 
 func Test_logs(t *testing.T) {
-	alloc := byteutil.NewByteBlockAllocator()
+	alloc := byteutil.NewByteBlockStackAllocator()
 	table := NewLogsTable(byteutil.NewForwardBytePool(alloc))
 	table.WriteLog([]byte("aaaaaaaaaaaaaaaaaaaaa"))
 	table.WriteLog([]byte("bbbbbbbbbbbbbbbbbbbb"))

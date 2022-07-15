@@ -3,7 +3,6 @@ package tem
 import (
 	"log"
 	"math"
-	"sync"
 	"sync/atomic"
 
 	"github.com/szuwgh/temsearch/pkg/temql"
@@ -17,24 +16,24 @@ import (
 
 type Head struct {
 	rwControl
-	mint         int64
-	MaxT         int64
-	indexMem     *mem.MemTable
-	logsMem      *mem.LogsTable
-	indexControl sync.WaitGroup
-	chunkRange   int64
-	lastSegNum   uint64
-	a            *analysis.Analyzer
-	isWaitfroze  bool
-	logSize      uint64
+	mint     int64
+	MaxT     int64
+	indexMem *mem.MemTable
+	logsMem  *mem.LogsTable
+	//indexControl sync.WaitGroup
+	chunkRange int64
+	lastSegNum uint64
+	a          *analysis.Analyzer
+	//isWaitfroze  bool
+	logSize uint64
 }
 
-func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer, skiplistLevel, skipListInterval int) *Head {
+func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer, skiplistLevel, skipListInterval int, msgTagName string) *Head {
 	h := &Head{
 		mint: math.MinInt64,
 		MaxT: math.MinInt64,
 	}
-	h.indexMem = mem.NewMemTable(byteutil.NewInvertedBytePool(alloc), skiplistLevel, skipListInterval)
+	h.indexMem = mem.NewMemTable(byteutil.NewInvertedBytePool(alloc), skiplistLevel, skipListInterval, msgTagName)
 	h.logsMem = mem.NewLogsTable(byteutil.NewForwardBytePool(alloc))
 	h.chunkRange = chunkRange
 	h.a = a
@@ -43,23 +42,31 @@ func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer, s
 
 //add some logs
 func (h *Head) addLogs(r logproto.Stream) error {
-	log.Println("add logs", r.Labels)
+	log.Println("add logs", r.Labels, r.Entries[0].Timestamp.Unix(), r.Entries[len(r.Entries)-1].Timestamp.Unix())
 	//return h.stat.addLogs(r)
 	context := mem.Context{}
-	series := h.serieser(r.Labels)
+	series, err := h.serieser(r.Labels)
+	if err != nil {
+		return err
+	}
+	h.setMinTime(r.Entries[0].Timestamp.UnixNano() / 1e6)
 	for _, e := range r.Entries {
-		h.logsMem.WriteLog([]byte(e.Line))
+		//h.logsMem.WriteLog([]byte(e.Line))
 		tokens := h.tokener(&e)
 		h.indexMem.Index(&context, e.LogID, e.Timestamp.UnixNano()/1e6, series, tokens)
 		h.indexMem.Flush()
 	}
+	h.setMaxTime(r.Entries[len(r.Entries)-1].Timestamp.UnixNano() / 1e6)
 	return nil
 }
 
-func (h *Head) serieser(labels string) *mem.MemSeries {
-	lset, _ := temql.ParseLabels(labels)
+func (h *Head) serieser(labels string) (*mem.MemSeries, error) {
+	lset, err := temql.ParseLabels(labels)
+	if err != nil {
+		return nil, err
+	}
 	s, _ := h.indexMem.GetOrCreate(lset.Hash(), lset)
-	return s
+	return s, nil
 }
 
 func (h *Head) tokener(entry *logproto.Entry) tokenizer.Tokens {

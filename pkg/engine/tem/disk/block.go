@@ -94,8 +94,6 @@ func (bw *blockWriter) finishTail() uint32 {
 	return checksum
 }
 
-func (bw *blockWriter) len() int { return bw.Len() }
-
 //返回blockWriter长度
 func (bw *blockWriter) bytesLen() int {
 	return bw.Len() + len(bw.restarts)*4 + blockTailLen
@@ -116,9 +114,9 @@ type blockReader struct {
 	restartsOffset int
 }
 
-func (br *blockReader) read(offset, length uint64) []byte {
-	return br.data[offset : offset+length]
-}
+// func (br *blockReader) read(offset, length uint64) []byte {
+// 	return br.data[offset : offset+length]
+// }
 
 func (br *blockReader) search(key []byte) (offset int, err error) {
 	index := sort.Search(br.restartsLen, func(i int) bool {

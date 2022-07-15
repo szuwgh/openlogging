@@ -184,7 +184,7 @@ func (f *labelIterator) Value() []byte {
 	return f.data.Value()
 }
 
-func (f *labelIterator) ChunkByte(isTerm bool, c ChunkMeta) chunks.ChunkEnc {
+func (f *labelIterator) ChunkByte(isTerm bool, c chunks.Chunk) chunks.ChunkEnc {
 	return c.ChunkEnc(isTerm, f.seriesr)
 }
 
@@ -340,16 +340,15 @@ type IteratorLabel interface {
 
 type WriterIterator interface {
 	iterator.SingleIterator
-	//Write(IndexWriter, uint64, int64) ([]TimeChunk, []uint64, error)
+
 	ChunksPosting(w IndexWriter, segmentNum uint64, iterIndex int) ([]TimeChunk, []uint64, error)
 
-	ChunkByte(bool, ChunkMeta) chunks.ChunkEnc
+	ChunkByte(bool, chunks.Chunk) chunks.ChunkEnc
 }
 
 //多路归并排序
 type MergedIterator struct {
-	iters []iterator.SingleIterator //tableIterator
-	//iters      []Iterator
+	iters  []iterator.SingleIterator
 	keys   [][]byte
 	indexs []int
 	index  int
@@ -614,7 +613,7 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 		if len(chunks) > 12 { //合并成一个更大chunk
 			m.lw.reset()
 			for _, c := range chunks {
-				chunkEnc := m.writerIters[c.IterIndex].ChunkByte(isMsgTag, c.ChunkMeta)
+				chunkEnc := m.writerIters[c.IterIndex].ChunkByte(isMsgTag, c.Chunk)
 				posting := chunkEnc.Iterator(c.MinT, c.MaxT, c.LastLogNum)
 				for posting.Next() {
 					m.lw.addLogID(posting.At())
@@ -627,6 +626,16 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 			chunks[0].Ref = ref
 			chunks[0].MaxT = chunks[len(chunks)-1].MaxT
 			chunks = chunks[:1]
+		} else {
+			for i, c := range chunks {
+				chunkEnc := m.writerIters[c.IterIndex].ChunkByte(isMsgTag, c.Chunk)
+				chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
+				if err != nil {
+					return err
+				}
+				c.Ref = chunkRef
+				chunks[i] = c
+			}
 		}
 		ref, err := w.AddSeries(!isMsgTag, lset, chunks...)
 		if err != nil {
@@ -638,10 +647,9 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 	var ref uint64
 	var err error
 
-	switch isMsgTag {
-	case true:
+	if isMsgTag {
 		ref, err = w.WritePostings(p, pRef)
-	default:
+	} else {
 		ref, err = w.WritePostings(append(p, pRef...))
 	}
 	if err != nil {

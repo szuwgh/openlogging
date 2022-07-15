@@ -19,18 +19,21 @@ type ByteGC interface {
 	gc()
 }
 
-type ByteBlockAllocator struct {
+type ByteBlockGoPoolAllocator struct {
+}
+
+type ByteBlockStackAllocator struct {
 	blockSize      int
 	freeByteBlocks ByteGC
 }
 
-func NewByteBlockAllocator() Allocator {
-	alloc := &ByteBlockAllocator{}
+func NewByteBlockStackAllocator() Allocator {
+	alloc := &ByteBlockStackAllocator{}
 	alloc.freeByteBlocks = newStack()
 	return alloc
 }
 
-func (alloc *ByteBlockAllocator) Allocate() []byte {
+func (alloc *ByteBlockStackAllocator) Allocate() []byte {
 	var b []byte
 	if alloc.freeByteBlocks.len() == 0 {
 		b = make([]byte, BYTE_BLOCK_SIZE)
@@ -40,21 +43,21 @@ func (alloc *ByteBlockAllocator) Allocate() []byte {
 	return b
 }
 
-func (alloc *ByteBlockAllocator) BlockSize() int {
+func (alloc *ByteBlockStackAllocator) BlockSize() int {
 	return alloc.blockSize
 }
 
-func (alloc *ByteBlockAllocator) Recycle(blocks [][]byte) {
+func (alloc *ByteBlockStackAllocator) Recycle(blocks [][]byte) {
 	for i := range blocks {
 		alloc.freeByteBlocks.recycle(blocks[i])
 	}
 }
 
-func (alloc *ByteBlockAllocator) Len() int {
+func (alloc *ByteBlockStackAllocator) Len() int {
 	return alloc.freeByteBlocks.len()
 }
 
-func (alloc *ByteBlockAllocator) GC() {
+func (alloc *ByteBlockStackAllocator) GC() {
 	alloc.freeByteBlocks.gc()
 }
 

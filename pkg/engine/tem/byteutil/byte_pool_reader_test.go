@@ -59,7 +59,7 @@ func Test_bytePoolReader(t *testing.T) {
 // }
 
 func Test_bytePoolReadVInt(t *testing.T) {
-	alloc := NewByteBlockAllocator()
+	alloc := NewByteBlockStackAllocator()
 	bytePool := NewInvertedBytePool(alloc)
 	//bytePool.newBytes2(8)
 	offset := bytePool.InitBytes(6)
@@ -92,7 +92,7 @@ func Test_bytePoolReadString(t *testing.T) {
 
 func Test_bytePoolGetBlock(t *testing.T) {
 	//BYTE_BLOCK_SIZE = 128
-	alloc := NewByteBlockAllocator()
+	alloc := NewByteBlockStackAllocator()
 	bytePool := NewInvertedBytePool(alloc)
 	offset := bytePool.InitBytes(6)
 	byteStart := offset
@@ -140,7 +140,7 @@ func Test_bytePoolGetBlock(t *testing.T) {
 
 func Test_bytePoolSnapBlock(t *testing.T) {
 	//	BYTE_BLOCK_SIZE = 32
-	alloc := NewByteBlockAllocator()
+	alloc := NewByteBlockStackAllocator()
 	bytePool := NewInvertedBytePool(alloc)
 	offset := bytePool.InitBytes(6)
 	byteStart := offset
@@ -180,7 +180,7 @@ func Test_bytePoolSnapBlock(t *testing.T) {
 
 func Test_bytereader2(t *testing.T) {
 
-	alloc := NewByteBlockAllocator()
+	alloc := NewByteBlockStackAllocator()
 
 	bytePool := NewForwardBytePool(alloc)
 	b := "woshishui3334456777771234567890123456788"

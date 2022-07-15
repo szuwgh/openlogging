@@ -7,7 +7,7 @@ import (
 
 func Test_bytePoolWrite(t *testing.T) {
 	//BYTE_BLOCK_SIZE = 10
-	alloc := NewByteBlockAllocator()
+	alloc := NewByteBlockStackAllocator()
 	bytePool := NewInvertedBytePool(alloc)
 	offset := bytePool.InitBytes(3)
 
@@ -68,7 +68,7 @@ func Test_initBytes(t *testing.T) {
 }
 
 func Test_bytePoolWrite2(t *testing.T) {
-	alloc := NewByteBlockAllocator()
+	alloc := NewByteBlockStackAllocator()
 	bytePool := NewForwardBytePool(alloc)
 	b := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA}
 	n1 := bytePool.useByteOffset

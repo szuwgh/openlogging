@@ -67,20 +67,19 @@ type Engine struct {
 	dataDir         string
 	compactor       *leveledCompactor
 	wg              sync.WaitGroup
-	//	indexChan       chan logmsg.LogMsgArray
-	done        chan struct{}
-	headPool    chan *Head
-	compactChan chan struct{}
-	walDir      string
-	wal         Wal
-	opts        *Options
+	done            chan struct{}
+	headPool        chan *Head
+	compactChan     chan struct{}
+	walDir          string
+	wal             Wal
+	opts            *Options
 }
 
 func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
 	e := &Engine{}
 	e.a = a
 	e.opts = opt
-	e.alloc = byteutil.NewByteBlockAllocator()
+	e.alloc = byteutil.NewByteBlockStackAllocator()
 	e.tOps = disk.NewTableOps()
 	e.dataDir = opt.DataDir
 	e.walDir = filepath.Join(e.dataDir, "wal")
@@ -115,7 +114,7 @@ func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
 }
 
 func (e *Engine) newHead() *Head {
-	return NewHead(e.alloc, e.opts.BlockRanges[0], e.a, e.opts.SkipListLevel, e.opts.SkipListInterval)
+	return NewHead(e.alloc, e.opts.BlockRanges[0], e.a, e.opts.SkipListLevel, e.opts.SkipListInterval, e.opts.MsgTagName)
 }
 
 func (e *Engine) recoverWal() error {
@@ -144,10 +143,19 @@ func (e *Engine) recoverWal() error {
 				log.Println(err, n)
 				break
 			}
-			e.recoverMemDB(buf.Bytes())
+			err = e.recoverMemDB(buf.Bytes())
+			if err != nil {
+				return err
+			}
 		}
-		f.Close()
-		e.shouldCompact()
+		err = f.Close()
+		if err != nil {
+			return err
+		}
+		err = e.shouldCompact()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -372,9 +380,9 @@ func (e *Engine) addToMemDB(r logproto.PushRequest) error {
 		for j := range r.Streams[i].Entries {
 			r.Streams[i].Entries[j].LogID = e.GetNextID()
 		}
-		head.setMinTime(r.Streams[i].Entries[0].Timestamp.UnixNano() / 1e6)
+		
 		head.addLogs(r.Streams[i])
-		head.setMaxTime(r.Streams[i].Entries[len(r.Streams[i].Entries)-1].Timestamp.UnixNano() / 1e6)
+		
 	}
 	atomic.AddUint64(&head.logSize, uint64(r.XXX_Size()))
 	return nil

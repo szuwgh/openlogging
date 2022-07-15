@@ -4,11 +4,12 @@ import (
 	"log"
 	"runtime"
 
+	"github.com/spf13/cobra"
 	"github.com/szuwgh/temsearch/pkg/server"
+
 	"github.com/szuwgh/temsearch/pkg/tokenizer"
 	_ "github.com/szuwgh/temsearch/pkg/tokenizer/buildinit"
 	"github.com/szuwgh/temsearch/web"
-	"github.com/spf13/cobra"
 )
 
 var config server.Config

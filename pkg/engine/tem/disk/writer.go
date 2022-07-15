@@ -633,7 +633,7 @@ func newSeriesWriter(dir string) (*seriesWriter, error) {
 	return sw, nil
 }
 
-func (sw *seriesWriter) addSeries(isSeries bool, lset labels.Labels, chunks ...ChunkMetaIndex) (uint64, error) {
+func (sw *seriesWriter) addSeries(isSeries bool, lset labels.Labels, chunks ...ChunkMeta) (uint64, error) {
 	sw.buf1.Reset()
 	sw.buf2.Reset()
 	sw.buf2.PutVarint(len(lset))
@@ -749,7 +749,7 @@ type IndexWriter interface {
 	AppendKey([]byte, uint64) error
 	Close() error
 	FinishTag() error
-	AddSeries(bool, labels.Labels, ...ChunkMetaIndex) (uint64, error)
+	AddSeries(bool, labels.Labels, ...ChunkMeta) (uint64, error)
 	WritePostings(ref ...[]uint64) (uint64, error)
 	WriteChunks([][]byte) (uint64, error)
 	GetSeries(labels.Labels) (uint64, bool)
@@ -804,7 +804,7 @@ func (tw *IndexW) GetSeries(lset labels.Labels) (uint64, bool) {
 	return tw.seriesw.getSeries(lset)
 }
 
-func (tw *IndexW) AddSeries(isSeries bool, lset labels.Labels, chunks ...ChunkMetaIndex) (uint64, error) {
+func (tw *IndexW) AddSeries(isSeries bool, lset labels.Labels, chunks ...ChunkMeta) (uint64, error) {
 	return tw.seriesw.addSeries(isSeries, lset, chunks...)
 }
 
