@@ -44,7 +44,6 @@ func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer, s
 //add some logs
 func (h *Head) addLogs(r logproto.Stream) error {
 	log.Println("add logs", r.Labels, r.Entries[0].Timestamp.Unix(), r.Entries[len(r.Entries)-1].Timestamp.Unix())
-	//return h.stat.addLogs(r)
 	context := mem.Context{}
 	series, err := h.serieser(r.Labels)
 	if err != nil {

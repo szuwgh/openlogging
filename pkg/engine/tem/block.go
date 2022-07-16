@@ -107,7 +107,7 @@ func (b *Block) MaxTime() int64 {
 }
 
 func (b *Block) LogNum() uint64 {
-	return b.meta.LogID[len(b.meta.LogID)-1]
+	return b.meta.Total
 }
 
 func (b *Block) LastSegNum() uint64 {
@@ -176,6 +176,7 @@ type BlockMeta struct {
 	MaxTime int64 `json:"maxTime"`
 
 	LogID            []uint64 `json:"log_id"`
+	Total            uint64   `json:"total"`
 	SkipListLevel    int      `json:"skiplistlevel"`
 	SkipListInterval int      `json:"SkipListInterval"`
 

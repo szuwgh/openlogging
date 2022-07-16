@@ -50,7 +50,7 @@ func Test_HeadAddLog(t *testing.T) {
 		}
 	}
 	compactor := newLeveledCompactor(nil, "msg")
-	err := compactor.Write("./", h, h.mint, h.MaxT, 6, 3)
+	err := compactor.Write("./", h, 6, 3)
 	if err != nil {
 		log.Fatal(err)
 	}

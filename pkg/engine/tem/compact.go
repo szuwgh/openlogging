@@ -133,29 +133,32 @@ func (c *leveledCompactor) Compact(dest string, br []BlockReader, metas []*Block
 }
 
 func compactBlockMetas(uid ulid.ULID, blocks ...*BlockMeta) *BlockMeta {
-	res := &BlockMeta{
+	meta := &BlockMeta{
 		ULID:    uid,
 		MinTime: blocks[0].MinTime,
 		MaxTime: blocks[len(blocks)-1].MaxTime,
 	}
-
+	var total uint64
 	for _, b := range blocks {
-		if b.Compaction.Level > res.Compaction.Level {
-			res.Compaction.Level = b.Compaction.Level
+		if b.Compaction.Level > meta.Compaction.Level {
+			meta.Compaction.Level = b.Compaction.Level
 		}
-		res.Compaction.Parents = append(res.Compaction.Parents, b.ULID)
+		meta.Compaction.Parents = append(meta.Compaction.Parents, b.ULID)
+		total += b.Total
 	}
-	res.Compaction.Level++
-	return res
+	meta.Compaction.Level++
+	meta.Total = total
+	return meta
 }
 
-func (c *leveledCompactor) Write(dest string, b BlockReader, mint, maxt int64, skiplistLevel int, skiplistInterval int) (err error) {
+func (c *leveledCompactor) Write(dest string, b *Head, skiplistLevel int, skiplistInterval int) (err error) {
 	entropy := rand.New(rand.NewSource(time.Now().UnixNano()))
 	uid := ulid.MustNew(ulid.Now(), entropy)
 	meta := &BlockMeta{
 		ULID:             uid,
-		MinTime:          mint,
-		MaxTime:          maxt,
+		MinTime:          b.mint,
+		MaxTime:          b.MaxT,
+		Total:            b.nextID,
 		SkipListLevel:    skiplistLevel,
 		SkipListInterval: skiplistInterval,
 	}

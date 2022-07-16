@@ -372,12 +372,7 @@ func (e *Engine) addToMemDB(r logproto.PushRequest) error {
 	head := e.getIndexHead()
 
 	for i := range r.Streams {
-		// for j := range r.Streams[i].Entries {
-		// 	r.Streams[i].Entries[j].LogID = e.GetNextID()
-		// }
-
 		head.addLogs(r.Streams[i])
-
 	}
 	atomic.AddUint64(&head.logSize, uint64(r.XXX_Size()))
 	return nil
@@ -569,7 +564,7 @@ func (e *Engine) mcompact() error {
 	if e.frozeHead == nil {
 		return nil
 	}
-	return e.compactor.Write(e.dataDir, e.frozeHead, e.frozeHead.mint, e.frozeHead.MaxT, e.opts.SkipListLevel, e.opts.SkipListInterval)
+	return e.compactor.Write(e.dataDir, e.frozeHead, e.opts.SkipListLevel, e.opts.SkipListInterval)
 }
 
 func chunkDir(dir string) string {
