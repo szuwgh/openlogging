@@ -58,8 +58,8 @@ type Engine struct {
 	a  *analysis.Analyzer
 	mu sync.RWMutex
 
-	memMu           sync.RWMutex
-	nextID          uint64
+	memMu sync.RWMutex
+
 	alloc           byteutil.Allocator
 	head, frozeHead *Head
 	walFile         []string
@@ -316,11 +316,6 @@ func (e *Engine) releaseFroze(frozeHead *Head) {
 	recycle = e.alloc.Len()
 }
 
-func (e *Engine) GetNextID() uint64 {
-	e.nextID++
-	return e.nextID
-}
-
 func TraceAll() {
 	for i := 1; ; i++ {
 		_, file, line, ok := runtime.Caller(i)
@@ -377,12 +372,12 @@ func (e *Engine) addToMemDB(r logproto.PushRequest) error {
 	head := e.getIndexHead()
 
 	for i := range r.Streams {
-		for j := range r.Streams[i].Entries {
-			r.Streams[i].Entries[j].LogID = e.GetNextID()
-		}
-		
+		// for j := range r.Streams[i].Entries {
+		// 	r.Streams[i].Entries[j].LogID = e.GetNextID()
+		// }
+
 		head.addLogs(r.Streams[i])
-		
+
 	}
 	atomic.AddUint64(&head.logSize, uint64(r.XXX_Size()))
 	return nil

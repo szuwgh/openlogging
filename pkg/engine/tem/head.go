@@ -26,6 +26,7 @@ type Head struct {
 	a          *analysis.Analyzer
 	//isWaitfroze  bool
 	logSize uint64
+	nextID  uint64
 }
 
 func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer, skiplistLevel, skipListInterval int, msgTagName string) *Head {
@@ -53,7 +54,7 @@ func (h *Head) addLogs(r logproto.Stream) error {
 	for _, e := range r.Entries {
 		//h.logsMem.WriteLog([]byte(e.Line))
 		tokens := h.tokener(&e)
-		h.indexMem.Index(&context, e.LogID, e.Timestamp.UnixNano()/1e6, series, tokens)
+		h.indexMem.Index(&context, h.getNextID(), e.Timestamp.UnixNano()/1e6, series, tokens)
 		h.indexMem.Flush()
 	}
 	h.setMaxTime(r.Entries[len(r.Entries)-1].Timestamp.UnixNano() / 1e6)
@@ -91,6 +92,7 @@ func (h *Head) reset() {
 	h.mint = math.MinInt64
 	h.lastSegNum = 0
 	h.logSize = 0
+	h.nextID = 0
 }
 
 func (h *Head) ReadDone() {
@@ -129,12 +131,17 @@ func (h *Head) size() uint64 {
 
 func (h *Head) Close() {
 	h.waitRead()
+
 }
 
 func (h *Head) open() {
 	h.closing = false
 	h.indexMem.Init()
+}
 
+func (h *Head) getNextID() uint64 {
+	h.nextID++
+	return h.nextID
 }
 
 func (h *Head) release(recycle, alloced *int) error {

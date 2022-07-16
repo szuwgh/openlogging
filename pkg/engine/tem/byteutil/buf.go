@@ -80,7 +80,7 @@ func (d *Decbuf) Err() error     { return d.e }
 func (d *Decbuf) Len() int       { return len(d.b) }
 func (d *Decbuf) Get() []byte    { return d.b }
 
-func (d *Decbuf) Uvarint() int      { return int(d.Varint64()) }
+func (d *Decbuf) Varint() int       { return int(d.Varint64()) }
 func (d *Decbuf) Uvarint32() uint32 { return uint32(d.Uvarint64()) }
 
 func (d *Decbuf) Uint32() uint32 {

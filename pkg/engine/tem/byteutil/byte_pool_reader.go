@@ -73,7 +73,6 @@ func (m *memSeriesSnapReader) Bytes() [][]byte {
 	seriesLen := m.ref[2]
 	var b [][]byte
 	m.r.encbuf.Reset()
-	//m.r.encbuf.PutUvarint(0)
 	m.r.encbuf.PutUvarint64(seriesLen)
 	b = append(b, m.r.encbuf.Get())
 	m.r.initReader(byteStart, seriesIndex)
@@ -142,7 +141,7 @@ func (m *memTermSnapReader) Bytes() [][]byte {
 			b = append(b, m.r.Block())
 		}
 	}
-	m.r.initReader(byteStart+SizeClass[0]*uint64(m.skiplistLevel), posIndex)
+	m.r.initReader(byteStart+SizeClass[0]*uint64(m.skiplistLevel+1), posIndex)
 	for m.r.Next() {
 		b = append(b, m.r.Block())
 	}
@@ -195,7 +194,6 @@ func (r *InvertedBytePoolReader) scanByte(i uint64) byte {
 
 func (r *InvertedBytePoolReader) scanByteBlock(i, length uint64) []byte {
 	m, n := turn(i)
-	//r.read += length
 	return r.bytePool.Bytes(m, n, length) //r.bytePoolr.buffers[m][n : n+length]
 }
 
@@ -220,11 +218,6 @@ func (r *InvertedBytePoolReader) nextBlock() {
 	}
 }
 
-// func (r *InvertedBytePoolReader) readInt32(i int) int {
-// 	m, n := turn(i)
-// 	return int(binary.LittleEndian.Uint32(r.bytePool.buffers[m][n:]))
-// }
-
 func (r *InvertedBytePoolReader) ReadByte() (byte, error) {
 	return r.readByte(), nil
 }
@@ -238,7 +231,6 @@ func (r *InvertedBytePoolReader) readByte() byte {
 	}
 	b := r.scanByte(r.offset)
 	r.offset++
-	//r.read++
 	return b
 }
 

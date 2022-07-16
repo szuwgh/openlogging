@@ -10,6 +10,6 @@ func Test_EncBuf(t *testing.T) {
 	e.PutVarint(1234)
 
 	d := NewDecBuf(e.Get())
-	s := d.Uvarint()
+	s := d.Varint()
 	fmt.Println(s)
 }

@@ -258,7 +258,7 @@ func (cr *seriesReader) readLabelChunk(ref uint64) *chunks.SeriesSnapShot {
 	}
 	debuf := mmap.decbufAt(off)
 
-	length := debuf.Uvarint()
+	length := debuf.Varint()
 	b := debuf.Bytes(length)
 	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
 		return nil
@@ -281,7 +281,7 @@ func (cr *seriesReader) readTermChunk(ref uint64) *chunks.TermSnapShot {
 	}
 	debuf := mmap.decbufAt(off)
 
-	length := debuf.Uvarint()
+	length := debuf.Varint()
 	b := debuf.Bytes(length)
 	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
 		return nil
@@ -303,7 +303,7 @@ type memSeriesSnapReader struct {
 }
 
 func (m *memSeriesSnapReader) Encode() chunks.SnapBlock {
-	m.r.Uvarint()
+	m.r.Varint()
 	//segmentNum := m.r.uvarint64()
 	seriesLen := m.r.Uvarint64()
 	seriesBytes := m.r.Bytes(int(seriesLen))
@@ -311,7 +311,7 @@ func (m *memSeriesSnapReader) Encode() chunks.SnapBlock {
 }
 
 func (m *memSeriesSnapReader) Bytes() [][]byte {
-	l := m.r.Uvarint()
+	l := m.r.Varint()
 	return [][]byte{m.r.Bytes(l)}
 }
 
@@ -321,7 +321,7 @@ type memTermSnapReader struct {
 }
 
 func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, []chunks.SnapBlock) {
-	m.r.Uvarint()
+	m.r.Varint()
 	//	segmentNum := m.r.uvarint64()
 	logFreqLen := m.r.Uvarint64()
 	skipLen := make([]uint64, m.skiplistLevel)
@@ -339,7 +339,7 @@ func (m *memTermSnapReader) Encode() (chunks.SnapBlock, chunks.SnapBlock, []chun
 }
 
 func (m *memTermSnapReader) Bytes() [][]byte {
-	l := m.r.Uvarint()
+	l := m.r.Varint()
 	return [][]byte{m.r.Bytes(l)}
 }
 
@@ -416,13 +416,13 @@ func (pr *seriesReader) getByID(ref uint64) (labels.Labels, []ChunkMeta, error) 
 		return nil, nil, errors.New("mmap is nil")
 	}
 	debuf := mmap.decbufAt(off)
-	length := debuf.Uvarint()
+	length := debuf.Varint()
 	b := debuf.Bytes(length)
 	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
 		return nil, nil, errors.New("crc not match")
 	}
 	debuf.Reset(b)
-	k := debuf.Uvarint()
+	k := debuf.Varint()
 	var lsets labels.Labels
 	for i := 0; i < k; i++ {
 		n := debuf.UvarintStr()
@@ -430,7 +430,7 @@ func (pr *seriesReader) getByID(ref uint64) (labels.Labels, []ChunkMeta, error) 
 		lsets = append(lsets, labels.Label{Name: n, Value: v})
 	}
 	//chunks meta data
-	k = debuf.Uvarint()
+	k = debuf.Varint()
 	for k == 0 {
 		return nil, nil, nil
 	}
@@ -515,7 +515,7 @@ func (pr *seriesReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
 	}
 	debuf := mmap.decbufAt(off)
 
-	length := debuf.Uvarint()
+	length := debuf.Varint()
 
 	b := debuf.Bytes(length)
 	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
@@ -523,8 +523,8 @@ func (pr *seriesReader) readPosting(ref uint64) ([]uint64, map[uint64]uint64) {
 	}
 	debuf.Reset(b)
 
-	refCount := debuf.Uvarint()
-	refLen := debuf.Uvarint()
+	refCount := debuf.Varint()
+	refLen := debuf.Varint()
 	seriesRef := make([]uint64, refLen)
 	var termRef map[uint64]uint64
 	if refCount > 1 {
@@ -557,15 +557,15 @@ func (pr *seriesReader) readPosting2(ref uint64) ([]uint64, []uint64) {
 	}
 	debuf := mmap.decbufAt(off)
 
-	length := debuf.Uvarint()
+	length := debuf.Varint()
 	b := debuf.Bytes(length)
 	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
 		return nil, nil
 	}
 	debuf.Reset(b)
 
-	refCount := debuf.Uvarint()
-	refLen := debuf.Uvarint()
+	refCount := debuf.Varint()
+	refLen := debuf.Varint()
 	seriesRef := make([]uint64, refLen)
 	var termRef []uint64
 	if refCount > 1 {
@@ -874,7 +874,7 @@ func (cr *LogReader) ReadLog(logID uint64) []byte {
 	}
 	offset := binary.LittleEndian.Uint64(logMmap.index[(logID-logOffset-1)*8:])
 	debuf := logMmap.mmap.decbufAt(int(offset))
-	l := debuf.Uvarint()
+	l := debuf.Varint()
 	b := debuf.Bytes(l)
 	ch.Release()
 	return b

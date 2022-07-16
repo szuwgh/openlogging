@@ -632,6 +632,7 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 				if err != nil {
 					return err
 				}
+				//fmt.Println(string(m.Key()), chunkEnc.Bytes())
 				metaChunks = append(metaChunks, ChunkMeta{chunkRef, c.MinTime(), c.MaxTime(), c.SegmentNum()})
 			}
 		}
