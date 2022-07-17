@@ -654,6 +654,7 @@ func (r *IndexReader) print() error {
 						fmt.Println(" ")
 					}
 				}
+				fmt.Println("termRef", termRef)
 				for k, v := range termRef {
 					fmt.Print("label_series id==>", k, " ")
 					fmt.Print("term_series==>")
@@ -662,7 +663,7 @@ func (r *IndexReader) print() error {
 					for _, c := range chunkMeta {
 						fmt.Println(c)
 						chunkEnc := c.ChunkEnc(true, r.seriesr)
-						//fmt.Println(chunkEnc.Bytes())
+						//fmt.Println("chunk bytes", chunkEnc.Bytes())
 						posting := chunkEnc.Iterator(c.MinTime(), c.MaxTime(), c.SegmentNum())
 						for posting.Next() {
 							fmt.Print(posting.At())

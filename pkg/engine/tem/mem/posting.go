@@ -2,7 +2,6 @@ package mem
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 	"sync"
 
@@ -236,7 +235,6 @@ func (d *defalutTagGroup) Iterator(chunkr chunks.ChunkReader, seriesr seriesRead
 	iter.i = -1
 	iter.keys = make([]string, 0, len(d.group))
 	for k := range d.group {
-		fmt.Println("k", k)
 		iter.keys = append(iter.keys, k)
 	}
 	iter.tags = d

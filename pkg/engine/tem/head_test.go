@@ -41,7 +41,7 @@ func Test_HeadAddLog(t *testing.T) {
 			},
 		},
 	}
-	h := NewHead(byteutil.NewByteBlockStackAllocator(), 20*1e3, analysis.NewAnalyzer("gojieba"), 6, 3, "msg")
+	h := NewHead(byteutil.NewByteBlockStackAllocator(), 20*1e3, analysis.NewAnalyzer("gojieba"), 6, 3, "~msg")
 	h.open()
 	for i := range logs {
 		err := h.addLogs(logs[i])
@@ -49,8 +49,8 @@ func Test_HeadAddLog(t *testing.T) {
 			log.Fatal(err)
 		}
 	}
-	compactor := newLeveledCompactor(nil, "msg")
-	err := compactor.Write("./", h, 6, 3)
+	compactor := newLeveledCompactor(nil, "~msg")
+	err := compactor.Write("/opt/goproject/temsearch/src/github.com/szuwgh/temsearch/data", h, 6, 3)
 	if err != nil {
 		log.Fatal(err)
 	}
