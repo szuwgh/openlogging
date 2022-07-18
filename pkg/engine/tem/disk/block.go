@@ -7,7 +7,7 @@ import (
 	"hash/crc32"
 	"sort"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
 )
 
 var (

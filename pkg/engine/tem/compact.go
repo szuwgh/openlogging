@@ -8,11 +8,11 @@ import (
 	"sort"
 	"time"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
 
 	"github.com/pkg/errors"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/fileutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/fileutil"
 
 	"github.com/oklog/ulid"
 )

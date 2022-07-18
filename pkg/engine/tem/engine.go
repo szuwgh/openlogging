@@ -14,7 +14,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
 	"github.com/szuwgh/temsearch/pkg/lib/logproto"
 
 	"github.com/oklog/ulid"
@@ -73,6 +73,10 @@ type Engine struct {
 	walDir          string
 	wal             Wal
 	opts            *Options
+}
+
+func (e *Engine) clearTmpFile() error {
+	return nil
 }
 
 func NewEngine(opt *Options, a *analysis.Analyzer) (*Engine, error) {
@@ -351,7 +355,6 @@ func (e *Engine) index(compressed []byte) error {
 		return err
 	}
 	return e.addToMemDB(req)
-
 }
 
 func (e *Engine) recoverMemDB(b []byte) error {
@@ -573,10 +576,6 @@ func chunkDir(dir string) string {
 
 func indexDir(dir string) string {
 	return filepath.Join(dir, "index")
-}
-
-func (e *Engine) flush(h *Head) {
-	h.indexMem.Flush()
 }
 
 // The MultiError type implements the error interface, and contains the

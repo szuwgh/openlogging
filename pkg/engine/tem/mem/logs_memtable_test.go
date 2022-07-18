@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
 )
 
 func Test_logs(t *testing.T) {

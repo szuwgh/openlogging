@@ -1,10 +1,11 @@
 package disk
 
 import (
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/fileutil"
 	"os"
 	"sync"
+
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/fileutil"
 )
 
 type mmapAccessor struct {

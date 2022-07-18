@@ -630,13 +630,9 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 			}
 			metaChunks = append(metaChunks, ChunkMeta{ref, chunks[0].MinTime(), chunks[len(chunks)-1].MaxTime(), 0})
 		} else {
-			fmt.Println("lset:", lset)
 			for _, c := range chunks {
 				chunkEnc := m.writerIters[c.IterIndex].ChunkByte(isMsgTag, c.Chunk)
-				a := chunkEnc.Bytes()
-				fmt.Println(labelName, c.MinTime(), c.MaxTime(), string(m.Key()), "chunk bytes", a)
-				chunkRef, err := w.WriteChunks(a)
-
+				chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
 				if err != nil {
 					return err
 				}

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/szuwgh/temsearch/pkg/analysis"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
 	"github.com/szuwgh/temsearch/pkg/lib/logproto"
 	"github.com/szuwgh/temsearch/pkg/tokenizer"
 	_ "github.com/szuwgh/temsearch/pkg/tokenizer/gojieba"

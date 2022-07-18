@@ -17,10 +17,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/fileutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/util"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/fileutil"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
 )
 

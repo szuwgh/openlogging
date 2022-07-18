@@ -3,7 +3,7 @@ package mem
 import (
 	"sync/atomic"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/util"
 )

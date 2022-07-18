@@ -18,8 +18,8 @@ import (
 	"github.com/szuwgh/temsearch/pkg/engine/tem/series"
 	"github.com/szuwgh/temsearch/pkg/temql"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
 
 	mybin "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"

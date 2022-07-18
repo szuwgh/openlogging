@@ -1,4 +1,8 @@
 package logfile
 
-type mmap struct {
+type Mmap struct {
+}
+
+func NewMmap(fName string, fsize int64) {
+
 }

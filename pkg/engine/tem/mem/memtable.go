@@ -16,7 +16,7 @@ import (
 	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/series"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"

@@ -8,25 +8,24 @@ import (
 	"github.com/szuwgh/temsearch/pkg/temql"
 
 	"github.com/szuwgh/temsearch/pkg/analysis"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/mem"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
 	"github.com/szuwgh/temsearch/pkg/lib/logproto"
 	"github.com/szuwgh/temsearch/pkg/tokenizer"
 )
 
 type Head struct {
 	rwControl
-	mint     int64
-	MaxT     int64
-	indexMem *mem.MemTable
-	logsMem  *mem.LogsTable
-	//indexControl sync.WaitGroup
+	mint       int64
+	MaxT       int64
+	indexMem   *mem.MemTable
+	logsMem    *mem.LogsTable
 	chunkRange int64
 	lastSegNum uint64
 	a          *analysis.Analyzer
-	//isWaitfroze  bool
-	logSize uint64
-	nextID  uint64
+	logSize    uint64
+	nextID     uint64
+	meta       *blockMeta
 }
 
 func NewHead(alloc byteutil.Allocator, chunkRange int64, a *analysis.Analyzer, skiplistLevel, skipListInterval int, msgTagName string) *Head {
