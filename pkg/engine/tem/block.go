@@ -20,6 +20,7 @@ import (
 )
 
 type IndexReader interface {
+	MaxDoc()
 	Search(lset []*prompb.LabelMatcher, expr temql.Expr) (posting.Postings, []series.Series)
 	ChunkReader() chunks.ChunkReader
 	Iterator() disk.IteratorLabel
