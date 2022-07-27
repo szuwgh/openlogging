@@ -732,6 +732,11 @@ func (t termSeriesReader) GetByID(id uint64) (labels.Labels, []chunks.Chunk, err
 	return t.reader.GetByID(ref)
 }
 
+func (r *IndexReader) MaxDoc() float64 {
+	return 0.0
+
+}
+
 func (r *IndexReader) Search(lset []*prompb.LabelMatcher, expr temql.Expr) (posting.Postings, []series.Series) {
 	var its []posting.Postings
 	for _, v := range lset {

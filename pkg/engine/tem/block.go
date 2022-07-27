@@ -20,7 +20,7 @@ import (
 )
 
 type IndexReader interface {
-	MaxDoc()
+	MaxDoc() float64
 	Search(lset []*prompb.LabelMatcher, expr temql.Expr) (posting.Postings, []series.Series)
 	ChunkReader() chunks.ChunkReader
 	Iterator() disk.IteratorLabel
@@ -128,6 +128,10 @@ func (b *Block) Close() error {
 type blockIndexReader struct {
 	ir IndexReader
 	b  BlockControl
+}
+
+func (r blockIndexReader) MaxDoc() float64 {
+	return r.ir.MaxDoc()
 }
 
 func (r blockIndexReader) Search(lset []*prompb.LabelMatcher, expr temql.Expr) (posting.Postings, []series.Series) {

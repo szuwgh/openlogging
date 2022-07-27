@@ -276,6 +276,10 @@ func (mt *MemTable) Iterator() disk.IteratorLabel {
 	return mt.indexs.Iterator(mt.bytePoolReader, mt.series)
 }
 
+func (mt *MemTable) MaxDoc() float64 {
+	return 0.0
+}
+
 func (mt *MemTable) Search(lset []*prompb.LabelMatcher, expr temql.Expr) (posting.Postings, []series.Series) { // ([]*search.SeriesSnapShot, []*search.SnapShot) {
 	var its []posting.Postings
 	for _, v := range lset {
