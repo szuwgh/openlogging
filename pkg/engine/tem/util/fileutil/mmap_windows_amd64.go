@@ -121,6 +121,10 @@ func Munmap(b []byte) (err error) {
 	return nil
 }
 
+func Msync(b []byte) error {
+	return syscall.FlushViewOfFile(uintptr(unsafe.Pointer(&b[0])), uintptr(len(b)))
+}
+
 // madviseWillNeed is unsupported on Windows.
 func madviseWillNeed(b []byte) error { return nil }
 

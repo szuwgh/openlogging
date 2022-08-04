@@ -27,7 +27,7 @@ func newMmapAccessor(f *os.File) (*mmapAccessor, error) {
 	if err != nil {
 		return nil, err
 	}
-	m.b, err = fileutil.Mmap(m.f, 0, int(stat.Size()))
+	m.b, err = fileutil.Mmap(m.f, false, int(stat.Size()))
 	if err != nil {
 		return nil, err
 	}
