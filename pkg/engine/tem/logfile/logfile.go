@@ -11,7 +11,7 @@ var ErrInvalidFsize = errors.New("fsize can`t be zero or negative")
 //ErrOutOfFile file out of range
 var ErrOutOfFile = errors.New("file out of range")
 
-type LogFile interface {
+type DiskIO interface {
 	Write(b []byte, offset int64) (int, error)
 
 	Read(b []byte, offset int64) (int, error)
@@ -36,4 +36,12 @@ func openFile(fName string, fsize int64) (*os.File, error) {
 		}
 	}
 	return fd, nil
+}
+
+type LogFile struct {
+	io DiskIO
+}
+
+func (lf *LogFile) WriteLog() error {
+	return nil
 }

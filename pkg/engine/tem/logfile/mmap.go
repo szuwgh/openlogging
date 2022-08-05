@@ -12,7 +12,7 @@ type Mmap struct {
 	bufLen int64
 }
 
-func NewMmap(fName string, fsize int64) (LogFile, error) {
+func NewMmap(fName string, fsize int64) (DiskIO, error) {
 	if fsize < 0 {
 		return nil, ErrInvalidFsize
 	}
