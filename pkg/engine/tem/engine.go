@@ -524,9 +524,9 @@ func (e *Engine) ShouldCompactMem(h *Head) bool {
 func (e *Engine) Searcher(mint, maxt int64) (Searcher, error) {
 	var blocks []BlockReader
 	var segNums []uint64
+	var segNum uint64
 	e.mu.RLock()
 	defer e.mu.RUnlock()
-	var segNum uint64
 	for _, b := range e.blocks {
 		m := b.meta
 		if intervalOverlap(mint, maxt, m.MinTime, m.MaxTime) {

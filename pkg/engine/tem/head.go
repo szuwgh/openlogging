@@ -50,7 +50,6 @@ func (h *Head) addLogs(r logproto.Stream) error {
 	}
 	h.setMinTime(r.Entries[0].Timestamp.UnixNano() / 1e6)
 	for _, e := range r.Entries {
-		//h.logsMem.WriteLog([]byte(e.Line))
 		tokens := h.tokener(&e)
 		h.indexMem.Index(&context, h.getNextID(), e.Timestamp.UnixNano()/1e6, series, tokens)
 		h.indexMem.Flush()
