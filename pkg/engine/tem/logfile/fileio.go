@@ -17,3 +17,7 @@ func (f *FileIO) Write(b []byte, offset int64) (int, error) {
 func (f *FileIO) Read(offset int64) ([]byte, error) {
 	return nil, nil
 }
+
+func (f *FileIO) Sync() error {
+	return nil
+}
