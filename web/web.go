@@ -12,7 +12,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
 	"github.com/szuwgh/temsearch/pkg/lib/prompb"
 	"github.com/szuwgh/temsearch/pkg/server"
 	"github.com/szuwgh/temsearch/util"

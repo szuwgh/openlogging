@@ -8,7 +8,7 @@ import (
 
 	"github.com/szuwgh/temsearch/pkg/analysis"
 	"github.com/szuwgh/temsearch/pkg/engine/tem"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/byteutil"
+	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
 	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
 	"github.com/szuwgh/temsearch/pkg/lib/prompb"
 	"github.com/szuwgh/temsearch/pkg/temql"

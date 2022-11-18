@@ -3,6 +3,7 @@ package byteutil
 import (
 	"encoding/binary"
 	"fmt"
+
 	mybin "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
 )
 
@@ -92,7 +93,7 @@ func (d *Decbuf) Uint32() uint32 {
 // func (d *decbuf) be64int64() int64  { return int64(d.be64()) }
 
 func (d *Decbuf) UvarintStr() string {
-	l := d.Varint64()
+	l := d.Varint()
 	if d.e != nil {
 		return ""
 	}

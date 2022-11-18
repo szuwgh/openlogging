@@ -2,9 +2,10 @@ package tem
 
 import (
 	"fmt"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
 	"testing"
 	"time"
+
+	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
 )
 
 func Test_Compact(t *testing.T) {
