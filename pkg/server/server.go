@@ -56,6 +56,7 @@ func New() *Server {
 	opts.MsgTagName = "~msg"
 	s.eg, err = tem.NewEngine(opts, analysis.NewAnalyzer("gojieba"))
 	if err != nil {
+		log.Println(err)
 		return nil
 	}
 	return s

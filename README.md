@@ -1,7 +1,7 @@
 # temsearch
 A log time series search engine for kubernetes
 
-temsearch is a lightweight for pod and kube-event log retrieval in the kubernets environment, and stores index and log information in a time series format.
+temsearch is a lightweight for pod and kube-event log retrieval in the kubernets environment, and stores index and log information in a time series format. currently under development, not available for production
 ### Features:
 - Support promtail to collect logs
 - Support full-text indexing and tag-based indexing

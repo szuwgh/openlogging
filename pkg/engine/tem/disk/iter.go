@@ -3,8 +3,6 @@ package disk
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
-	"log"
 
 	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
 	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
@@ -201,7 +199,7 @@ func (f *labelIterator) ChunksPosting(w IndexWriter, segmentNum uint64, iterInde
 			if err != nil {
 				return nil, nil, err
 			}
-			fmt.Println()
+			//fmt.Println()
 			chk := TimeChunk{Lset: lset}
 			chkMetaIndex := make([]ChunkMetaIndex, len(chunkMeta))
 			for i, c := range chunkMeta {
@@ -589,11 +587,8 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 	//合并
 	m.set = emptyChunkSet
 	m.posting = posting.EmptyPostings
-	for i, x := range m.indexs {
-		chunks, p, err := m.writerIters[x].ChunksPosting(w, segmentNum, i)
-		// for _, c := range chunks {
-		// 	fmt.Println(labelName, string(m.Key()), c.Lset, c.Meta)
-		// }
+	for _, x := range m.indexs {
+		chunks, p, err := m.writerIters[x].ChunksPosting(w, segmentNum, x)
 		if err != nil {
 			return err
 		}
@@ -620,6 +615,7 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 		if len(chunks) > 12 { //合并成一个更大chunk
 			m.lw.reset()
 			for _, c := range chunks {
+
 				chunkEnc := m.writerIters[c.IterIndex].ChunkByte(isMsgTag, c.Chunk)
 				posting := chunkEnc.Iterator(c.MinTime(), c.MaxTime(), c.SegmentNum())
 				for posting.Next() {
@@ -634,7 +630,6 @@ func (m *MergeWriterIterator) Write(labelName string, w IndexWriter) error {
 		} else {
 			for _, c := range chunks {
 				chunkEnc := m.writerIters[c.IterIndex].ChunkByte(isMsgTag, c.Chunk)
-				log.Println("chunkEnc", chunkEnc)
 				chunkRef, err := w.WriteChunks(chunkEnc.Bytes())
 				if err != nil {
 					return err

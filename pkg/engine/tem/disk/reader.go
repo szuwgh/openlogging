@@ -68,7 +68,6 @@ func newKeyReader(dir string) (*keyReader, error) {
 		if err != nil {
 			continue
 		}
-		fmt.Println("tag", string(tagsIterator.Key()))
 		r.indexBlocks[string(tagsIterator.Key())] = indexBlock
 	}
 
@@ -259,7 +258,6 @@ func (cr *seriesReader) readLabelChunk(ref uint64) *chunks.SeriesSnapShot {
 	debuf := mmap.decbufAt(off)
 
 	length := debuf.Varint()
-	fmt.Println("length", length)
 	b := debuf.Bytes(length)
 	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
 		return nil
@@ -283,7 +281,6 @@ func (cr *seriesReader) readTermChunk(ref uint64) *chunks.TermSnapShot {
 	debuf := mmap.decbufAt(off)
 
 	length := debuf.Varint()
-	fmt.Println("readTermChunk length", length)
 	b := debuf.Bytes(length)
 	if crc32.ChecksumIEEE(b) != debuf.Uint32() {
 		return nil

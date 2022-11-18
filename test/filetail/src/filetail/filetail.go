@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 	"time"
-
-	"github.com/ser163/WordBot/generate"
 )
+
+var sentence = [6]string{"aa bb cc dd ee", "aa1 bb1 cc1 dd1 ee1", "aa2 bb2 cc2 dd2 ee2", "aa3 bb3 cc3 dd3 ee3", "aa4 bb4 cc4 dd4 ee4", "aa5 bb5 cc5 dd5 ee5"}
 
 func main() {
 	file := "./log.txt"
@@ -16,21 +16,21 @@ func main() {
 	if nil != err {
 		panic(err)
 	}
-	loger := log.New(logFile, "", log.Ldate|log.Ltime|log.Lshortfile)
-	var sentence []string
+	loger := log.New(logFile, "", log.Ldate|log.Ltime|log.Lshortfile) //
+	//var sentence []string
+	var i int
 	go func() {
 		for {
-			for i := 0; i < 5; i++ {
-				w, err := generate.GenRandomWorld(0, "none")
-				if err != nil {
-					fmt.Println(err)
-					break
-				}
-				sentence = append(sentence, w.Word)
-			}
-			loger.Println(time.Now().Format("2006-01-02: 15:04:05"), sentence)
-			sentence = sentence[:0]
+			// for i := 0; i < 5; i++ {
+			// 	sentence = append(sentence, s[0])
+			// }
+			loger.Println(sentence[i])
+			//sentence = sentence[:0]
 			time.Sleep(5 * time.Second)
+			i++
+			if i > 5 {
+				i = 0
+			}
 		}
 	}()
 	fmt.Println("start file log with 5 second")
