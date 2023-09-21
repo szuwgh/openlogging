@@ -8,8 +8,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
-	"github.com/szuwgh/temsearch/pkg/lib/logproto"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/hawkobserve/pkg/lib/logproto"
 )
 
 var testMsg = `[
@@ -55,7 +55,7 @@ func Test_Wal(t *testing.T) {
 }
 
 func Test_WalReader(t *testing.T) {
-	fname := "E:\\goproject\\temsearch\\data\\wal\\000001"
+	fname := "E:\\goproject\\hawkobserve\\data\\wal\\000001"
 	//fname := "./wal.log"
 	f, err := os.OpenFile(fname, os.O_RDONLY, 0644)
 	if err != nil {

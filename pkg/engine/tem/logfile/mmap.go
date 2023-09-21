@@ -3,7 +3,7 @@ package logfile
 import (
 	"os"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/fileutil"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/fileutil"
 )
 
 type Mmap struct {

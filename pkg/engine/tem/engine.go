@@ -14,13 +14,13 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
-	"github.com/szuwgh/temsearch/pkg/lib/logproto"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/hawkobserve/pkg/lib/logproto"
 
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
-	"github.com/szuwgh/temsearch/pkg/analysis"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
+	"github.com/szuwgh/hawkobserve/pkg/analysis"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/disk"
 )
 
 const (
@@ -549,7 +549,7 @@ func (e *Engine) Searcher(mint, maxt int64) (Searcher, error) {
 	}
 	s := &searcher{bs: make([]Searcher, 0, len(blocks))}
 	for i, b := range blocks {
-		q := NewBloctemsearcher(b)
+		q := NewBlochawkobserveer(b)
 		q.lastSegNum = segNums[i]
 		if q != nil {
 			s.bs = append(s.bs, q)

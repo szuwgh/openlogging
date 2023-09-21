@@ -17,46 +17,7 @@ func Test_bytePoolReader(t *testing.T) {
 	reader.initReader(byteStart, uint64(len(b)))
 	x := reader.readBytes(20)
 	fmt.Println(x)
-	// fmt.Println(reader.readByte())
-	// fmt.Println(reader.readByte())
-	// fmt.Println(reader.readByte())
-	// fmt.Println(reader.readByte())
-	// fmt.Println(reader.readByte())
-	// fmt.Println(reader.readByte())
-	// fmt.Println(reader.readByte())
 }
-
-// func Test_CopyBlock(t *testing.T) {
-// 	bytePool := NewByteArrayPool()
-// 	offset := bytePool.initBytes()
-// 	byteStart := offset
-// 	b := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA}
-// 	offset, _ = bytePool.writeBytes(offset, b)
-// 	fmt.Println(bytePool.buffer)
-// 	reader := newByteBlockReader(bytePool)
-// 	fmt.Println("offset", offset)
-// 	reader.init(byteStart, offset)
-// 	fmt.Println(reader.copyBlock(10))
-// }
-
-// func Test_ReadBlock(t *testing.T) {
-// 	bytePool := NewByteArrayPool()
-// 	offset := bytePool.initBytes()
-// 	byteStart := offset
-// 	b := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA}
-// 	offset, _ = bytePool.writeBytes(offset, b)
-// 	fmt.Println(bytePool.buffer)
-// 	reader := newByteBlockReader(bytePool)
-// 	fmt.Println("offset", offset)
-// 	reader.init(byteStart, offset)
-// 	r := reader.readBlock()
-// 	var err error = nil
-// 	var x byte
-// 	for ; err == nil; x, err = r.ReadByte() {
-// 		fmt.Print(x)
-// 	}
-
-// }
 
 func Test_bytePoolReadVInt(t *testing.T) {
 	alloc := NewByteBlockStackAllocator()

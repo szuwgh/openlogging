@@ -29,7 +29,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "temsearch",
+	Use:   "hawkobserve",
 	Short: "A brief description of your application",
 	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
@@ -40,7 +40,7 @@ to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("hello temsearch")
+		fmt.Println("hello hawkobserve")
 	},
 }
 
@@ -60,7 +60,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.temsearch.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.hawkobserve.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -80,9 +80,9 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".temsearch" (without extension).
+		// Search config in home directory with name ".hawkobserve" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".temsearch")
+		viper.SetConfigName(".hawkobserve")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

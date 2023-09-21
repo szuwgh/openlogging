@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	iradix "github.com/hashicorp/go-immutable-radix"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/index"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/index"
 )
 
 type GoRax struct {

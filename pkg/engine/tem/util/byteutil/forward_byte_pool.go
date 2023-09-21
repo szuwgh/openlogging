@@ -1,7 +1,7 @@
 package byteutil
 
 import (
-	bin "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
+	bin "github.com/szuwgh/hawkobserve/pkg/engine/tem/mybinary"
 )
 
 type ForwardBytePool struct {

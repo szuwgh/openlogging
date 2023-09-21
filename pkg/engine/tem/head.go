@@ -5,13 +5,13 @@ import (
 	"math"
 	"sync/atomic"
 
-	"github.com/szuwgh/temsearch/pkg/temql"
+	"github.com/szuwgh/hawkobserve/pkg/temql"
 
-	"github.com/szuwgh/temsearch/pkg/analysis"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/mem"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
-	"github.com/szuwgh/temsearch/pkg/lib/logproto"
-	"github.com/szuwgh/temsearch/pkg/tokenizer"
+	"github.com/szuwgh/hawkobserve/pkg/analysis"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/mem"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/hawkobserve/pkg/lib/logproto"
+	"github.com/szuwgh/hawkobserve/pkg/tokenizer"
 )
 
 type Head struct {

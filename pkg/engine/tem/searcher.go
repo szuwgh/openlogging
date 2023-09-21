@@ -3,13 +3,13 @@ package tem
 import (
 	"container/heap"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/series"
-	"github.com/szuwgh/temsearch/pkg/lib/prompb"
-	"github.com/szuwgh/temsearch/pkg/temql"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/chunks"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/posting"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/series"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prompb"
+	"github.com/szuwgh/hawkobserve/pkg/temql"
 
-	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prometheus/labels"
 )
 
 type Searcher interface {
@@ -187,7 +187,7 @@ func (it *chainedSeriesIterator) Err() error {
 	return it.cur.Err()
 }
 
-func NewBloctemsearcher(b BlockReader) *blockSearcher {
+func NewBlochawkobserveer(b BlockReader) *blockSearcher {
 	bs := &blockSearcher{
 		indexr:        b.Index(),
 		logr:          b.Logs(),

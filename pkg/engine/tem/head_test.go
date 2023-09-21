@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/szuwgh/temsearch/pkg/analysis"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
-	"github.com/szuwgh/temsearch/pkg/lib/logproto"
-	"github.com/szuwgh/temsearch/pkg/tokenizer"
-	_ "github.com/szuwgh/temsearch/pkg/tokenizer/gojieba"
+	"github.com/szuwgh/hawkobserve/pkg/analysis"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/hawkobserve/pkg/lib/logproto"
+	"github.com/szuwgh/hawkobserve/pkg/tokenizer"
+	_ "github.com/szuwgh/hawkobserve/pkg/tokenizer/gojieba"
 )
 
 func Test_HeadAddLog(t *testing.T) {
@@ -50,7 +50,7 @@ func Test_HeadAddLog(t *testing.T) {
 		}
 	}
 	compactor := newLeveledCompactor(nil, "~msg")
-	err := compactor.Write("/opt/goproject/temsearch/src/github.com/szuwgh/temsearch/data", h, 6, 3)
+	err := compactor.Write("/opt/goproject/hawkobserve/src/github.com/szuwgh/hawkobserve/data", h, 6, 3)
 	if err != nil {
 		log.Fatal(err)
 	}

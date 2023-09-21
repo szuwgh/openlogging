@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/szuwgh/temsearch/cmd"
+import "github.com/szuwgh/hawkobserve/cmd"
 
 func main() {
 	cmd.Execute()

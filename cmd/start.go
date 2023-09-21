@@ -5,11 +5,11 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
-	"github.com/szuwgh/temsearch/pkg/server"
+	"github.com/szuwgh/hawkobserve/pkg/server"
 
-	"github.com/szuwgh/temsearch/pkg/tokenizer"
-	_ "github.com/szuwgh/temsearch/pkg/tokenizer/buildinit"
-	"github.com/szuwgh/temsearch/web"
+	"github.com/szuwgh/hawkobserve/pkg/tokenizer"
+	_ "github.com/szuwgh/hawkobserve/pkg/tokenizer/buildinit"
+	"github.com/szuwgh/hawkobserve/web"
 )
 
 var config server.Config
@@ -38,7 +38,7 @@ func start(args []string) {
 	tokenizer.Init()
 	webHandler := web.New()
 	if webHandler == nil {
-		log.Fatalln("temsearch handler is nil")
+		log.Fatalln("hawkobserve handler is nil")
 	}
 	webHandler.Run()
 }

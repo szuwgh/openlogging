@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
-	"github.com/szuwgh/temsearch/pkg/temql"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/posting"
+	"github.com/szuwgh/hawkobserve/pkg/temql"
 )
 
 func Test_tagIter(t *testing.T) {

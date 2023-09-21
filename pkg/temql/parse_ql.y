@@ -1,9 +1,9 @@
 %{
 package temql
 import (
-        "github.com/szuwgh/temsearch/pkg/lib/prompb"
+        "github.com/szuwgh/hawkobserve/pkg/lib/prompb"
         "fmt"
-        "github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
+        "github.com/szuwgh/hawkobserve/pkg/lib/prometheus/labels"
 )
 %}
 

@@ -9,8 +9,8 @@ import __yyfmt__ "fmt"
 //line ./parse_ql.y:3
 import (
 	"fmt"
-	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
-	"github.com/szuwgh/temsearch/pkg/lib/prompb"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prometheus/labels"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prompb"
 )
 
 //line ./parse_ql.y:11

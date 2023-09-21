@@ -1,4 +1,4 @@
-module github.com/szuwgh/temsearch
+module github.com/szuwgh/hawkobserve
 
 go 1.14
 

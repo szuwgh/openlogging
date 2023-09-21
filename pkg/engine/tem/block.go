@@ -10,13 +10,13 @@ import (
 
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/series"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/fileutil"
-	"github.com/szuwgh/temsearch/pkg/lib/prompb"
-	"github.com/szuwgh/temsearch/pkg/temql"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/chunks"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/disk"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/posting"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/series"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/fileutil"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prompb"
+	"github.com/szuwgh/hawkobserve/pkg/temql"
 )
 
 type IndexReader interface {

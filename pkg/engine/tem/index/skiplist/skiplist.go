@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"sync"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/index"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/index"
 )
 
 //后面需要优化
@@ -42,7 +42,6 @@ type skipList struct {
 
 func New(isTag bool) *skipList {
 	sl := &skipList{}
-	//sl.termReader = newByteBlockReader(bytePool)
 	sl.nodeData = append(sl.nodeData, 0)        //kvoffset
 	sl.nodeData = append(sl.nodeData, 0)        //KeyLen
 	sl.nodeData = append(sl.nodeData, 0)        //Valoffset
@@ -52,7 +51,7 @@ func New(isTag bool) *skipList {
 	}
 	sl.isTag = isTag
 	sl.level = 1
-	//sl.metaLen = metaLen
+
 	return sl
 }
 

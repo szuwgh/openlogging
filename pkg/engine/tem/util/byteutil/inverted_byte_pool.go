@@ -3,7 +3,7 @@ package byteutil
 import (
 	"sync"
 
-	bin "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
+	bin "github.com/szuwgh/hawkobserve/pkg/engine/tem/mybinary"
 )
 
 //内存分配

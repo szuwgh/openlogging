@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/byteutil"
 )
 
 // Releaser is the interface that wraps the basic Release method.

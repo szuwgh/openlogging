@@ -2,8 +2,8 @@ package tem
 
 // import (
 // 	"github.com/pkg/errors"
-// 	"github.com/szuwgh/temsearch/pkg/engine/tem/mem"
-// 	"github.com/szuwgh/temsearch/pkg/lib/logproto"
+// 	"github.com/szuwgh/hawkobserve/pkg/engine/tem/mem"
+// 	"github.com/szuwgh/hawkobserve/pkg/lib/logproto"
 // )
 
 // var blockErr = errors.New("log channel block")

@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	mybin "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
+	mybin "github.com/szuwgh/hawkobserve/pkg/engine/tem/mybinary"
 )
 
 var errInvalidSize = fmt.Errorf("invalid size")

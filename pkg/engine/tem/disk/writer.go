@@ -15,13 +15,13 @@ import (
 
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/cache"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/fileutil"
-	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/chunks"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/fileutil"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prometheus/labels"
 )
 
 const (
@@ -43,7 +43,7 @@ const (
 	dirSeries  = "series"
 	dirPosting = "posting"
 
-	LogMaxSize = 128 * MiB //100 	KB
+	LogMaxSize = 512 * MiB //100 	KB
 
 	defaultSegmentSize = 64 * MiB //32 * MiB //1024 * 1024
 
@@ -192,25 +192,25 @@ func sequenceFiles(dir string) ([]string, error) {
 }
 
 //块
-type fileWriter interface {
-	//blcok写入文件系统
-	//writeBlock(b []byte) blockHandle
-	setTagName([]byte)
-	//完成域
-	finishTag() error
-	//byte长度
-	byteLen() int
-	//完成写入
-	finishBlock() error
-	//关闭
-	close() error
-	//添加k和v
-	append(k, v []byte)
-	//写入byte
-	write(v []byte) (int, error)
+// type fileWriter interface {
+// 	//blcok写入文件系统
+// 	//writeBlock(b []byte) blockHandle
+// 	setTagName([]byte)
+// 	//完成域
+// 	finishTag() error
+// 	//byte长度
+// 	byteLen() int
+// 	//完成写入
+// 	finishBlock() error
+// 	//关闭
+// 	close() error
+// 	//添加k和v
+// 	append(k, v []byte)
+// 	//写入byte
+// 	write(v []byte) (int, error)
 
-	writeBytes(b []byte) (int, error)
-}
+// 	writeBytes(b []byte) (int, error)
+// }
 
 type baseWrite struct {
 	w         io.WriteCloser //写入 writer

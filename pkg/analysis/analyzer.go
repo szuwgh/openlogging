@@ -3,7 +3,7 @@ package analysis
 import (
 	"fmt"
 
-	"github.com/szuwgh/temsearch/pkg/tokenizer"
+	"github.com/szuwgh/hawkobserve/pkg/tokenizer"
 	"github.com/yanyiwu/gojieba"
 )
 

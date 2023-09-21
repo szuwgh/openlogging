@@ -1,6 +1,6 @@
 package mem
 
-import "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
+import "github.com/szuwgh/hawkobserve/pkg/engine/tem/mybinary"
 
 type chunkAlloc interface {
 	Alloc([]byte, byte) []byte

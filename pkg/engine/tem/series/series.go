@@ -1,8 +1,8 @@
 package series
 
 import (
-	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
-	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/chunks"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prometheus/labels"
 )
 
 type Series interface {

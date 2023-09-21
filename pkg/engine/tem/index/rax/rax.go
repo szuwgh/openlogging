@@ -10,7 +10,7 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/index"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/index"
 )
 
 var (

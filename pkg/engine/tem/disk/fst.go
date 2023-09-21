@@ -1,7 +1,7 @@
 package disk
 
 import (
-	"github.com/szuwgh/temsearch/pkg/lib/furze/gofst"
+	"github.com/szuwgh/hawkobserve/pkg/lib/furze/gofst"
 )
 
 type Builder struct {

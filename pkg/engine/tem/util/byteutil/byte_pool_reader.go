@@ -4,9 +4,9 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/chunks"
 
-	bin "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
+	bin "github.com/szuwgh/hawkobserve/pkg/engine/tem/mybinary"
 )
 
 //对byte块进行写入

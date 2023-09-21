@@ -3,9 +3,9 @@ package mem
 import (
 	"sync/atomic"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/byteutil"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util"
 )
 
 type Context struct {

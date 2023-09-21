@@ -5,12 +5,12 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/index"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
-	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/chunks"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/index"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prometheus/labels"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/disk"
 )
 
 type RawPosting struct {

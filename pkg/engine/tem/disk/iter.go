@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/cache"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/chunks"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/iterator"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
-	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/iterator"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/posting"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prometheus/labels"
 )
 
 type dir int

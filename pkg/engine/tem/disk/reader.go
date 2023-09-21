@@ -13,17 +13,17 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/cache"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/series"
-	"github.com/szuwgh/temsearch/pkg/temql"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/cache"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/chunks"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/series"
+	"github.com/szuwgh/hawkobserve/pkg/temql"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/posting"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/posting"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/byteutil"
 
-	mybin "github.com/szuwgh/temsearch/pkg/engine/tem/mybinary"
-	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
-	"github.com/szuwgh/temsearch/pkg/lib/prompb"
+	mybin "github.com/szuwgh/hawkobserve/pkg/engine/tem/mybinary"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prometheus/labels"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prompb"
 )
 
 type keyReader struct {

@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/szuwgh/temsearch/pkg/analysis"
-	"github.com/szuwgh/temsearch/pkg/engine/tem"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
-	"github.com/szuwgh/temsearch/pkg/lib/prometheus/labels"
-	"github.com/szuwgh/temsearch/pkg/lib/prompb"
-	"github.com/szuwgh/temsearch/pkg/temql"
+	"github.com/szuwgh/hawkobserve/pkg/analysis"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prometheus/labels"
+	"github.com/szuwgh/hawkobserve/pkg/lib/prompb"
+	"github.com/szuwgh/hawkobserve/pkg/temql"
 )
 
 type Config struct {
@@ -48,7 +48,7 @@ func New() *Server {
 	if err != nil {
 		return nil
 	}
-	opts.DataDir = filepath.Join(exeDir, "data")           //"E:\\goproject\\temsearch\\data" //config.DataDir
+	opts.DataDir = filepath.Join(exeDir, "data")           //"E:\\goproject\\hawkobserve\\data" //config.DataDir
 	opts.FlushWritecoldDuration = 60 * 1e3                 //config.FlushWritecoldDuration
 	opts.DefaultCacheSnapshotMemorySize = 25 * 1024 * 1024 //config.DefaultCacheSnapshotMemorySize
 	opts.SkipListInterval = 3

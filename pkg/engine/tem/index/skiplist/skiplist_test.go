@@ -5,7 +5,7 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/disk"
 )
 
 func Test_skiplist(t *testing.T) {

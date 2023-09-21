@@ -8,7 +8,7 @@ GOCLEAN := $(GOCMD) clean
 
 
 GO_SOURCE := main.go
-GO_BINARY := temsearch
+GO_BINARY := hawkobserve
 
 all: build_go
 

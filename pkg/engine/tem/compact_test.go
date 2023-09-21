@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/disk"
 )
 
 func Test_Compact(t *testing.T) {
@@ -18,7 +18,7 @@ func Test_Compact(t *testing.T) {
 	e := &Engine{}
 	e.tOps = disk.NewTableOps()
 	e.opts = opts
-	dataDir := "/opt/goproject/temsearch/src/github.com/szuwgh/temsearch/data"
+	dataDir := "/opt/goproject/hawkobserve/src/github.com/szuwgh/hawkobserve/data"
 	blocks, err := blockDirs(dataDir)
 	if err != nil {
 		t.Fatal(err)

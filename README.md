@@ -1,7 +1,7 @@
-# temsearch
+# hawkobserve
 A log time series search engine for kubernetes
 
-temsearch is a lightweight for pod and kube-event log retrieval in the kubernets environment, and stores index and log information in a time series format. currently under development, not available for production
+hawkobserve is a lightweight for pod and kube-event log retrieval in the kubernets environment, and stores index and log information in a time series format. currently under development, not available for production
 ### Features:
 - Support promtail to collect logs
 - Support full-text indexing and tag-based indexing
@@ -13,17 +13,17 @@ temsearch is a lightweight for pod and kube-event log retrieval in the kubernets
 
 Quick-Start
 --------------
-1. download `temsearch`
+1. download `hawkobserve`
 ```bash
-git clone https://github.com/szuwgh/temsearch.git
+git clone https://github.com/szuwgh/hawkobserve.git
 ```
-2. build `temsearch`
+2. build `hawkobserve`
 ```bash
 make
 ```
 3. Run server.
 ```bash
-./temsearch start
+./hawkobserve start
 ```
 
 open in browser http://localhost:9400/graph

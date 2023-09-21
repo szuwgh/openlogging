@@ -3,8 +3,8 @@ package mem
 import (
 	"encoding/binary"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/util/byteutil"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/disk"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/util/byteutil"
 )
 
 const blockSize = 4 * 1024

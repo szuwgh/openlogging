@@ -1,10 +1,10 @@
 package mem
 
 import (
-	"github.com/szuwgh/temsearch/pkg/engine/tem/index"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/index"
 
-	"github.com/szuwgh/temsearch/pkg/engine/tem/chunks"
-	"github.com/szuwgh/temsearch/pkg/engine/tem/disk"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/chunks"
+	"github.com/szuwgh/hawkobserve/pkg/engine/tem/disk"
 )
 
 type memIterator struct {
